@@ -71,7 +71,7 @@ final class ReportedIP_Hive_Catalog {
 				'label'       => __( 'Adaptive 2FA policies per role', 'reportedip-hive' ),
 				'description' => __( 'Ask for the second factor again on a new device, address, network or country, every N days or sign-ins.', 'reportedip-hive' ),
 				'tier'        => 'professional',
-				'section'     => 'twofa_policies',
+				'section'     => 'account_security',
 				'docs_url'    => self::PRODUCT_URL . '#hive-identity',
 			),
 			'hardening_mode'               => array(

@@ -91,10 +91,6 @@ final class ReportedIP_Hive_Settings_Registry {
 				'label'       => __( 'Two-Factor Authentication', 'reportedip-hive' ),
 				'description' => __( 'Which methods exist, who has to use one, and how long a device stays trusted. The storefront variant for WooCommerce lives here too.', 'reportedip-hive' ),
 			),
-			'twofa_policies'   => array(
-				'label'       => __( 'Adaptive Step-Up', 'reportedip-hive' ),
-				'description' => __( 'When a user who already passed the second factor is asked for it again. Each trigger is set per role, and a user without a configured method is never locked out by one.', 'reportedip-hive' ),
-			),
 			'account_password' => array(
 				'label'       => __( 'Password Policy', 'reportedip-hive' ),
 				'description' => __( 'What a password has to look like before WordPress accepts it.', 'reportedip-hive' ),
@@ -1281,127 +1277,6 @@ final class ReportedIP_Hive_Settings_Registry {
 				'label'       => __( 'Trusted device lifetime (days)', 'reportedip-hive' ),
 				'description' => __( 'How long a trusted device stays trusted before the code is asked for again.', 'reportedip-hive' ),
 			),
-			'reportedip_hive_2fa_policy_new_country'       => array(
-				'choices'      => 'roles',
-				'section'      => 'twofa_policies',
-				'kind'         => 'json_list',
-				'json_filter'  => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
-				'choice_locks' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'locked_choices' ),
-				'choices_note' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'choices_note' ),
-				'tier'         => '2fa_policies',
-				'tier_gate'    => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
-				'remote'       => true,
-				'label'        => __( 'Step-up on a new country', 'reportedip-hive' ),
-				'description'  => __( 'Roles that are asked for the second factor again when the sign-in comes from a country the account has not used.', 'reportedip-hive' ),
-			),
-			'reportedip_hive_2fa_policy_new_ip'            => array(
-				'choices'      => 'roles',
-				'section'      => 'twofa_policies',
-				'kind'         => 'json_list',
-				'json_filter'  => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
-				'choice_locks' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'locked_choices' ),
-				'choices_note' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'choices_note' ),
-				'tier'         => '2fa_policies',
-				'tier_gate'    => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
-				'remote'       => true,
-				'label'        => __( 'Step-up on a new IP address', 'reportedip-hive' ),
-				'description'  => __( 'Roles that are asked again when the exact address is new to the account. Fires often on ordinary dynamic connections.', 'reportedip-hive' ),
-			),
-			'reportedip_hive_2fa_policy_new_subnet'        => array(
-				'choices'      => 'roles',
-				'section'      => 'twofa_policies',
-				'kind'         => 'json_list',
-				'json_filter'  => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
-				'choice_locks' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'locked_choices' ),
-				'choices_note' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'choices_note' ),
-				'tier'         => '2fa_policies',
-				'tier_gate'    => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
-				'remote'       => true,
-				'label'        => __( 'Step-up on a new network', 'reportedip-hive' ),
-				'description'  => __( 'Roles that are asked again when the address block is new, which ignores a normal dynamic-IP change.', 'reportedip-hive' ),
-			),
-			'reportedip_hive_2fa_policy_new_device'        => array(
-				'choices'      => 'roles',
-				'section'      => 'twofa_policies',
-				'kind'         => 'json_list',
-				'json_filter'  => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
-				'choice_locks' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'locked_choices' ),
-				'choices_note' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'choices_note' ),
-				'tier'         => '2fa_policies',
-				'tier_gate'    => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
-				'remote'       => true,
-				'label'        => __( 'Step-up on a new browser or device', 'reportedip-hive' ),
-				'description'  => __( 'Roles that are asked again when the browser has not signed this account in before.', 'reportedip-hive' ),
-			),
-			'reportedip_hive_2fa_policy_every_n_days'      => array(
-				'choices'      => 'roles',
-				'section'      => 'twofa_policies',
-				'kind'         => 'json_list',
-				'json_filter'  => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
-				'choice_locks' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'locked_choices' ),
-				'choices_note' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'choices_note' ),
-				'tier'         => '2fa_policies',
-				'tier_gate'    => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
-				'remote'       => true,
-				'label'        => __( 'Step-up every few days', 'reportedip-hive' ),
-				'description'  => __( 'Roles that are asked again once the last verification is older than the interval below.', 'reportedip-hive' ),
-			),
-			'reportedip_hive_2fa_policy_every_n_logins'    => array(
-				'choices'      => 'roles',
-				'section'      => 'twofa_policies',
-				'kind'         => 'json_list',
-				'json_filter'  => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
-				'choice_locks' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'locked_choices' ),
-				'choices_note' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'choices_note' ),
-				'tier'         => '2fa_policies',
-				'tier_gate'    => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
-				'remote'       => true,
-				'label'        => __( 'Step-up every few sign-ins', 'reportedip-hive' ),
-				'description'  => __( 'Roles that are asked again after the number of sign-ins below.', 'reportedip-hive' ),
-			),
-			'reportedip_hive_2fa_policy_sessions_above_n'  => array(
-				'choices'      => 'roles',
-				'section'      => 'twofa_policies',
-				'kind'         => 'json_list',
-				'json_filter'  => array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_policy_roles' ),
-				'choice_locks' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'locked_choices' ),
-				'choices_note' => array( 'ReportedIP_Hive_Two_Factor_Policies', 'choices_note' ),
-				'tier'         => '2fa_policies',
-				'tier_gate'    => array( 'ReportedIP_Hive_Settings_Registry', 'policy_list_needs_tier' ),
-				'remote'       => true,
-				'label'        => __( 'Step-up above a session count', 'reportedip-hive' ),
-				'description'  => __( 'Roles that are asked again while the account already has more open sessions than the number below.', 'reportedip-hive' ),
-			),
-			'reportedip_hive_2fa_policy_days'              => array(
-				'section'     => 'twofa_policies',
-				'kind'        => 'int',
-				'ui_lock'     => '2fa_policies',
-				'min'         => 1,
-				'max'         => 365,
-				'remote'      => true,
-				'label'       => __( 'Step-up interval (days)', 'reportedip-hive' ),
-				'description' => __( 'The interval for the every-few-days trigger. The clock starts at the first sign-in after you switch it on, so nobody is challenged all at once.', 'reportedip-hive' ),
-			),
-			'reportedip_hive_2fa_policy_logins'            => array(
-				'section'     => 'twofa_policies',
-				'kind'        => 'int',
-				'ui_lock'     => '2fa_policies',
-				'min'         => 1,
-				'max'         => 100,
-				'remote'      => true,
-				'label'       => __( 'Step-up interval (sign-ins)', 'reportedip-hive' ),
-				'description' => __( 'The number of sign-ins for the every-few-sign-ins trigger.', 'reportedip-hive' ),
-			),
-			'reportedip_hive_2fa_policy_sessions'          => array(
-				'section'     => 'twofa_policies',
-				'kind'        => 'int',
-				'ui_lock'     => '2fa_policies',
-				'min'         => 1,
-				'max'         => 20,
-				'remote'      => true,
-				'label'       => __( 'Open-session threshold', 'reportedip-hive' ),
-				'description' => __( 'How many open sessions an account may have before the trigger applies.', 'reportedip-hive' ),
-			),
 			'reportedip_hive_2fa_require_on_password_reset' => array(
 				'section'     => 'account_security',
 				'kind'        => 'bool',
@@ -1784,20 +1659,6 @@ final class ReportedIP_Hive_Settings_Registry {
 	 */
 	public static function paranoia_needs_tier( $value ) {
 		return (int) $value >= 2;
-	}
-
-	/**
-	 * Whether a policy role list activates the adaptive-2FA tier gate. An
-	 * empty list is inert and stays writable on every plan, so a site that
-	 * lost the plan can still clear its matrix.
-	 *
-	 * @param mixed $value Sanitized target value (JSON string or array).
-	 * @return bool
-	 */
-	public static function policy_list_needs_tier( $value ) {
-		$list = is_array( $value ) ? $value : json_decode( (string) $value, true );
-
-		return is_array( $list ) && ! empty( $list );
 	}
 
 	/**

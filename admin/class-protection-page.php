@@ -150,7 +150,8 @@ class ReportedIP_Hive_Protection_Page {
 	 * section: every link into the page still points at a section id.
 	 *
 	 * A registry section no tab names (one an add-on adds through
-	 * `reportedip_hive_settings_sections`) lands on the Advanced tab.
+	 * `reportedip_hive_settings_sections`) lands on the Advanced tab. A tab
+	 * without sections (Advanced while no add-on adds one) is left out.
 	 *
 	 * @return array<string, array{label:string,icon:string,sections:string[],advice:string}>
 	 * @since  2.1.69
@@ -178,7 +179,7 @@ class ReportedIP_Hive_Protection_Page {
 			'advanced'   => array(
 				'label'    => __( 'Advanced', 'reportedip-hive' ),
 				'icon'     => 'settings',
-				'sections' => array( 'twofa_policies' ),
+				'sections' => array(),
 				'advice'   => __( 'These settings only matter during a coordinated attack or for a second factor asked again. The recommendation covers both.', 'reportedip-hive' ),
 			),
 			'operations' => array(
@@ -195,7 +196,12 @@ class ReportedIP_Hive_Protection_Page {
 				$tabs['advanced']['sections'][] = $section;
 			}
 		}
-		return $tabs;
+		return array_filter(
+			$tabs,
+			static function ( $tab ) {
+				return array() !== $tab['sections'];
+			}
+		);
 	}
 
 	/**

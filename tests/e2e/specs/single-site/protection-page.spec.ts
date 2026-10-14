@@ -56,15 +56,15 @@ test.describe('protection page', () => {
 		forgetExpert();
 	});
 
-	test('five tabs with a status pill each, the first one open', async ({ page }) => {
+	test('four tabs with a status pill each, the first one open', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
 		const tabs = page.locator('.rip-protection__tabs .rip-nav-tabs__tab');
-		await expect(tabs).toHaveCount(5);
+		await expect(tabs).toHaveCount(4);
 		await expect(tabs.first()).toHaveClass(/rip-nav-tabs__tab--active/);
 		await expect(page.locator('.rip-protection__panel[data-tab="basics"]')).toBeVisible();
 		await expect(page.locator('.rip-protection__panel[data-tab="forms"]')).toBeHidden();
-		await expect(page.locator('.rip-protection__tabs .rip-nav-tabs__tab .rip-badge')).toHaveCount(5);
+		await expect(page.locator('.rip-protection__tabs .rip-nav-tabs__tab .rip-badge')).toHaveCount(4);
 		await expect(page.locator('.rip-status-banner')).toBeVisible();
 	});
 

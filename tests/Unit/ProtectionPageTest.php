@@ -567,6 +567,30 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringNotContainsString( 'rip-tier', $html );
 		}
 
+		public function test_a_tab_without_sections_is_left_out(): void {
+			$tabs = ReportedIP_Hive_Protection_Page::tabs();
+			$this->assertArrayNotHasKey( 'advanced', $tabs, 'Without an add-on section the Advanced tab has nothing to show.' );
+			$this->assertSame( 'basics', ReportedIP_Hive_Protection_Page::active_tab( 'advanced' ) );
+
+			add_filter(
+				'reportedip_hive_settings_sections',
+				static function ( array $sections ) {
+					$sections['addon_probe'] = array(
+						'label'       => 'Probe',
+						'description' => 'Probe section.',
+					);
+					return $sections;
+				}
+			);
+			\ReportedIP_Hive_Settings_Registry::flush_spec_cache();
+			try {
+				$this->assertSame( array( 'addon_probe' ), ReportedIP_Hive_Protection_Page::tabs()['advanced']['sections'] ?? null );
+			} finally {
+				unset( $GLOBALS['wp_filters']['reportedip_hive_settings_sections'] );
+				\ReportedIP_Hive_Settings_Registry::flush_spec_cache();
+			}
+		}
+
 		public function test_tabs_cover_every_registry_section_exactly_once(): void {
 			$seen = array();
 			foreach ( ReportedIP_Hive_Protection_Page::tabs() as $slug => $tab ) {
@@ -609,23 +633,24 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reason'    => 'tier',
 				'min_tier'  => 'professional',
 			);
-			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_locked( 'twofa_policies', $this->statuses_for( 'twofa_policies', $locked ) ) );
+			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_locked( 'headers', $this->statuses_for( 'headers', $locked ) ) );
 
-			$partly = $this->statuses_for( 'twofa_policies', $locked );
-			$partly['reportedip_hive_2fa_policy_days'] = array( 'available' => true );
-			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_locked( 'twofa_policies', $partly ), 'one open key opens the section' );
+			$partly = $this->statuses_for( 'headers', $locked );
+			$partly['reportedip_hive_headers_enabled'] = array( 'available' => true );
+			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_locked( 'headers', $partly ), 'one open key opens the section' );
 
-			$partial = $this->statuses_for( 'twofa_policies', $locked + array( 'partial' => true ) );
-			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_locked( 'twofa_policies', $partial ), 'a switch left on after a downgrade is editable, but the feature is still not in the plan' );
+			$partial = $this->statuses_for( 'headers', $locked + array( 'partial' => true ) );
+			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_locked( 'headers', $partial ), 'a switch left on after a downgrade is editable, but the feature is still not in the plan' );
 
-			$runtime = $this->statuses_for( 'twofa_policies', array( 'available' => false, 'reason' => 'runtime' ) );
-			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_locked( 'twofa_policies', $runtime ), 'a runtime lock is not a plan lock' );
+			$runtime = $this->statuses_for( 'headers', array( 'available' => false, 'reason' => 'runtime' ) );
+			$this->assertFalse( ReportedIP_Hive_Protection_Page::section_locked( 'headers', $runtime ), 'a runtime lock is not a plan lock' );
 
-			$mode = $this->statuses_for( 'twofa_policies', array( 'available' => false, 'reason' => 'mode', 'min_tier' => 'professional' ) );
-			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_locked( 'twofa_policies', $mode ), 'a mode lock closes the section too' );
+			$mode_lock = array( 'available' => false, 'reason' => 'mode', 'min_tier' => 'professional' );
+			$mode      = $this->statuses_for( 'headers', $mode_lock );
+			$this->assertTrue( ReportedIP_Hive_Protection_Page::section_locked( 'headers', $mode ), 'a mode lock closes the section too' );
 			$this->assertSame(
 				array( 'text' => '', 'tone' => 'neutral', 'plan' => '' ),
-				ReportedIP_Hive_Protection_Page::tab_state( 'advanced', array(), $mode ),
+				ReportedIP_Hive_Protection_Page::tab_state( 'firewall', array(), $mode + $this->statuses_for( 'waf', $mode_lock ) + $this->statuses_for( 'lockdown', $mode_lock ) ),
 				'a mode lock names no plan'
 			);
 

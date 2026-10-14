@@ -207,16 +207,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_2fa_enforce_action'            => 'enum',
 				'reportedip_hive_2fa_trusted_devices'           => 'bool',
 				'reportedip_hive_2fa_trusted_device_days'       => 'int',
-				'reportedip_hive_2fa_policy_new_country' => 'json_list',
-				'reportedip_hive_2fa_policy_new_ip' => 'json_list',
-				'reportedip_hive_2fa_policy_new_subnet' => 'json_list',
-				'reportedip_hive_2fa_policy_new_device' => 'json_list',
-				'reportedip_hive_2fa_policy_every_n_days' => 'json_list',
-				'reportedip_hive_2fa_policy_every_n_logins' => 'json_list',
-				'reportedip_hive_2fa_policy_sessions_above_n' => 'json_list',
-				'reportedip_hive_2fa_policy_days' => 'int',
-				'reportedip_hive_2fa_policy_logins' => 'int',
-				'reportedip_hive_2fa_policy_sessions' => 'int',
 				'reportedip_hive_2fa_require_on_password_reset' => 'bool',
 				'reportedip_hive_password_policy_enabled'       => 'bool',
 				'reportedip_hive_password_min_length'           => 'int',
@@ -563,9 +553,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_csp_report_uri'                 => 'security_headers_advanced',
 				'reportedip_hive_audit_triggers'                 => 'audit_log',
 				'reportedip_hive_audit_retention_days'           => 'audit_log',
-				'reportedip_hive_2fa_policy_days'                => '2fa_policies',
-				'reportedip_hive_2fa_policy_logins'              => '2fa_policies',
-				'reportedip_hive_2fa_policy_sessions'            => '2fa_policies',
 			);
 			foreach ( $expected as $key => $feature ) {
 				$this->assertSame( $feature, $spec[ $key ]['ui_lock'] ?? '', $key );
