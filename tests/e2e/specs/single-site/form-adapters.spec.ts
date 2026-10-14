@@ -3,41 +3,23 @@ import type { APIRequestContext } from '@playwright/test';
 import { test, expect } from '../../fixtures/admin';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
 import { FORCE_FREE_PHP, forceTierPhp } from '../../fixtures/tier';
-import { MAILPIT_BASE_URL } from '../../fixtures/reset-flow';
-
-/** How many messages the mail catcher holds right now. */
-async function mailCount(): Promise<number> {
-	const response = await fetch(`${MAILPIT_BASE_URL}/api/v1/messages?limit=1`);
-	const body = (await response.json()) as { total?: number };
-
-	return Number(body.total ?? 0);
-}
 
 /**
- * Execution proof on third-party forms (since 2.1.58).
+ * Execution proof on third-party forms (since 2.1.58), free part.
  *
  * Same claim as form-proof.spec.ts and the same reason PHPUnit cannot carry
- * it: a real browser has to get through and a bare POST has to be refused,
- * on three form plugins that each render and validate their own way. Every
- * spec drives either a genuine page or a raw request and reads the
- * consequence out of the database.
+ * it: a real browser has to get through and a bare POST has to be refused.
+ * The free plugin ships the Contact Form 7 adapter; the six Business
+ * adapters (Formidable, Elementor, Ultimate Member, Gravity Forms, WPForms,
+ * Forminator) live in the add-on and are driven by its own suite. This run
+ * expects the add-on to be off and also proves that a stored switch alone
+ * arms none of them then.
  *
  * Fixtures the stack already carries:
  *
  *   Contact Form 7   post 700, page /rip-e2e-cf7-page/
  *   Formidable       form_id 2, form_key ripe2efrm, page /rip-e2e-frm-page/
  *   Elementor Pro    widget ripfrm01 on post 703, page /rip-e2e-elementor-page/
- *   Ultimate Member  default forms, pages /rip-e2e-um-register/ and -login,
- *                    switched on only while its own cases run
- *   Gravity Forms    form "RIP E2E Gravity", page /rip-e2e-gravity-page/
- *                    (legacy iframe submission) and /rip-e2e-gravity-ajax-page/
- *                    (true background submission, switched on by the dev-stack
- *                    mu-plugin rip-gravity-ajax-test.php); skipped when the
- *                    plugin is not installed (it is paid)
- *   WPForms Lite     forms "RIP E2E WPForms" (page load, own guards off) and
- *                    "RIP E2E WPForms AJAX" (background path, own anti-spam
- *                    token on), pages /rip-e2e-wpforms-page/ and
- *                    /rip-e2e-wpforms-ajax-page/; skipped when not installed
  *
  * Serial: the specs mutate shared plugin state on the long-lived stack.
  */
@@ -51,14 +33,6 @@ const CF7_PAGE = '/rip-e2e-cf7-page/';
 const FRM_PAGE = '/rip-e2e-frm-page/';
 const ELEMENTOR_PAGE = '/rip-e2e-elementor-page/';
 const ELEMENTOR_WIDGET = 'ripfrm01';
-const UM_REGISTER_PAGE = '/rip-e2e-um-register/';
-const GRAVITY_PAGE = '/rip-e2e-gravity-page/';
-const GRAVITY_AJAX_PAGE = '/rip-e2e-gravity-ajax-page/';
-const GRAVITY_MULTI_PAGE = '/rip-e2e-gravity-multi-page/';
-const WPFORMS_PAGE = '/rip-e2e-wpforms-page/';
-const WPFORMS_AJAX_PAGE = '/rip-e2e-wpforms-ajax-page/';
-const FORMINATOR_PAGE = '/rip-e2e-forminator-page/';
-const FORMINATOR_AJAX_PAGE = '/rip-e2e-forminator-ajax-page/';
 
 /**
  * Object ids the fixture hands back. Nothing here may be hard-coded: the three
@@ -72,14 +46,12 @@ let ELEMENTOR_POST = '0';
 let FRM_FORM = '0';
 let FRM_NAME_FIELD = '0';
 let FRM_TEXT_FIELD = '0';
-let UM_REGISTER_FORM = '0';
-let GRAVITY_FORM = '0';
-let GRAVITY_MULTI_FORM = '0';
-let WPFORMS_FORM = '0';
-let WPFORMS_AJAX_FORM = '0';
-let FORMINATOR_FORM = '0';
-let FORMINATOR_AJAX_FORM = '0';
 
+/**
+ * Every adapter switch, the six of the add-on included: they are set here as
+ * well, so the cases prove that a stored switch alone arms nothing while the
+ * add-on is off.
+ */
 const ADAPTER_OPTIONS = [
 	'reportedip_hive_form_proof_cf7',
 	'reportedip_hive_form_proof_formidable',
@@ -118,7 +90,6 @@ function phpTolerant(code: string): string {
 	}
 }
 
-/** Switch the three adapters on or off in one call. */
 /**
  * Build the three forms and read their ids back.
  *
@@ -140,13 +111,6 @@ function seedForms(): void {
 	FRM_FORM = read('frm');
 	FRM_NAME_FIELD = read('frm_name');
 	FRM_TEXT_FIELD = read('frm_text');
-	UM_REGISTER_FORM = read('um_register');
-	GRAVITY_FORM = read('gravity');
-	GRAVITY_MULTI_FORM = read('gravity_multi');
-	WPFORMS_FORM = read('wpforms');
-	WPFORMS_AJAX_FORM = read('wpforms_ajax');
-	FORMINATOR_FORM = read('forminator');
-	FORMINATOR_AJAX_FORM = read('forminator_ajax');
 
 	const page = php(
 		`$p = get_posts(array('name' => 'rip-e2e-cf7-page', 'post_type' => 'page', 'post_status' => 'any', 'numberposts' => 1)); echo $p ? (int) $p[0]->ID : 0;`
@@ -261,83 +225,6 @@ function clearSpamEscalations(): void {
 	`);
 }
 
-/**
- * Switch Ultimate Member on or off.
- *
- * An active Ultimate Member takes the core registration form over and sends
- * `wp-login.php?action=register` to its own page, which is exactly what
- * `registration-rules.spec.ts` drives. So the plugin is only on while its own
- * cases run. Returns false when it is not installed on this stack.
- */
-function umPlugin(on: boolean): boolean {
-	try {
-		wp('plugin', on ? 'activate' : 'deactivate', 'ultimate-member');
-		return true;
-	} catch {
-		return false;
-	}
-}
-
-/** How many accounts the Ultimate Member cases have created. */
-function umUserCount(): number {
-	return Number(
-		php(`
-			global $wpdb;
-			echo (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->users} WHERE user_login LIKE 'ripe2eum%'");
-		`)
-	);
-}
-
-/** Drop every account the Ultimate Member cases created. */
-function clearUmUsers(): void {
-	php(`
-		require_once ABSPATH . 'wp-admin/includes/user.php';
-		global $wpdb;
-		$ids = $wpdb->get_col("SELECT ID FROM {$wpdb->users} WHERE user_login LIKE 'ripe2eum%'");
-		foreach ( $ids as $id ) { wp_delete_user( (int) $id ); }
-	`);
-}
-
-/**
- * Drop the sign-up counter rows.
- *
- * The registration rules hold a rate limit of three sign-ups an hour per
- * address, and every case in this file arrives from the same one. Without this
- * an Ultimate Member case is refused by the limit, and the assertion about the
- * reason it was refused for then reads the wrong field.
- */
-function clearRegistrationAttempts(): void {
-	php(`
-		global $wpdb;
-		$wpdb->query("DELETE FROM {$wpdb->base_prefix}reportedip_hive_attempts WHERE attempt_type = 'registration'");
-	`);
-}
-
-/**
- * Post straight at the Ultimate Member sign-up form, the way a blind bot does.
- *
- * The plugin reads its own nonce long after the validation hook this adapter
- * uses, so a body without one still reaches the check. The consequence is read
- * from the log and from the users table, never from the response.
- */
-async function postUmRegister(
-	request: APIRequestContext,
-	login: string,
-	extra: Record<string, string> = {}
-): Promise<void> {
-	await request.post(UM_REGISTER_PAGE, {
-		form: {
-			form_id: UM_REGISTER_FORM,
-			[`user_login-${UM_REGISTER_FORM}`]: login,
-			[`user_email-${UM_REGISTER_FORM}`]: `${login}@example.com`,
-			[`user_password-${UM_REGISTER_FORM}`]: 'Str0ngPass!234',
-			[`confirm_user_password-${UM_REGISTER_FORM}`]: 'Str0ngPass!234',
-			...extra,
-		},
-		failOnStatusCode: false,
-	});
-}
-
 /** How many Formidable entries the fixture form holds. */
 function formidableEntryCount(): number {
 	return Number(
@@ -441,26 +328,6 @@ async function expectCf7Refused(
 	).toBeGreaterThan(logsBefore);
 }
 
-/**
- * Post at Formidable and insist the refusal is ours.
- *
- * Same reason as the Contact Form 7 helper: Formidable turns away a request
- * that does not look like one of its own rendered forms, so an entry table
- * that stayed empty is no evidence by itself.
- */
-async function expectFormidableRefused(request: APIRequestContext): Promise<void> {
-	clearFormidableEntries();
-	const logsBefore = failureLogCount();
-
-	await postFormidable(request);
-
-	expect(formidableEntryCount()).toBe(0);
-	expect(
-		failureLogCount(),
-		'the refusal must come from our adapter, not from Formidable'
-	).toBeGreaterThan(logsBefore);
-}
-
 /** Post straight at the Elementor Pro form endpoint. */
 async function postElementor(
 	request: APIRequestContext,
@@ -511,140 +378,6 @@ async function postFormidable(
 	return response.status();
 }
 
-/** How many entries the Gravity Forms fixture form holds, spam included. */
-function gravityEntryCount(): number {
-	return Number(
-		php(`
-			global $wpdb;
-			echo (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}gf_entry WHERE form_id = ${GRAVITY_FORM}");
-		`)
-	);
-}
-
-function gravityMultiEntryCount(): number {
-	return Number(
-		php(`
-			global $wpdb;
-			echo (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}gf_entry WHERE form_id = ${GRAVITY_MULTI_FORM}");
-		`)
-	);
-}
-
-function clearGravityMultiEntries(): void {
-	php(`
-		global $wpdb;
-		$ids = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}gf_entry WHERE form_id = ${GRAVITY_MULTI_FORM}");
-		foreach ( $ids as $id ) { GFAPI::delete_entry( (int) $id ); }
-	`);
-}
-
-function clearGravityEntries(): void {
-	php(`
-		global $wpdb;
-		$ids = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}gf_entry WHERE form_id = ${GRAVITY_FORM}");
-		foreach ( $ids as $id ) { GFAPI::delete_entry( (int) $id ); }
-	`);
-}
-
-/**
- * Post straight at the Gravity Forms fixture page, the way a blind bot does.
- *
- * The page-load path needs no nonce, only the two hidden inputs the plugin
- * reads to know a form was submitted. Returns the page body, because the
- * refusal is rendered into it as a form-level validation error.
- */
-async function postGravity(
-	request: APIRequestContext,
-	extra: Record<string, string> = {}
-): Promise<string> {
-	const response = await request.post(GRAVITY_PAGE, {
-		form: {
-			gform_submit: GRAVITY_FORM,
-			[`is_submit_${GRAVITY_FORM}`]: '1',
-			[`gform_target_page_number_${GRAVITY_FORM}`]: '0',
-			[`gform_source_page_number_${GRAVITY_FORM}`]: '1',
-			input_1: 'E2E Prober',
-			input_2: `An ordinary enquiry written at ${Date.now()}.`,
-			...extra,
-		},
-		failOnStatusCode: false,
-	});
-
-	return await response.text();
-}
-
-/**
- * Post at Gravity Forms and insist the refusal is ours and visible.
- *
- * Two things are read: no entry was written, and the page carries the
- * form-level error the sender is shown. The log row names us; Gravity Forms
- * refuses for reasons of its own too.
- */
-async function expectGravityRefused(
-	request: APIRequestContext,
-	extra: Record<string, string> = {}
-): Promise<void> {
-	clearGravityEntries();
-	const logsBefore = failureLogCount();
-
-	const body = await postGravity(request, extra);
-
-	expect(gravityEntryCount()).toBe(0);
-	expect(body, 'the sender must be told').toContain('gform_submission_error');
-	expect(
-		failureLogCount(),
-		'the refusal must come from our adapter, not from Gravity Forms'
-	).toBeGreaterThan(logsBefore);
-}
-
-/**
- * Post straight at the WPForms fixture page, the way a blind bot does.
- *
- * The page-load path reads the form id and the field values out of the
- * POST and nothing else while the plugin's own guards are off. Returns the
- * page body, because a refusal is rendered into it as the form's header
- * error and an accepted submission as the confirmation box.
- */
-async function postWpforms(
-	request: APIRequestContext,
-	extra: Record<string, string> = {}
-): Promise<string> {
-	const response = await request.post(WPFORMS_PAGE, {
-		form: {
-			'wpforms[id]': WPFORMS_FORM,
-			'wpforms[fields][1]': 'E2E Prober',
-			'wpforms[fields][2]': `An ordinary enquiry written at ${Date.now()}.`,
-			...extra,
-		},
-		failOnStatusCode: false,
-	});
-
-	return await response.text();
-}
-
-/**
- * Post at WPForms and insist the refusal is ours and visible.
- *
- * WPForms Lite keeps no entries, so the consequence is read from the page
- * and from our own log: the header error the sender is shown, no
- * confirmation box, and a failure row that names this plugin.
- */
-async function expectWpformsRefused(
-	request: APIRequestContext,
-	extra: Record<string, string> = {}
-): Promise<void> {
-	const logsBefore = failureLogCount();
-
-	const body = await postWpforms(request, extra);
-
-	expect(body, 'the sender must be told').toContain('wpforms-error-container');
-	expect(body).not.toContain('wpforms-confirmation-container');
-	expect(
-		failureLogCount(),
-		'the refusal must come from our adapter, not from WPForms'
-	).toBeGreaterThan(logsBefore);
-}
-
 test.describe.configure({ mode: 'serial' });
 
 test.describe('form adapters', () => {
@@ -690,8 +423,6 @@ test.describe('form adapters', () => {
 	 */
 	for (const [label, url] of [
 		['Contact Form 7', CF7_PAGE],
-		['Formidable', FRM_PAGE],
-		['Elementor', ELEMENTOR_PAGE],
 	] as const) {
 		test(`${label} renders the anchor exactly once`, async ({ page }) => {
 			await page.goto(url);
@@ -713,50 +444,9 @@ test.describe('form adapters', () => {
 		await expect(page.locator('form.wpcf7-form')).toHaveAttribute('data-status', 'sent');
 	});
 
-	test('a real browser gets through Elementor', async ({ page }) => {
-		const mailsBefore = await mailCount();
-
-		await page.goto(ELEMENTOR_PAGE);
-		await page.fill('input[name="form_fields[name]"]', 'E2E Reader');
-		await page.fill('textarea[name="form_fields[message]"]', 'An ordinary enquiry from a reader.');
-		await page.click('.elementor-button[type="submit"]');
-
-		await expect(page.locator('.elementor-message-success')).toBeVisible();
-		await expect.poll(mailCount, { timeout: 15000 }).toBe(mailsBefore + 1);
-	});
-
-	test('a real browser gets through Formidable', async ({ page }) => {
-		clearFormidableEntries();
-
-		await page.goto(FRM_PAGE);
-		await page.fill(`input[name="item_meta[${FRM_NAME_FIELD}]"]`, 'E2E Reader');
-		await page.fill(`textarea[name="item_meta[${FRM_TEXT_FIELD}]"]`, 'An ordinary enquiry from a reader.');
-		await page.click('.frm_button_submit');
-		await page.waitForLoadState('domcontentloaded');
-
-		expect(formidableEntryCount()).toBe(1);
-	});
-
 	/** Case 3: a bare POST carrying none of our fields, past the grace. */
 	test('a bare post without our fields is refused on Contact Form 7', async ({ request }) => {
 		await expectCf7Refused(request);
-	});
-
-	/**
-	 * `success: false` alone is not a refusal: Elementor runs its submit
-	 * actions unless the handler holds a field error, so a message-only
-	 * refusal used to report an error after the mail had already left.
-	 */
-	test('a bare post without our fields is refused on Elementor', async ({ request }) => {
-		const mailsBefore = await mailCount();
-		const body = await postElementor(request);
-
-		expect(body.success).toBe(false);
-		expect(await mailCount(), 'a refused submission must not send the form mail').toBe(mailsBefore);
-	});
-
-	test('a bare post without our fields is refused on Formidable', async ({ request }) => {
-		await expectFormidableRefused(request);
 	});
 
 	/** Case 4: a filled decoy is refused, logged and escalated at once. */
@@ -833,14 +523,28 @@ test.describe('form adapters', () => {
 		});
 	}
 
-	test('business arms all three adapters', async ({ request }) => {
+	/**
+	 * Without the add-on Contact Form 7 is the only adapter, on every plan:
+	 * Business and every switch on still leave Formidable and Elementor
+	 * without an anchor and without a judgement, exactly like a 2.1.74 plan
+	 * that did not cover them.
+	 */
+	test('without the add-on business arms Contact Form 7 only', async ({ page, request }) => {
 		await expectCf7Refused(request);
 
 		const elementor = await postElementor(request);
 
-		expect(elementor.success).toBe(false);
+		expect(elementor.success, 'Elementor is an add-on adapter').toBe(true);
 
-		await expectFormidableRefused(request);
+		clearFormidableEntries();
+		await postFormidable(request);
+		expect(formidableEntryCount(), 'Formidable is an add-on adapter').toBe(1);
+
+		for (const url of [FRM_PAGE, ELEMENTOR_PAGE]) {
+			await page.goto(url);
+			await page.waitForLoadState('domcontentloaded');
+			await expect(page.locator('form input.rip-fp-anchor'), url).toHaveCount(0);
+		}
 	});
 
 	/** Case 8: the off switch. */
@@ -895,588 +599,5 @@ test.describe('form adapters', () => {
 		}
 
 		phpTolerant(`wp_delete_post(${pageId}, true);`);
-	});
-
-	/**
-	 * Formidable brings its own execution proof and its own honeypot. Both
-	 * layers plant a hidden field and both read it back, and a real browser has
-	 * to satisfy the pair. This is the spec that would catch the two refusing
-	 * each other's traffic.
-	 */
-	test('Formidable passes with its own antispam and honeypot switched on', async ({ page }) => {
-		setFormidableOwnGuards(true);
-		clearFormidableEntries();
-
-		await page.goto(FRM_PAGE);
-		await page.fill(`input[name="item_meta[${FRM_NAME_FIELD}]"]`, 'E2E Reader');
-		await page.fill(`textarea[name="item_meta[${FRM_TEXT_FIELD}]"]`, 'An ordinary enquiry from a reader.');
-		await page.click('.frm_button_submit');
-		await page.waitForLoadState('domcontentloaded');
-
-		expect(formidableEntryCount(), 'the two proof layers must not refuse each other').toBe(1);
-
-		setFormidableOwnGuards(false);
-	});
-
-	/**
-	 * Gravity Forms submits its forms itself and fires no submit event, so a
-	 * real browser is the only proof the script hooked the plugin's own
-	 * submission filter. Every case skips when the plugin is not on the stack:
-	 * it is paid and cannot be installed in CI.
-	 */
-	test.describe('Gravity Forms', () => {
-		test.beforeAll(() => {
-			test.skip(GRAVITY_FORM === '0', 'Gravity Forms is not installed on this stack');
-		});
-
-		test('Gravity Forms renders the anchor exactly once', async ({ page }) => {
-			await page.goto(GRAVITY_PAGE);
-			await page.waitForLoadState('domcontentloaded');
-
-			await expect(page.locator('form input.rip-fp-anchor')).toHaveCount(1);
-			await expect(page.locator(`form input[name="${ANCHOR}"]`)).toHaveCount(1);
-		});
-
-		/**
-		 * Both background paths: the legacy iframe the shortcode switches on
-		 * and the true background request of 2.9 and later. They share the
-		 * submission filter the script hooks, and each renders the form again
-		 * its own way after an error.
-		 */
-		for (const [label, url] of [
-			['iframe', GRAVITY_PAGE],
-			['ajax', GRAVITY_AJAX_PAGE],
-		] as const) {
-			test(`a real browser gets through Gravity Forms (${label})`, async ({ page }) => {
-				clearGravityEntries();
-
-				await page.goto(url);
-				await page.fill('input[name="input_1"]', 'E2E Reader');
-				await page.fill('textarea[name="input_2"]', 'An ordinary enquiry from a reader.');
-				await page.click(`#gform_submit_button_${GRAVITY_FORM}`);
-
-				await expect(page.locator('.gform_confirmation_message')).toBeVisible();
-				expect(gravityEntryCount()).toBe(1);
-			});
-
-			/**
-			 * After a failed validation the plugin renders the whole form again
-			 * in place. The second attempt has to carry a fresh proof, which is
-			 * what the re-arm on `gform/post_render` is for.
-			 */
-			test(`a browser gets through Gravity Forms after a validation error (${label})`, async ({
-				page,
-			}) => {
-				clearGravityEntries();
-
-				await page.goto(url);
-				await page.fill('textarea[name="input_2"]', 'An enquiry that forgot the name.');
-				await page.click(`#gform_submit_button_${GRAVITY_FORM}`);
-
-				await expect(page.locator('.gform_validation_errors')).toBeVisible();
-				expect(gravityEntryCount()).toBe(0);
-
-				await page.fill('input[name="input_1"]', 'E2E Reader');
-				await page.click(`#gform_submit_button_${GRAVITY_FORM}`);
-
-				await expect(page.locator('.gform_confirmation_message')).toBeVisible();
-				expect(gravityEntryCount()).toBe(1);
-			});
-
-			/**
-			 * The one case that must never end in silence: a browser that did
-			 * not run the proof script. The refusal has to come back through
-			 * the plugin's own response and be rendered above the form, or the
-			 * sender is thanked for a message nobody got.
-			 */
-			test(`a browser without our script is told (${label})`, async ({ page }) => {
-				clearGravityEntries();
-				await page.route('**/form-proof.js*', (route) => route.abort());
-
-				await page.goto(url);
-				await page.fill('input[name="input_1"]', 'E2E Reader');
-				await page.fill('textarea[name="input_2"]', 'An enquiry from a browser that blocks scripts.');
-				await page.click(`#gform_submit_button_${GRAVITY_FORM}`);
-
-				await expect(page.locator('.gform_validation_errors')).toBeVisible();
-				await expect(page.locator('.gform_submission_error')).toContainText('JavaScript');
-				expect(gravityEntryCount()).toBe(0);
-			});
-		}
-
-		test('a bare post without our fields is refused on Gravity Forms, in front of the sender', async ({
-			request,
-		}) => {
-			await expectGravityRefused(request);
-		});
-
-		test('a filled decoy is refused on Gravity Forms and escalated', async ({ request }) => {
-			clearSpamEscalations();
-
-			await expectGravityRefused(request, { [ANCHOR]: 'http://spam.example' });
-
-			expect(spamEscalationCount()).toBe(1);
-
-			clearSpamEscalations();
-		});
-
-		test('a post carrying both fields is accepted on Gravity Forms', async ({ request }) => {
-			clearGravityEntries();
-			const field = proofField();
-
-			const body = await postGravity(request, { [ANCHOR]: '', [field]: '1' });
-
-			expect(body).not.toContain('gform_submission_error');
-			expect(gravityEntryCount()).toBe(1);
-		});
-
-		/**
-		 * A multi-step form over AJAX: Name on page one, Message on page two,
-		 * submitted without a page reload. The plugin only judges the last
-		 * page, so the Next click must not be refused and the final submit
-		 * must carry a fresh proof, dealt by the re-arm on `gform/post_render`.
-		 */
-		test('a browser gets through the multi-step Gravity Forms form over AJAX', async ({ page }) => {
-			clearGravityMultiEntries();
-
-			try {
-				await page.goto(GRAVITY_MULTI_PAGE);
-				await expect(page.locator('input.rip-fp-anchor')).toHaveCount(1);
-
-				await page.fill(`#input_${GRAVITY_MULTI_FORM}_1`, 'E2E Mehrschritt Leser');
-				await page.click(`#gform_next_button_${GRAVITY_MULTI_FORM}_2`);
-
-				const message = page.locator(`#input_${GRAVITY_MULTI_FORM}_3`);
-				await expect(message).toBeVisible({ timeout: 30000 });
-				await message.fill('Eine echte mehrseitige Nachricht ueber AJAX.');
-				await page.click(`#gform_submit_button_${GRAVITY_MULTI_FORM}`);
-
-				await expect(page.locator('.gform_confirmation_message')).toBeVisible({ timeout: 60000 });
-				expect(gravityMultiEntryCount()).toBe(1);
-			} finally {
-				clearGravityMultiEntries();
-			}
-		});
-
-		test('a submission through the Gravity Forms API is never judged', async () => {
-			clearGravityEntries();
-
-			const result = php(`
-				$r = GFAPI::submit_form(${GRAVITY_FORM}, array('input_1' => 'API Caller', 'input_2' => 'Sent by an integration.'));
-				echo is_wp_error($r) ? 'error:' . $r->get_error_message() : (empty($r['is_valid']) ? 'invalid' : 'valid');
-			`);
-
-			expect(result).toBe('valid');
-			expect(gravityEntryCount()).toBe(1);
-		});
-
-		test('professional leaves Gravity Forms inert', async ({ request }) => {
-			php(forceTierPhp('professional'));
-			clearGravityEntries();
-
-			await postGravity(request);
-
-			expect(gravityEntryCount(), 'Gravity Forms needs the Business plan').toBe(1);
-
-			php(forceTierPhp('business'));
-		});
-
-		test.afterAll(() => {
-			phpTolerant(`
-				global $wpdb;
-				$ids = $wpdb->get_col("SELECT id FROM {$wpdb->prefix}gf_entry WHERE form_id = ${GRAVITY_FORM}");
-				foreach ( $ids as $id ) { GFAPI::delete_entry( (int) $id ); }
-			`);
-		});
-	});
-
-	/**
-	 * WPForms validates on the form's submit event and only then sends the
-	 * form itself, so the proof script's own listener sees every submission
-	 * and no plugin hook is needed on the browser side. A second listener on
-	 * the plugin's pre-submit event was tried and refused a held submit: it
-	 * ran the proof twice and the second pass drew from an empty stock. Both
-	 * paths are driven: the page load and the background request, the latter
-	 * with the plugin's own anti-spam token on.
-	 */
-	test.describe('WPForms', () => {
-		test.beforeAll(() => {
-			test.skip(WPFORMS_FORM === '0', 'WPForms is not installed on this stack');
-		});
-
-		/**
-		 * The plugin resets every element inside its container to static
-		 * positioning, which put the decoy on screen for a visitor to fill in.
-		 * The off-screen rule is asserted here, not only the count.
-		 */
-		test('WPForms renders the anchor exactly once, off screen', async ({ page }) => {
-			await page.goto(WPFORMS_PAGE);
-			await page.waitForLoadState('domcontentloaded');
-
-			await expect(page.locator('form input.rip-fp-anchor')).toHaveCount(1);
-			await expect(page.locator(`form input[name="${ANCHOR}"]`)).toHaveCount(1);
-
-			const box = await page.locator('form .rip-hp-field').boundingBox();
-			expect(box, 'the decoy must sit off screen').not.toBeNull();
-			expect(box!.x).toBeLessThan(0);
-		});
-
-		for (const [label, url, form] of [
-			['page load', WPFORMS_PAGE, () => WPFORMS_FORM],
-			['ajax', WPFORMS_AJAX_PAGE, () => WPFORMS_AJAX_FORM],
-		] as const) {
-			test(`a real browser gets through WPForms (${label})`, async ({ page }) => {
-				const logsBefore = failureLogCount();
-
-				await page.goto(url);
-				await page.fill(`#wpforms-${form()}-field_1`, 'E2E Reader');
-				await page.fill(`#wpforms-${form()}-field_2`, 'An ordinary enquiry from a reader.');
-				await page.click(`#wpforms-submit-${form()}`);
-
-				await expect(page.locator('.wpforms-confirmation-container-full')).toBeVisible({
-					timeout: 30000,
-				});
-				expect(failureLogCount()).toBe(logsBefore);
-			});
-
-			/**
-			 * The one case that must never end in silence: a browser that did
-			 * not run the proof script. The refusal has to come back through
-			 * the plugin's own error box above the form, or the sender is
-			 * thanked for a message nobody got.
-			 */
-			test(`a browser without our script is told (${label})`, async ({ page }) => {
-				await page.route('**/form-proof.js*', (route) => route.abort());
-
-				await page.goto(url);
-				await page.fill(`#wpforms-${form()}-field_1`, 'E2E Reader');
-				await page.fill(`#wpforms-${form()}-field_2`, 'An enquiry from a browser that blocks scripts.');
-				await page.click(`#wpforms-submit-${form()}`);
-
-				await expect(page.locator('.wpforms-error-container')).toContainText('JavaScript', {
-					timeout: 30000,
-				});
-				await expect(page.locator('.wpforms-confirmation-container-full')).toHaveCount(0);
-			});
-		}
-
-		test('a bare post without our fields is refused on WPForms, in front of the sender', async ({
-			request,
-		}) => {
-			await expectWpformsRefused(request);
-		});
-
-		test('a filled decoy is refused on WPForms and escalated', async ({ request }) => {
-			clearSpamEscalations();
-
-			await expectWpformsRefused(request, { [ANCHOR]: 'http://spam.example' });
-
-			expect(spamEscalationCount()).toBe(1);
-
-			clearSpamEscalations();
-		});
-
-		test('a post carrying both fields is accepted on WPForms', async ({ request }) => {
-			const field = proofField();
-
-			const body = await postWpforms(request, { [ANCHOR]: '', [field]: '1' });
-
-			expect(body).not.toContain('wpforms-error-container');
-			expect(body).toContain('wpforms-confirmation-container');
-		});
-
-		test('professional leaves WPForms inert', async ({ request }) => {
-			php(forceTierPhp('professional'));
-
-			const body = await postWpforms(request);
-
-			expect(body, 'WPForms needs the Business plan').toContain('wpforms-confirmation-container');
-
-			php(forceTierPhp('business'));
-		});
-	});
-
-	/**
-	 * Post to Forminator the way its own script does: the submission goes to
-	 * admin-ajax with the nonce the rendered page carries, because the plugin
-	 * refuses anything else before this layer is ever asked.
-	 */
-	async function postForminator(
-		request: APIRequestContext,
-		extra: Record<string, string> = {},
-		formId: string = FORMINATOR_FORM,
-		pageUrl: string = FORMINATOR_PAGE
-	): Promise<string> {
-		/*
-		 * One retry on the first read. A case that counts mail or entries
-		 * first spends seconds in WP-CLI, and the kept-alive connection to
-		 * the site has been closed by the server by the time the request
-		 * goes out: the first attempt then fails with a socket hang up that
-		 * says nothing about the form.
-		 */
-		let markup = '';
-
-		for (let attempt = 0; attempt < 2; attempt++) {
-			try {
-				markup = await (await request.get(pageUrl)).text();
-				break;
-			} catch (error) {
-				if (attempt > 0) {
-					throw error;
-				}
-			}
-		}
-
-		const nonce = /name="forminator_nonce" value="([^"]+)"/.exec(markup)?.[1] ?? '';
-
-		const response = await request.post('/wp-admin/admin-ajax.php', {
-			form: {
-				action: 'forminator_submit_form_custom-forms',
-				form_id: formId,
-				page_id: '1',
-				render_id: '0',
-				forminator_nonce: nonce,
-				'email-1': 'e2e-forminator@example.com',
-				'textarea-1': 'An ordinary enquiry.',
-				...extra,
-			},
-		});
-
-		return response.text();
-	}
-
-	/** A Forminator refusal has to reach the sender and must be ours. */
-	async function expectForminatorRefused(
-		request: APIRequestContext,
-		extra: Record<string, string> = {}
-	): Promise<void> {
-		const logsBefore = failureLogCount();
-		const body = await postForminator(request, extra);
-
-		expect(body, 'the sender has to be told').toContain('not accepted');
-		expect(body).toContain('"success":false');
-		expect(
-			failureLogCount(),
-			'the refusal has to come from this layer, not from Forminator'
-		).toBeGreaterThan(logsBefore);
-	}
-
-	test.describe('Forminator', () => {
-		test.beforeAll(() => {
-			test.skip(FORMINATOR_FORM === '0', 'Forminator is not installed on this stack');
-		});
-
-		test('Forminator renders the anchor exactly once, inside the form', async ({ page }) => {
-			await page.goto(FORMINATOR_PAGE);
-			await page.waitForLoadState('domcontentloaded');
-
-			await expect(page.locator('form input.rip-fp-anchor')).toHaveCount(1);
-			await expect(page.locator(`form input[name="${ANCHOR}"]`)).toHaveCount(1);
-
-			const box = await page.locator('form .rip-hp-field').boundingBox();
-			expect(box, 'the decoy must sit off screen').not.toBeNull();
-			expect(box!.x).toBeLessThan(0);
-		});
-
-		/**
-		 * Both ways a Forminator form reaches the page: written into the
-		 * markup, and fetched afterwards. The second one hands the browser a
-		 * form the proof script never saw at load time, which is the case a
-		 * page cache produces on a live site.
-		 */
-		for (const [label, url] of [
-			['in the page', FORMINATOR_PAGE],
-			['loaded afterwards', FORMINATOR_AJAX_PAGE],
-		] as const) {
-			test(`a real browser gets through Forminator (${label})`, async ({ page }) => {
-				const logsBefore = failureLogCount();
-
-				await page.goto(url);
-				await page.waitForSelector('form input.rip-fp-anchor', { timeout: 30000 });
-				await page.fill('input[name="email-1"]', 'e2e-forminator@example.com');
-				await page.fill('textarea[name="textarea-1"]', 'An ordinary enquiry from a reader.');
-				await page.click('button.forminator-button-submit');
-
-				await expect(page.locator('.forminator-success')).toBeVisible({ timeout: 30000 });
-				expect(failureLogCount()).toBe(logsBefore);
-			});
-
-			test(`a browser without our script is told on Forminator (${label})`, async ({ page }) => {
-				await page.route('**/form-proof.js*', (route) => route.abort());
-
-				await page.goto(url);
-				await page.waitForSelector('form input.rip-fp-anchor', { timeout: 30000 });
-				await page.fill('input[name="email-1"]', 'e2e-forminator@example.com');
-				await page.fill('textarea[name="textarea-1"]', 'An enquiry from a browser that blocks scripts.');
-				await page.click('button.forminator-button-submit');
-
-				await expect(page.locator('.forminator-error-message, .forminator-label--error')).toContainText(
-					'JavaScript',
-					{ timeout: 30000 }
-				);
-				await expect(page.locator('.forminator-success')).toHaveCount(0);
-			});
-		}
-
-		test('a bare post without our fields is refused on Forminator', async ({ request }) => {
-			await expectForminatorRefused(request);
-		});
-
-		/**
-		 * The refusal must land before the entry is stored and before the mail
-		 * goes out. Elementor shipped a refusal that was read too late and let
-		 * the mail through anyway, which is the failure this pins down.
-		 */
-		test('a refused Forminator submission stores nothing and sends nothing', async ({
-			request,
-		}) => {
-			const mailsBefore = await mailCount();
-			const entriesBefore = Number(
-				php(`global $wpdb; echo (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}frmt_form_entry");`)
-			);
-
-			await expectForminatorRefused(request);
-
-			expect(
-				Number(
-					php(`global $wpdb; echo (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}frmt_form_entry");`)
-				),
-				'a refused submission must not be stored'
-			).toBe(entriesBefore);
-			expect(await mailCount(), 'a refused submission must not be mailed').toBe(mailsBefore);
-		});
-
-		test('a filled decoy is refused on Forminator and escalated', async ({ request }) => {
-			clearSpamEscalations();
-
-			await expectForminatorRefused(request, { [ANCHOR]: 'http://spam.example' });
-
-			expect(spamEscalationCount()).toBe(1);
-
-			clearSpamEscalations();
-		});
-
-		test('a post carrying both fields is accepted on Forminator', async ({ request }) => {
-			const body = await postForminator(request, { [ANCHOR]: '', [proofField()]: '1' });
-
-			expect(body).toContain('"success":true');
-		});
-
-		test('professional leaves Forminator inert', async ({ request }) => {
-			php(forceTierPhp('professional'));
-
-			const body = await postForminator(request);
-
-			expect(body, 'Forminator needs the Business plan').toContain('"success":true');
-
-			php(forceTierPhp('business'));
-		});
-	});
-
-	test.describe('Ultimate Member', () => {
-		test.beforeAll(() => {
-			if (!umPlugin(true)) {
-				return;
-			}
-			seedForms();
-		});
-
-		test.afterAll(() => {
-			clearUmUsers();
-			clearRegistrationAttempts();
-			umPlugin(false);
-		});
-
-		/**
-		 * Ultimate Member writes the account itself instead of going through the
-		 * WordPress sign-up, so nothing about this path is covered by the comment
-		 * and sign-up specs. A real browser has to get an account, a blind POST
-		 * must not, and a filled decoy has to cost the address a counter row.
-		 */
-		test('Ultimate Member refuses a blind sign-up and lets a browser through', async ({
-			page,
-			request,
-		}) => {
-			test.skip(UM_REGISTER_FORM === '0', 'Ultimate Member is not installed on this stack');
-
-			setAdapters(true);
-			expireGrace();
-			clearUmUsers();
-			clearSpamEscalations();
-			clearRegistrationAttempts();
-
-			const logsBefore = failureLogCount();
-
-			await postUmRegister(request, 'ripe2eumblind');
-
-			expect(umUserCount(), 'a body that never carried the anchor must not open an account').toBe(0);
-			expect(
-				failureLogCount(),
-				'the refusal must come from our adapter, not from Ultimate Member'
-			).toBeGreaterThan(logsBefore);
-
-			await postUmRegister(request, 'ripe2eumdecoy', { _reportedip_hive_hp: 'filled by a bot' });
-
-			expect(umUserCount()).toBe(0);
-			expect(
-				spamEscalationCount(),
-				'a filled decoy costs the address at once'
-			).toBeGreaterThan(0);
-
-			clearSpamEscalations();
-
-			const login = `ripe2eum${Date.now().toString().slice(-6)}`;
-
-			await page.goto(UM_REGISTER_PAGE);
-			await page.waitForLoadState('domcontentloaded');
-			await expect(page.locator('form input.rip-fp-anchor')).toHaveCount(1);
-
-			await page.fill(`input[name="user_login-${UM_REGISTER_FORM}"]`, login);
-			await page.fill(`input[name="user_email-${UM_REGISTER_FORM}"]`, `${login}@example.com`);
-			await page.fill(`input[name="user_password-${UM_REGISTER_FORM}"]`, 'Str0ngPass!234');
-			await page.fill(`input[name="confirm_user_password-${UM_REGISTER_FORM}"]`, 'Str0ngPass!234');
-			await page.click('input[type="submit"].um-button');
-			await page.waitForLoadState('domcontentloaded');
-
-			expect(umUserCount(), 'a reader with a browser must get an account').toBe(1);
-
-			clearUmUsers();
-		});
-
-		/**
-		 * The registration rules used to reach an Ultimate Member sign-up only
-		 * through the last safety net, moments before the row was written and with
-		 * WordPress's own wording. This is the spec that would catch that
-		 * regression: the refusal has to name the field it is about.
-		 */
-		test('Ultimate Member runs the registration rules with a readable reason', async ({ page }) => {
-			test.skip(UM_REGISTER_FORM === '0', 'Ultimate Member is not installed on this stack');
-
-			setAdapters(true);
-			clearUmUsers();
-			clearRegistrationAttempts();
-			php("ReportedIP_Hive_Option_Routing::set('reportedip_hive_disposable_email_action', 'block');");
-
-			await page.goto(UM_REGISTER_PAGE);
-			await page.waitForLoadState('domcontentloaded');
-
-			await page.fill(`input[name="user_login-${UM_REGISTER_FORM}"]`, 'ripe2eumthrowaway');
-			await page.fill(
-				`input[name="user_email-${UM_REGISTER_FORM}"]`,
-				'ripe2eumthrowaway@mailinator.com'
-			);
-			await page.fill(`input[name="user_password-${UM_REGISTER_FORM}"]`, 'Str0ngPass!234');
-			await page.fill(`input[name="confirm_user_password-${UM_REGISTER_FORM}"]`, 'Str0ngPass!234');
-			await page.click('input[type="submit"].um-button');
-			await page.waitForLoadState('domcontentloaded');
-
-			expect(umUserCount(), 'a throwaway address must not open an account').toBe(0);
-			await expect(page.locator(`#um-error-for-user_email-${UM_REGISTER_FORM}`)).toContainText(
-				'permanent e-mail address'
-			);
-
-			php("ReportedIP_Hive_Option_Routing::set('reportedip_hive_disposable_email_action', 'monitor');");
-			clearUmUsers();
-		});
 	});
 });
