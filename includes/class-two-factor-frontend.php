@@ -145,6 +145,7 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 		add_filter( 'reportedip_hive_2fa_post_skip_url', array( __CLASS__, 'filter_post_skip_url' ), 10, 2 );
 		add_filter( 'reportedip_2fa_skip_onboarding_redirect', array( __CLASS__, 'skip_onboarding_redirect' ), 10, 2 );
 		add_filter( 'reportedip_hive_hide_login_bypass_paths', array( __CLASS__, 'bypass_paths' ) );
+		add_action( 'reportedip_hive_settings_effect_flush_2fa_frontend_memo', array( __CLASS__, 'flush_memo' ) );
 	}
 
 	/**

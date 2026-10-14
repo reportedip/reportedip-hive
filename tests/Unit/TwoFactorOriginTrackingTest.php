@@ -148,6 +148,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				"add_filter( 'reportedip_hive_2fa_redirect_url', array( __CLASS__, 'filter_redirect_url' ), 10, 4 );",
 				"add_action( 'reportedip_hive_2fa_render_challenge_' . self::CONTEXT, array( __CLASS__, 'render_challenge_view' ), 10, 2 );",
 				"add_action( 'reportedip_hive_2fa_render_expired_' . self::CONTEXT, array( __CLASS__, 'render_expired_view' ), 10, 2 );",
+				"add_action( 'reportedip_hive_settings_effect_flush_2fa_frontend_memo', array( __CLASS__, 'flush_memo' ) );",
 			) as $line ) {
 				$this->assertStringContainsString( $line, $source );
 			}
