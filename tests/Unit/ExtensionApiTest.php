@@ -605,6 +605,17 @@ class ExtensionApiTest extends TestCase {
 		$this->assertStringContainsString( "do_action( 'reportedip_hive_site_2fa_settings_after', \$all_roles );", $body );
 		$this->assertStringNotContainsString( 'Two_Factor_Policies', $body );
 		$this->assertLessThan( strpos( $body, 'submit_button(' ), strpos( $body, 'reportedip_hive_site_2fa_settings_after' ), 'The slot sits above the submit button.' );
+
+		$this->assertStringContainsString( "do_action( 'reportedip_hive_site_2fa_settings_before' );", $body );
+		$this->assertLessThan( strpos( $body, 'rip_2fa_enforce_roles_extra' ), strpos( $body, 'reportedip_hive_site_2fa_settings_before' ), 'The upper slot sits above the role overrides.' );
+		foreach ( array( '2fa_frontend', 'WooCommerce', 'frontend_2fa' ) as $needle ) {
+			$this->assertStringNotContainsString( $needle, $body, $needle );
+		}
+
+		$save = substr( $source, (int) strpos( $source, 'private function maybe_handle_site_2fa_save(' ) );
+		$save = substr( $save, 0, (int) strpos( $save, 'public function register_settings(' ) );
+		$this->assertLessThan( strpos( $save, "do_action( 'reportedip_hive_site_2fa_settings_save' );" ), strpos( $save, 'wp_verify_nonce(' ), 'Add-on fields are saved only after the nonce check.' );
+		$this->assertStringNotContainsString( '2fa_frontend', $save );
 	}
 
 	/**

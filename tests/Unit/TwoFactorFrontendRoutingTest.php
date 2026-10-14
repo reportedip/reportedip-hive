@@ -153,5 +153,24 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertFalse( \ReportedIP_Hive_Two_Factor_Frontend::skip_onboarding_redirect( false, 5 ), 'wp-admin keeps redirecting to the wizard.' );
 			$this->assertTrue( \ReportedIP_Hive_Two_Factor_Frontend::skip_onboarding_redirect( true, 5 ), 'An earlier skip stands.' );
 		}
+	
+
+		public function test_site_overrides_are_saved_and_cleared(): void {
+			$_POST['rip_2fa_frontend_slug_site_override']       = 'Shop Verify';
+			$_POST['rip_2fa_frontend_setup_slug_site_override'] = 'shop-setup';
+			\ReportedIP_Hive_Two_Factor_Frontend::save_site_overrides();
+
+			$this->assertSame( 'shop-verify', $GLOBALS['wp_options']['reportedip_hive_2fa_frontend_slug_site_override'] );
+			$this->assertSame( 'shop-setup', $GLOBALS['wp_options']['reportedip_hive_2fa_frontend_setup_slug_site_override'] );
+			$this->assertSame( 'shop-verify', \ReportedIP_Hive_Two_Factor_Frontend::get_challenge_slug(), 'The override wins over the network slug.' );
+
+			unset( $_POST['rip_2fa_frontend_slug_site_override'], $_POST['rip_2fa_frontend_setup_slug_site_override'] );
+			\ReportedIP_Hive_Two_Factor_Frontend::save_site_overrides();
+			\ReportedIP_Hive_Option_Routing::flush_resolve_cache();
+			\ReportedIP_Hive_Two_Factor_Frontend::flush_slug_memo();
+
+			$this->assertSame( '', $GLOBALS['wp_options']['reportedip_hive_2fa_frontend_slug_site_override'], 'A locked block posts nothing and clears the override, as in 2.1.x.' );
+			$this->assertSame( 'reportedip-hive-2fa', \ReportedIP_Hive_Two_Factor_Frontend::get_challenge_slug() );
+		}
 	}
 }

@@ -2612,11 +2612,9 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Site-Admin 2FA Site Settings page, the only writable section.
-	 *
-	 * Two fields:
-	 *   - reportedip_hive_2fa_frontend_slug_site_override (URL-safe slug)
-	 *   - reportedip_hive_2fa_enforce_roles_extra (additive role list)
+	 * Site-Admin 2FA Site Settings page, the only writable section: the
+	 * additive role list `reportedip_hive_2fa_enforce_roles_extra`, plus
+	 * what add-ons hang into the page's slots.
 	 *
 	 * @since 2.0.0
 	 */
@@ -2627,29 +2625,13 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$saved = $this->maybe_handle_site_2fa_save();
 
-		$slug_default        = (string) get_site_option( 'reportedip_hive_2fa_frontend_slug', ReportedIP_Hive_Option_Routing::DEFAULT_FRONTEND_SLUG );
-		$slug_override       = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_slug_site_override', '' );
-		$setup_slug_default  = (string) get_site_option( 'reportedip_hive_2fa_frontend_setup_slug', 'reportedip-hive-2fa-setup' );
-		$setup_slug_override = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_setup_slug_site_override', '' );
-
 		$network_roles = ReportedIP_Hive_Option_Routing::get_network_enforce_roles();
 		$site_extra    = ReportedIP_Hive_Option_Routing::get_site_enforce_roles_extra();
 		$all_roles     = function_exists( 'wp_roles' ) ? wp_roles()->get_names() : array();
 
-		$has_wc        = class_exists( 'WooCommerce' );
-		$home_prefix   = trailingslashit( home_url( '/' ) );
-		$challenge_url = $home_prefix . sanitize_title( '' !== $slug_override ? $slug_override : $slug_default ) . '/';
-		$setup_url     = $home_prefix . sanitize_title( '' !== $setup_slug_override ? $setup_slug_override : $setup_slug_default ) . '/';
-
-		$frontend_status         = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
-		$frontend_locked         = empty( $frontend_status['available'] );
-		$frontend_locked_by_tier = $frontend_locked && 'tier' === $frontend_status['reason'];
-		$frontend_enabled        = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_enabled', false );
-		$customer_optional       = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_customer_optional', true );
-
 		$this->render_site_admin_header(
 			__( '2FA Site Settings', 'reportedip-hive' ),
-			__( 'Per-site overrides for the WooCommerce-style frontend 2FA flow', 'reportedip-hive' )
+			__( 'Per-site two-factor overrides', 'reportedip-hive' )
 		);
 		$this->render_site_readonly_banner();
 		?>
@@ -2661,108 +2643,16 @@ class ReportedIP_Hive_Admin_Settings {
 			<form method="post">
 				<?php wp_nonce_field( 'reportedip_hive_site_2fa_save', '_rip_site_2fa_nonce' ); ?>
 
-				<div class="rip-settings-section <?php echo $frontend_locked ? 'rip-settings-section--locked' : ''; ?>">
-					<h2 class="rip-settings-section__title">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-						<?php esc_html_e( 'Frontend login for WooCommerce', 'reportedip-hive' ); ?>
-						&nbsp;<?php self::render_tier_marker( $frontend_status ); ?>
-					</h2>
-					<p class="rip-settings-section__desc">
-						<?php esc_html_e( 'Renders the second factor inside the active storefront theme when customers sign in via My Account, classic checkout or the WooCommerce blocks, instead of bouncing them to wp-login.php.', 'reportedip-hive' ); ?>
-					</p>
-
-					<?php self::render_frontend_2fa_pro_upsell( $frontend_status ); ?>
-
-					<?php if ( ! $has_wc ) : ?>
-						<div class="rip-alert rip-alert--info">
-							<?php esc_html_e( 'WooCommerce is not active on this site. Activate WooCommerce to use frontend login 2FA, these slug overrides take effect once it is.', 'reportedip-hive' ); ?>
-						</div>
-					<?php endif; ?>
-
-					<div class="rip-form-group">
-						<span class="rip-label"><?php esc_html_e( 'Network configuration (managed by Super Admin)', 'reportedip-hive' ); ?></span>
-						<ul class="rip-network-state">
-							<li>
-								<?php esc_html_e( 'Themed challenge page', 'reportedip-hive' ); ?>:
-								<?php if ( $frontend_enabled && ! $frontend_locked ) : ?>
-									<span class="rip-badge rip-badge--success"><?php esc_html_e( 'enabled', 'reportedip-hive' ); ?></span>
-								<?php elseif ( $frontend_locked_by_tier ) : ?>
-									<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'locked by tier', 'reportedip-hive' ); ?></span>
-								<?php else : ?>
-									<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'disabled', 'reportedip-hive' ); ?></span>
-								<?php endif; ?>
-							</li>
-							<li>
-								<?php esc_html_e( 'Customer self-service opt-in', 'reportedip-hive' ); ?>:
-								<span class="rip-badge rip-badge--<?php echo $customer_optional ? 'success' : 'neutral'; ?>"><?php echo $customer_optional ? esc_html__( 'allowed', 'reportedip-hive' ) : esc_html__( 'not allowed', 'reportedip-hive' ); ?></span>
-							</li>
-						</ul>
-					</div>
-
-					<fieldset class="rip-fieldset" <?php echo $frontend_locked ? 'disabled' : ''; ?>>
-						<legend class="screen-reader-text"><?php esc_html_e( 'Per-site slug overrides', 'reportedip-hive' ); ?></legend>
-
-						<div class="rip-form-group">
-							<label class="rip-label" for="rip_2fa_frontend_slug_site_override">
-								<?php esc_html_e( 'Challenge page slug (site override)', 'reportedip-hive' ); ?>
-							</label>
-							<div class="rip-input-prefix">
-								<span class="rip-input-prefix__prefix"><?php echo esc_html( $home_prefix ); ?></span>
-								<input type="text"
-									id="rip_2fa_frontend_slug_site_override"
-									name="rip_2fa_frontend_slug_site_override"
-									class="rip-input"
-									value="<?php echo esc_attr( $slug_override ); ?>"
-									placeholder="<?php echo esc_attr( $slug_default ); ?>"
-									pattern="[a-z0-9][a-z0-9-]{1,48}[a-z0-9]"
-									maxlength="50"
-									spellcheck="false"
-									autocomplete="off" />
-								<span class="rip-input-prefix__suffix">/</span>
-							</div>
-							<p class="rip-help-text">
-								<?php
-								printf(
-									/* translators: 1: network-default slug, 2: effective URL on this site */
-									esc_html__( 'Network default: %1$s. Leave empty to inherit. Effective URL on this site: %2$s', 'reportedip-hive' ),
-									'<code>' . esc_html( $slug_default ) . '</code>',
-									'<code>' . esc_html( $challenge_url ) . '</code>'
-								);
-								?>
-							</p>
-						</div>
-
-						<div class="rip-form-group">
-							<label class="rip-label" for="rip_2fa_frontend_setup_slug_site_override">
-								<?php esc_html_e( 'Setup page slug (onboarding), site override', 'reportedip-hive' ); ?>
-							</label>
-							<div class="rip-input-prefix">
-								<span class="rip-input-prefix__prefix"><?php echo esc_html( $home_prefix ); ?></span>
-								<input type="text"
-									id="rip_2fa_frontend_setup_slug_site_override"
-									name="rip_2fa_frontend_setup_slug_site_override"
-									class="rip-input"
-									value="<?php echo esc_attr( $setup_slug_override ); ?>"
-									placeholder="<?php echo esc_attr( $setup_slug_default ); ?>"
-									pattern="[a-z0-9][a-z0-9-]{1,48}[a-z0-9]"
-									maxlength="50"
-									spellcheck="false"
-									autocomplete="off" />
-								<span class="rip-input-prefix__suffix">/</span>
-							</div>
-							<p class="rip-help-text">
-								<?php
-								printf(
-									/* translators: 1: network-default setup slug, 2: effective URL on this site */
-									esc_html__( 'Network default: %1$s. Leave empty to inherit. Effective URL on this site: %2$s', 'reportedip-hive' ),
-									'<code>' . esc_html( $setup_slug_default ) . '</code>',
-									'<code>' . esc_html( $setup_url ) . '</code>'
-								);
-								?>
-							</p>
-						</div>
-					</fieldset>
-				</div>
+				<?php
+				/**
+				 * Further blocks on the site 2FA page, inside the form and
+				 * above the role overrides. Writable fields are saved by a
+				 * listener of `reportedip_hive_site_2fa_settings_save`.
+				 *
+				 * @since 3.0.0
+				 */
+				do_action( 'reportedip_hive_site_2fa_settings_before' );
+				?>
 
 				<div class="rip-settings-section">
 					<h2 class="rip-settings-section__title">
@@ -2976,10 +2866,10 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Handle the Site-2FA-Settings POST. Validates nonce, sanitises input,
-	 * intersects roles against the actual `wp_roles()` whitelist (so a
-	 * crafted POST cannot smuggle non-existent role slugs into the
-	 * enforcement list), persists both override keys.
+	 * Handle the Site-2FA-Settings POST. Validates nonce, lets add-ons save
+	 * their fields, sanitises input, intersects roles against the actual
+	 * `wp_roles()` whitelist (so a crafted POST cannot smuggle non-existent
+	 * role slugs into the enforcement list), persists the role override.
 	 *
 	 * @return bool True when a save happened on this request.
 	 * @since  2.0.0
@@ -2994,21 +2884,14 @@ class ReportedIP_Hive_Admin_Settings {
 			wp_die( esc_html__( 'Security check failed. Please reload and try again.', 'reportedip-hive' ) );
 		}
 
-		$slug_raw = isset( $_POST['rip_2fa_frontend_slug_site_override'] )
-			? sanitize_text_field( wp_unslash( $_POST['rip_2fa_frontend_slug_site_override'] ) )
-			: '';
-		ReportedIP_Hive_Option_Routing::set(
-			'reportedip_hive_2fa_frontend_slug_site_override',
-			sanitize_title( $slug_raw )
-		);
-
-		$setup_slug_raw = isset( $_POST['rip_2fa_frontend_setup_slug_site_override'] )
-			? sanitize_text_field( wp_unslash( $_POST['rip_2fa_frontend_setup_slug_site_override'] ) )
-			: '';
-		ReportedIP_Hive_Option_Routing::set(
-			'reportedip_hive_2fa_frontend_setup_slug_site_override',
-			sanitize_title( $setup_slug_raw )
-		);
+		/**
+		 * Save the fields an add-on put on the site 2FA page. Fires after
+		 * the nonce check of the form, so a listener reads `$_POST` without
+		 * checking it again.
+		 *
+		 * @since 3.0.0
+		 */
+		do_action( 'reportedip_hive_site_2fa_settings_save' );
 
 		$roles_raw     = isset( $_POST['rip_2fa_enforce_roles_extra'] ) && is_array( $_POST['rip_2fa_enforce_roles_extra'] )
 			? array_map( 'sanitize_text_field', wp_unslash( $_POST['rip_2fa_enforce_roles_extra'] ) )
