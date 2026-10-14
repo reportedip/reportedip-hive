@@ -72,6 +72,15 @@ tests_add_filter( 'muplugins_loaded', '_reportedip_hive_load_plugin_for_multisit
 
 require $wp_tests_dir . '/includes/bootstrap.php';
 
+/*
+ * The test installer recreates only the core tables, so the plugin tables keep
+ * whatever an earlier run committed (DDL inside a test commits its
+ * transaction). A leftover registration attempt from 127.0.0.1 then trips the
+ * registration rate limit on the factory's next users for a whole hour. Start
+ * every run from empty plugin tables, as a fresh install would.
+ */
+ReportedIP_Hive_Schema::truncate_all_tables();
+
 if ( file_exists( dirname( __DIR__ ) . '/TestCase.php' ) ) {
 	require_once dirname( __DIR__ ) . '/TestCase.php';
 }
