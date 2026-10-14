@@ -20,7 +20,7 @@
 declare(strict_types=1);
 
 namespace {
-	require_once dirname( __DIR__, 2 ) . '/includes/class-user-block.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-account-block.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-user-enumeration.php';
 }
 
@@ -33,7 +33,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 	 * @runTestsInSeparateProcesses
 	 * @preserveGlobalState disabled
 	 */
-	class UserBlockLoginErrorTest extends TestCase {
+	class AccountBlockLoginErrorTest extends TestCase {
 
 		/**
 		 * Start from an empty user-meta bucket.
@@ -78,18 +78,18 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_default_message_carries_a_passthrough_needle(): void {
 			$this->assertTrue(
-				$this->passes_unmasked( \ReportedIP_Hive_User_Block::default_message() ),
+				$this->passes_unmasked( \ReportedIP_Hive_Account_Block::default_message() ),
 				'The default block message must survive normalize_login_errors().'
 			);
 		}
 
 		public function test_custom_message_inherits_the_needle(): void {
-			$GLOBALS['wp_user_meta'][11][ \ReportedIP_Hive_User_Block::META ] = array(
+			$GLOBALS['wp_user_meta'][11][ \ReportedIP_Hive_Account_Block::META ] = array(
 				'blocked_at' => '2026-09-08 10:00:00',
 				'message'    => 'Your access ended with your last working day.',
 			);
 
-			$message = \ReportedIP_Hive_User_Block::message_for( 11 );
+			$message = \ReportedIP_Hive_Account_Block::message_for( 11 );
 
 			$this->assertStringContainsString( 'Your access ended with your last working day.', $message );
 			$this->assertTrue(
@@ -100,7 +100,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_error_code_is_outside_both_masking_lists(): void {
 			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-user-enumeration.php' );
-			$code   = \ReportedIP_Hive_User_Block::ERROR_CODE;
+			$code   = \ReportedIP_Hive_Account_Block::ERROR_CODE;
 
 			$this->assertStringContainsString(
 				"\$mask_codes = array( 'invalid_username', 'invalid_email', 'incorrect_password', 'invalid_credentials' )",

@@ -1,11 +1,12 @@
 <?php
 /**
- * Guards the wiring of the user-management WP-CLI surface.
+ * Guards the wiring of the free `wp reportedip user unblock|list` commands.
  *
- * The commands are thin wrappers around the block state machine, so these
- * tests pin the wiring decisions rather than executing WP-CLI: the command
- * paths, the bootstrap require, the `list` subcommand rename, and the fact
- * that sessions are deliberately left to core's own `wp user session`.
+ * Both run without the add-on, so a block written by an earlier release or
+ * by the add-on can always be found and lifted from the command line. The
+ * tests pin the command path, the bootstrap require, the `list` rename, that
+ * unblocking never asks the plan, and that sessions are left to core's own
+ * `wp user session`.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -13,7 +14,7 @@
  * @copyright  2025-2026 Patrick Schlesinger
  * @license    GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link       https://github.com/reportedip/reportedip-hive
- * @since      2.1.51
+ * @since      3.0.0
  */
 
 declare(strict_types=1);
@@ -22,7 +23,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 	use ReportedIP\Hive\Tests\TestCase;
 
-	class UserCliTest extends TestCase {
+	class AccountBlockCliTest extends TestCase {
 
 		/**
 		 * Read one source file from the plugin.
@@ -35,29 +36,32 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_command_is_registered(): void {
-			$source = $this->source( 'includes/class-user-cli.php' );
+			$source = $this->source( 'includes/class-account-block-cli.php' );
 
 			$this->assertStringContainsString( "WP_CLI::add_command( 'reportedip user', __CLASS__ )", $source );
-			$this->assertStringContainsString( 'ReportedIP_Hive_User_CLI::register();', $source );
+			$this->assertStringContainsString( 'ReportedIP_Hive_Account_Block_CLI::register();', $source );
 			$this->assertStringContainsString( '@subcommand list', $source );
 			$this->assertStringContainsString( 'public function list_(', $source );
+			$this->assertStringContainsString( 'public function unblock(', $source );
+			$this->assertStringNotContainsString( 'public function block(', $source, 'blocking belongs to the add-on' );
 		}
 
 		public function test_bootstrap_requires_the_cli_file(): void {
 			$this->assertStringContainsString(
-				'includes/class-user-cli.php',
+				"require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-account-block-cli.php';",
 				$this->source( 'reportedip-hive.php' ),
-				'class-user-cli.php must be required from the WP_CLI bootstrap block.'
+				'class-account-block-cli.php must be required from the WP_CLI bootstrap block.'
 			);
 		}
 
 		public function test_unblock_is_never_tier_gated(): void {
-			$source = $this->source( 'includes/class-user-cli.php' );
+			$source = $this->source( 'includes/class-account-block-cli.php' );
 			$body   = substr( $source, (int) strpos( $source, 'public function unblock(' ) );
 			$body   = substr( $body, 0, (int) strpos( $body, 'public function list_(' ) );
 
-			$this->assertStringContainsString( 'User_Block::unblock(', $body );
+			$this->assertStringContainsString( 'Account_Block::unblock(', $body );
 			$this->assertStringNotContainsString( 'is_available', $body );
+			$this->assertStringNotContainsString( 'feature_status', $body );
 		}
 
 		/**
@@ -67,7 +71,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_no_session_commands_are_registered(): void {
 			$this->assertStringNotContainsString(
 				"add_command( 'reportedip user session",
-				$this->source( 'includes/class-user-cli.php' )
+				$this->source( 'includes/class-account-block-cli.php' )
 			);
 		}
 	}

@@ -1,13 +1,14 @@
 <?php
 /**
- * WP-CLI commands for user account blocking.
+ * WP-CLI commands for blocked user accounts.
  *
  * Available as `wp reportedip user <subcommand>` once WP-CLI sees the plugin:
  *
- *     block <user>   → block an account and end its sessions
- *     unblock <user> → lift a block
- *     list           → list blocked accounts (table/json/csv/yaml)
+ *     unblock <user> : lift a block
+ *     list           : list blocked accounts (table/json/csv/yaml)
  *
+ * Both work without the add-on, so a block written by an earlier release or
+ * by the add-on can always be found and lifted. The add-on adds `block`.
  * Sessions themselves are not covered here, core already ships
  * `wp user session list|destroy`.
  *
@@ -16,7 +17,7 @@
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
- * @since     2.1.51
+ * @since     3.0.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -27,7 +28,12 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 	return;
 }
 
-class ReportedIP_Hive_User_CLI {
+/**
+ * `wp reportedip user unblock|list`.
+ *
+ * @since 3.0.0
+ */
+class ReportedIP_Hive_Account_Block_CLI {
 
 	/**
 	 * Register the class as a WP-CLI command.
@@ -36,49 +42,6 @@ class ReportedIP_Hive_User_CLI {
 	 */
 	public static function register() {
 		WP_CLI::add_command( 'reportedip user', __CLASS__ );
-	}
-
-	/**
-	 * Block a user account.
-	 *
-	 * The account keeps its content but cannot sign in, authenticate an
-	 * application password or complete a password reset. Every WordPress
-	 * session and every trusted 2FA device is revoked immediately.
-	 *
-	 * ## OPTIONS
-	 *
-	 * <user>
-	 * : User ID, login or e-mail address.
-	 *
-	 * [--message=<text>]
-	 * : Text appended to the standard notice on the sign-in page.
-	 *
-	 * [--note=<text>]
-	 * : Internal note. Not shown at login, but part of the user's
-	 * personal-data export.
-	 *
-	 * ## EXAMPLES
-	 *
-	 *     wp reportedip user block jdoe --note="offboarded 2026-09-01"
-	 *
-	 * @param array $args       Positional arguments.
-	 * @param array $assoc_args Associative arguments.
-	 * @return void
-	 */
-	public function block( $args, $assoc_args ) {
-		$user = self::fetch_user( $args );
-
-		$result = ReportedIP_Hive_User_Block::block(
-			$user->ID,
-			isset( $assoc_args['message'] ) ? (string) $assoc_args['message'] : '',
-			isset( $assoc_args['note'] ) ? (string) $assoc_args['note'] : ''
-		);
-
-		if ( is_wp_error( $result ) ) {
-			WP_CLI::error( $result->get_error_message() );
-		}
-
-		WP_CLI::success( 'Blocked ' . $user->user_login . ' (#' . $user->ID . '). Sessions and trusted devices revoked.' );
 	}
 
 	/**
@@ -103,8 +66,8 @@ class ReportedIP_Hive_User_CLI {
 		unset( $assoc_args );
 
 		$user    = self::fetch_user( $args );
-		$existed = ReportedIP_Hive_User_Block::is_blocked( $user->ID );
-		$result  = ReportedIP_Hive_User_Block::unblock( $user->ID );
+		$existed = ReportedIP_Hive_Account_Block::is_blocked( $user->ID );
+		$result  = ReportedIP_Hive_Account_Block::unblock( $user->ID );
 
 		if ( is_wp_error( $result ) ) {
 			WP_CLI::error( $result->get_error_message() );
@@ -148,7 +111,7 @@ class ReportedIP_Hive_User_CLI {
 		$query = new WP_User_Query(
 			array(
 				'blog_id'      => 0,
-				'meta_key'     => ReportedIP_Hive_User_Block::META, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Existence probe over a rare meta key.
+				'meta_key'     => ReportedIP_Hive_Account_Block::META, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- Existence probe over a rare meta key.
 				'meta_compare' => 'EXISTS',
 				'number'       => -1,
 			)
@@ -156,7 +119,7 @@ class ReportedIP_Hive_User_CLI {
 
 		$rows = array();
 		foreach ( (array) $query->get_results() as $user ) {
-			$record = ReportedIP_Hive_User_Block::get( $user->ID );
+			$record = ReportedIP_Hive_Account_Block::get( $user->ID );
 			if ( null === $record ) {
 				continue;
 			}
@@ -164,7 +127,7 @@ class ReportedIP_Hive_User_CLI {
 				'id'         => (int) $user->ID,
 				'login'      => (string) $user->user_login,
 				'blocked_at' => $record['blocked_at'],
-				'blocked_by' => ReportedIP_Hive_User_Block::blocked_by_label( $record['blocked_by'] ),
+				'blocked_by' => ReportedIP_Hive_Account_Block::blocked_by_label( $record['blocked_by'] ),
 				'message'    => $record['message'],
 				'note'       => $record['note'],
 			);
@@ -196,4 +159,4 @@ class ReportedIP_Hive_User_CLI {
 	}
 }
 
-ReportedIP_Hive_User_CLI::register();
+ReportedIP_Hive_Account_Block_CLI::register();

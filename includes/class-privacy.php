@@ -207,7 +207,7 @@ class ReportedIP_Hive_Privacy {
 
 		$items = array_merge( $items, ReportedIP_Hive_Legacy_Data::export_items( $user ) );
 
-		$block = ReportedIP_Hive_User_Block::get( $user->ID );
+		$block = ReportedIP_Hive_Account_Block::get( $user->ID );
 		if ( null !== $block ) {
 			$items[] = array(
 				'group_id'    => 'reportedip-hive-account-block',
@@ -385,8 +385,8 @@ class ReportedIP_Hive_Privacy {
 
 		$retained = 0;
 		$messages = array();
-		if ( ReportedIP_Hive_User_Block::is_blocked( $user->ID ) ) {
-			ReportedIP_Hive_User_Block::update_texts( $user->ID, '', '' );
+		if ( ReportedIP_Hive_Account_Block::is_blocked( $user->ID ) ) {
+			ReportedIP_Hive_Account_Block::update_texts( $user->ID, '', '' );
 			$retained   = 1;
 			$messages[] = __( 'The account block itself was retained for security; its free-text fields were cleared.', 'reportedip-hive' );
 		}

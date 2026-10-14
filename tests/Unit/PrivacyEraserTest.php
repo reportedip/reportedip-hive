@@ -74,11 +74,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$source = $this->source( 'includes/class-privacy.php' );
 			$body   = substr( $source, (int) strpos( $source, 'public function erase_personal_data(' ) );
 
-			$this->assertStringContainsString( "ReportedIP_Hive_User_Block::update_texts( \$user->ID, '', '' )", $body );
+			$this->assertStringContainsString( "ReportedIP_Hive_Account_Block::update_texts( \$user->ID, '', '' )", $body );
 			$this->assertStringContainsString( '$retained   = 1;', $body );
 			$this->assertStringContainsString( "'retained' => \$retained", $body );
 			$this->assertStringContainsString( "'items_retained' => (int) ( \$result['retained'] ?? \$retained )", $body );
-			$this->assertStringNotContainsString( 'User_Block::unblock(', $body );
+			$this->assertStringNotContainsString( 'Account_Block::unblock(', $body );
 		}
 
 		/**

@@ -211,7 +211,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Decoy_Path_Block::get_instance()->register_hooks();
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->register_hooks();
 		ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()->register_hooks();
-		ReportedIP_Hive_User_Block::register_hooks();
+		ReportedIP_Hive_Account_Block::register_hooks();
 		ReportedIP_Hive_User_Sessions::register_hooks();
 	}
 
@@ -378,7 +378,7 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-honeypot.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-spam-filter.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-headers.php';
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-block.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-account-block.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-sessions.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-score.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-readiness.php';
@@ -419,7 +419,7 @@ class ReportedIP_Hive {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-cli.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-status-cli.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-support-bundle-cli.php';
-			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-cli.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-account-block-cli.php';
 		}
 
 		if ( is_admin() ) {
@@ -738,10 +738,10 @@ class ReportedIP_Hive {
 
 		delete_metadata( 'user', 0, '_reportedip_hive_known_ips', '', true );
 
-		if ( ! class_exists( 'ReportedIP_Hive_User_Block' ) ) {
-			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-block.php';
+		if ( ! class_exists( 'ReportedIP_Hive_Account_Block' ) ) {
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-account-block.php';
 		}
-		delete_metadata( 'user', 0, ReportedIP_Hive_User_Block::META, '', true );
+		delete_metadata( 'user', 0, ReportedIP_Hive_Account_Block::META, '', true );
 	}
 
 	/**
@@ -1121,7 +1121,7 @@ class ReportedIP_Hive {
 		}
 
 		if ( $error instanceof WP_Error
-			&& in_array( ReportedIP_Hive_User_Block::ERROR_CODE, $error->get_error_codes(), true ) ) {
+			&& in_array( ReportedIP_Hive_Account_Block::ERROR_CODE, $error->get_error_codes(), true ) ) {
 			return;
 		}
 

@@ -1,23 +1,24 @@
 <?php
 /**
- * User account blocking, the identity-based counterpart to the IP block list.
+ * Account block enforcement, the identity-based counterpart to the IP block
+ * list.
  *
  * A blocked account keeps its password and its content but cannot sign in,
  * cannot authenticate an application password and cannot complete a password
- * reset. Blocking writes one user-meta record, destroys every WordPress
- * session and revokes every trusted 2FA device, so the offboarded account is
- * out of the site within the same request.
+ * reset. The block is one user-meta record. This class reads it, enforces it
+ * and lifts it; writing a new block belongs to the add-on.
  *
- * Writing a block is a Business feature. Enforcing an existing one and lifting
- * it are deliberately never tier-gated: a lapsed licence must not hand a
- * released employee their access back.
+ * Enforcing an existing block and lifting it never depend on the add-on or
+ * the plan: an account blocked under an earlier release, or while the
+ * add-on ran, stays blocked when only this plugin is left, so a lapsed plan
+ * or a removed add-on never hands a released employee their access back.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
  * @license   GPL-2.0-or-later https://www.gnu.org/licenses/gpl-2.0.html
  * @link      https://github.com/reportedip/reportedip-hive
- * @since     2.1.51
+ * @since     3.0.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -25,21 +26,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Account block state machine and login/reset/API enforcement.
+ * Account block record and login/reset/API enforcement.
  *
- * @since 2.1.51
+ * @since 3.0.0
  */
-final class ReportedIP_Hive_User_Block {
+final class ReportedIP_Hive_Account_Block {
 
 	/**
 	 * User-meta key holding the block record. Its existence means "blocked".
 	 */
 	const META = '_reportedip_hive_blocked';
-
-	/**
-	 * Tier feature key gating the write side.
-	 */
-	const FEATURE = 'user_management';
 
 	/**
 	 * Maximum length of the message shown to the blocked user.
@@ -88,20 +84,6 @@ final class ReportedIP_Hive_User_Block {
 		add_filter( 'authenticate', array( __CLASS__, 'deny_authenticate' ), 30, 3 );
 		add_filter( 'determine_current_user', array( __CLASS__, 'deny_current_user' ), 99 );
 		add_action( 'validate_password_reset', array( __CLASS__, 'deny_password_reset' ), 4, 2 );
-	}
-
-	/**
-	 * Whether the current plan may create new blocks.
-	 *
-	 * @return bool
-	 * @since  2.1.51
-	 */
-	public static function is_available() {
-		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			return false;
-		}
-		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( self::FEATURE );
-		return ! empty( $status['available'] );
 	}
 
 	/**
@@ -168,149 +150,6 @@ final class ReportedIP_Hive_User_Block {
 	}
 
 	/**
-	 * Decide whether a block must be refused, from gathered inputs. Pure.
-	 *
-	 * @param int      $actor_id             Administrator performing the block.
-	 * @param int      $target_id            Account to block.
-	 * @param bool     $target_is_super      Whether the target is a network super admin.
-	 * @param int|null $other_active_admins  Number of other unblocked administrators,
-	 *                                       or null when the target is not an administrator.
-	 * @return string '' | 'self' | 'super_admin' | 'last_admin'
-	 * @since  2.1.51
-	 */
-	public static function refusal_reason( $actor_id, $target_id, $target_is_super, $other_active_admins ) {
-		if ( (int) $actor_id > 0 && (int) $actor_id === (int) $target_id ) {
-			return 'self';
-		}
-		if ( $target_is_super ) {
-			return 'super_admin';
-		}
-		if ( null !== $other_active_admins && (int) $other_active_admins < 1 ) {
-			return 'last_admin';
-		}
-		return '';
-	}
-
-	/**
-	 * Gather the environment and evaluate {@see refusal_reason()}.
-	 *
-	 * The last-unblocked-administrator guard is single-site only. It exists to
-	 * keep a site from locking itself out for good, and on a network that
-	 * outcome cannot happen: super administrators are refused outright, so at
-	 * least one account always keeps its way in and can lift the block. A
-	 * network count would also be wrong: roles and `get_users()` answer for
-	 * whichever blog the current screen sits on, which is the main site while
-	 * an administrator of some other site is being blocked from Network Admin.
-	 *
-	 * @param int $target_id Account to block.
-	 * @return string Refusal token, '' when the block may proceed.
-	 * @since  2.1.51
-	 */
-	public static function refusal( $target_id ) {
-		$target_id       = (int) $target_id;
-		$target_is_super = is_multisite() && is_super_admin( $target_id );
-		$other_admins    = null;
-
-		$target       = get_userdata( $target_id );
-		$target_roles = $target ? (array) $target->roles : array();
-
-		if ( ! is_multisite() && in_array( 'administrator', $target_roles, true ) ) {
-			$other_admins = 0;
-			foreach ( (array) get_users(
-				array(
-					'role'   => 'administrator',
-					'fields' => 'ID',
-				)
-			) as $admin_id ) {
-				if ( (int) $admin_id !== $target_id && ! self::is_blocked( (int) $admin_id ) ) {
-					++$other_admins;
-				}
-			}
-		}
-
-		return self::refusal_reason( get_current_user_id(), $target_id, $target_is_super, $other_admins );
-	}
-
-	/**
-	 * Human-readable explanation for a refusal token.
-	 *
-	 * @param string $reason Refusal token.
-	 * @return string
-	 * @since  2.1.51
-	 */
-	public static function refusal_message( $reason ) {
-		switch ( $reason ) {
-			case 'self':
-				return __( 'You cannot block your own account.', 'reportedip-hive' );
-			case 'super_admin':
-				return __( 'Network super administrators cannot be blocked.', 'reportedip-hive' );
-			case 'last_admin':
-				return __( 'This is the last administrator who can still sign in.', 'reportedip-hive' );
-			default:
-				return '';
-		}
-	}
-
-	/**
-	 * Block an account: record, sessions, trusted devices, audit trail.
-	 *
-	 * @param int    $user_id User id.
-	 * @param string $message Message shown to the user on the login form.
-	 * @param string $note    Internal administrator note.
-	 * @return true|WP_Error
-	 * @since  2.1.51
-	 */
-	public static function block( $user_id, $message = '', $note = '' ) {
-		$user_id = (int) $user_id;
-		$user    = get_userdata( $user_id );
-		if ( ! $user ) {
-			return new WP_Error( 'not_found', __( 'That user does not exist.', 'reportedip-hive' ) );
-		}
-
-		if ( ! self::is_available() ) {
-			return new WP_Error( 'tier_locked', self::tier_locked_message() );
-		}
-
-		$refusal = self::refusal( $user_id );
-		if ( '' !== $refusal ) {
-			return new WP_Error( $refusal, self::refusal_message( $refusal ) );
-		}
-
-		$texts = self::sanitize_texts( $message, $note );
-		update_user_meta(
-			$user_id,
-			self::META,
-			array(
-				'blocked_at' => current_time( 'mysql', true ),
-				'blocked_by' => get_current_user_id(),
-				'message'    => $texts['message'],
-				'note'       => $texts['note'],
-			)
-		);
-		self::$count_memo = array();
-
-		WP_Session_Tokens::get_instance( $user_id )->destroy_all();
-		ReportedIP_Hive_Two_Factor::revoke_all_trusted_devices( $user_id );
-
-		if ( class_exists( 'ReportedIP_Hive_Audit_Logger' ) ) {
-			ReportedIP_Hive_Audit_Logger::get_instance()->record(
-				'user_block',
-				'blocked',
-				array(
-					'by'          => get_current_user_id(),
-					'has_message' => '' !== $texts['message'] ? 1 : 0,
-					'has_note'    => '' !== $texts['note'] ? 1 : 0,
-				),
-				get_current_user_id(),
-				(string) wp_get_current_user()->user_login,
-				ReportedIP_Hive_Audit_Logger::user_object( $user, $user_id )
-			);
-		}
-
-		return true;
-	}
-
-	/**
 	 * Update the two free-text fields without touching the block itself.
 	 *
 	 * @param int    $user_id User id.
@@ -331,7 +170,10 @@ final class ReportedIP_Hive_User_Block {
 	}
 
 	/**
-	 * Lift a block. Never tier-gated.
+	 * Lift a block. Never depends on the plan or on the add-on.
+	 *
+	 * Fires `reportedip_hive_user_unblocked` after the record is gone, so
+	 * the add-on writes its audit row.
 	 *
 	 * @param int $user_id User id.
 	 * @return true|WP_Error
@@ -351,16 +193,14 @@ final class ReportedIP_Hive_User_Block {
 		delete_user_meta( $user_id, self::META );
 		self::$count_memo = array();
 
-		if ( class_exists( 'ReportedIP_Hive_Audit_Logger' ) ) {
-			ReportedIP_Hive_Audit_Logger::get_instance()->record(
-				'user_block',
-				'unblocked',
-				array( 'by' => get_current_user_id() ),
-				get_current_user_id(),
-				(string) wp_get_current_user()->user_login,
-				ReportedIP_Hive_Audit_Logger::user_object( $user, $user_id )
-			);
-		}
+		/**
+		 * Fires after the block of an account was lifted.
+		 *
+		 * @param int     $user_id Account that was unblocked.
+		 * @param WP_User $user    The account.
+		 * @since 3.0.0
+		 */
+		do_action( 'reportedip_hive_user_unblocked', $user_id, $user );
 
 		return true;
 	}
@@ -517,32 +357,6 @@ final class ReportedIP_Hive_User_Block {
 	 */
 	public static function flush_count_memo() {
 		self::$count_memo = array();
-	}
-
-	/**
-	 * Tier-lock wording, mirroring the settings registry.
-	 *
-	 * The single source for every surface that gates on {@see self::FEATURE}.
-	 * account blocking and the session manager alike, so the plan name comes
-	 * from `feature_status()` instead of being spelled out three times.
-	 *
-	 * @return string
-	 * @since  2.1.51
-	 */
-	public static function tier_locked_message() {
-		$min_tier = 'business';
-		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			$manager  = ReportedIP_Hive_Mode_Manager::get_instance();
-			$status   = $manager->feature_status( self::FEATURE );
-			$slug     = ! empty( $status['min_tier'] ) ? (string) $status['min_tier'] : $min_tier;
-			$min_tier = (string) $manager->get_tier_info( $slug )['label'];
-		}
-
-		return sprintf(
-			/* translators: %s: minimum plan name required for the feature */
-			__( 'User management requires the %s plan.', 'reportedip-hive' ),
-			$min_tier
-		);
 	}
 
 	/**
