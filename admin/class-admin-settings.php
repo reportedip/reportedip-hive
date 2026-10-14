@@ -29,7 +29,6 @@ class ReportedIP_Hive_Admin_Settings {
 		add_action( 'network_admin_menu', array( $this, 'add_network_admin_menu' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_init', array( 'ReportedIP_Hive_Two_Factor_Admin', 'register_settings' ) );
-		add_action( 'admin_notices', array( $this, 'render_tier_upgrade_banner' ) );
 		add_action( 'admin_post_reportedip_hive_support_bundle', array( $this, 'handle_support_bundle' ) );
 		add_action( 'updated_option', array( $this, 'maybe_sync_notifications_to_api' ), 10, 1 );
 		add_action( 'network_admin_edit_reportedip_hive_save_settings', array( $this, 'handle_network_admin_save' ) );
@@ -1344,84 +1343,6 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Render the post-tier-upgrade welcome banner on every Hive admin page.
-	 *
-	 * Hooked on `admin_notices`. Visible only on screens whose id contains
-	 * `reportedip-hive` and only while {@see ReportedIP_Hive_Tier_Upgrade::should_show_notice()}
-	 * returns true. Shows a three-step checklist plus a dismiss button.
-	 */
-	public function render_tier_upgrade_banner() {
-		if ( ! class_exists( 'ReportedIP_Hive_Tier_Upgrade' ) ) {
-			return;
-		}
-		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-		if ( ! $screen || strpos( (string) $screen->id, 'reportedip-hive' ) === false ) {
-			return;
-		}
-		if ( ! ReportedIP_Hive_Tier_Upgrade::should_show_notice() ) {
-			return;
-		}
-		$notice = ReportedIP_Hive_Tier_Upgrade::get_notice();
-		if ( ! $notice ) {
-			return;
-		}
-
-		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
-		$tier_info    = $mode_manager->get_tier_info( (string) $notice['to'] );
-		$tier_label   = '' !== (string) $tier_info['label']
-			? (string) $tier_info['label']
-			: __( 'paid', 'reportedip-hive' );
-
-		$two_factor_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-protection#account_security' );
-		$checklist      = ReportedIP_Hive_Tier_Upgrade::get_setup_checklist();
-
-		$activated_labels = array();
-		$spec             = ReportedIP_Hive_Settings_Registry::spec();
-		foreach ( (array) ( $notice['activated'] ?? array() ) as $activated_key ) {
-			if ( isset( $spec[ $activated_key ]['label'] ) ) {
-				$activated_labels[] = (string) $spec[ $activated_key ]['label'];
-			}
-		}
-		$body = __( 'Two-factor authentication via the managed reportedip.com relay is now included with your plan. SMS is ready to use, enable it as a method to roll it out:', 'reportedip-hive' );
-		if ( ! empty( $activated_labels ) ) {
-			$body = sprintf(
-				/* translators: 1: tier label, 2: comma-separated list of setting labels */
-				__( 'Switched on for %1$s: %2$s.', 'reportedip-hive' ),
-				$tier_label,
-				implode( ', ', $activated_labels )
-			) . ' ' . $body;
-		}
-
-		$title = sprintf(
-			/* translators: %s = tier label, e.g. Professional */
-			__( 'Your %s plan is active: finish 2FA setup', 'reportedip-hive' ),
-			$tier_label
-		);
-
-		ReportedIP_Hive_Admin_Notice::render(
-			array(
-				'variant'           => 'info',
-				'extra_classes'     => 'rip-tier-upgrade-banner',
-				'title'             => $title,
-				'body'              => $body,
-				'checklist'         => $checklist,
-				'primary_action'    => array(
-					'label' => __( 'Open 2FA settings', 'reportedip-hive' ),
-					'url'   => $two_factor_url,
-				),
-				'secondary_actions' => array(
-					array(
-						'type'        => 'form',
-						'label'       => __( 'Dismiss', 'reportedip-hive' ),
-						'form_action' => 'reportedip_hive_dismiss_tier_notice',
-						'nonce'       => 'reportedip_hive_dismiss_tier_notice',
-					),
-				),
-			)
-		);
-	}
-
-	/**
 	 * Send the support bundle as a JSON download.
 	 *
 	 * @return void
@@ -2483,14 +2404,6 @@ class ReportedIP_Hive_Admin_Settings {
 			array(
 				'type'              => 'string',
 				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_notify_recipients' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_notifications',
-			'reportedip_hive_tier_change_mail_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_tier_change_mail_enabled' ),
 			)
 		);
 		register_setting(

@@ -1410,13 +1410,6 @@ final class ReportedIP_Hive_Settings_Registry {
 				'label'       => __( 'Notification cooldown (minutes)', 'reportedip-hive' ),
 				'description' => __( 'How long the same address and event type stays quiet after a mail went out.', 'reportedip-hive' ),
 			),
-			'reportedip_hive_tier_change_mail_enabled'     => array(
-				'section'     => 'notifications',
-				'kind'        => 'bool',
-				'remote'      => true,
-				'label'       => __( 'Mail when the plan changes', 'reportedip-hive' ),
-				'description' => __( 'One factual mail per upgrade or downgrade with what becomes available or pauses.', 'reportedip-hive' ),
-			),
 		);
 
 		/**

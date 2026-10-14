@@ -119,7 +119,6 @@ class SettingsKeysAreStableTest extends TestCase {
 			'reportedip_hive_notify_recipients',
 			'reportedip_hive_notify_sync_to_api',
 			'reportedip_hive_operation_mode',
-			'reportedip_hive_tier_change_mail_enabled',
 			'reportedip_hive_report_cooldown_hours',
 			'reportedip_hive_report_only_mode',
 			'reportedip_hive_trusted_ip_header',
