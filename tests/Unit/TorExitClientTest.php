@@ -126,38 +126,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( array( '185.220.101.34/32', '2001:db8::9/128' ), $got['rules'] );
 		}
 
-		public function test_tor_blocking_requires_professional_tier() {
-			$this->pretend_mode( 'community' );
-			$this->pretend_tier( 'free' );
-
-			$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'tor_blocking' );
-
-			$this->assertFalse( $status['available'] );
-			$this->assertSame( 'tier', $status['reason'] );
-			$this->assertSame( 'professional', $status['min_tier'] );
-		}
-
-		public function test_tor_blocking_unlocked_for_professional_tier() {
-			$this->pretend_mode( 'community' );
-			$this->pretend_tier( 'professional' );
-
-			$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'tor_blocking' );
-
-			$this->assertTrue( $status['available'] );
-			$this->assertSame( 'ok', $status['reason'] );
-		}
-
-		public function test_tor_blocking_unavailable_in_local_mode() {
-			$this->pretend_mode( 'local' );
-			$this->pretend_tier( 'professional' );
-
-			$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'tor_blocking' );
-
-			$this->assertFalse( $status['available'], 'The exit-node list arrives over the signed sync, so Local Shield cannot offer the feature.' );
-			$this->assertSame( 'mode', $status['reason'] );
-			$this->assertSame( 'community', $status['mode_required'] );
-		}
-
 		public function test_is_tor_exit_reduces_host_entries_to_a_hash_set() {
 			$body = $this->method_source( 'public static function is_tor_exit(' );
 

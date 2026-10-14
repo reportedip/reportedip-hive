@@ -302,16 +302,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
-		public function test_webauthn_advanced_is_business_gated_in_the_feature_matrix(): void {
+		public function test_the_free_matrix_leaves_webauthn_advanced_to_the_add_on(): void {
 			$source = $this->source( 'includes/class-mode-manager.php' );
-			$this->assertStringContainsString( "'webauthn_advanced'", $source );
-			$position = strpos( $source, "'webauthn_advanced'" );
-			$window   = substr( $source, $position, 220 );
-			$this->assertStringContainsString(
-				"'requires_tier' => 'business'",
-				$window,
-				'webauthn_advanced must be Business-gated (decision 2026-08-05, PRICING-PLAN.md history 1.9).'
-			);
+			$this->assertStringNotContainsString( "'webauthn_advanced'", $source, 'The Business gate is a row of the add-on matrix (PRICING-PLAN.md history 1.9).' );
 		}
 
 		public function test_register_endpoints_enforce_the_key_limit_server_side(): void {

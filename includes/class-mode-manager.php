@@ -243,53 +243,13 @@ class ReportedIP_Hive_Mode_Manager {
 				'local'     => false,
 				'community' => true,
 			),
-			'mail_relay_via_api'           => array(
-				'local'         => false,
-				'community'     => true,
-				'requires_tier' => 'professional',
-			),
-			'sms_relay_via_api'            => array(
-				'local'         => false,
-				'community'     => true,
-				'requires_tier' => 'professional',
-			),
-			'frontend_2fa'                 => array(
-				'local'         => true,
-				'community'     => true,
-				'requires_tier' => 'professional',
-			),
-			'webauthn_advanced'            => array(
-				'local'         => true,
-				'community'     => true,
-				'requires_tier' => 'business',
-			),
 			'decoy_pathblock'              => array(
 				'local'     => true,
 				'community' => true,
 			),
-			'hardening_mode'               => array(
-				'local'         => true,
-				'community'     => true,
-				'requires_tier' => 'professional',
-			),
-			'form_proof_pow'               => array(
-				'local'         => true,
-				'community'     => true,
-				'requires_tier' => 'professional',
-			),
 			'form_adapters'                => array(
 				'local'     => true,
 				'community' => true,
-			),
-			'form_adapters_advanced'       => array(
-				'local'         => true,
-				'community'     => true,
-				'requires_tier' => 'business',
-			),
-			'tor_blocking'                 => array(
-				'local'         => false,
-				'community'     => true,
-				'requires_tier' => 'professional',
 			),
 			'waf'                          => array(
 				'local'     => true,
@@ -311,36 +271,6 @@ class ReportedIP_Hive_Mode_Manager {
 			'security_headers'             => array(
 				'local'     => true,
 				'community' => true,
-			),
-			'security_headers_advanced'    => array(
-				'local'         => true,
-				'community'     => true,
-				'requires_tier' => 'professional',
-			),
-			'audit_log'                    => array(
-				'local'         => true,
-				'community'     => true,
-				'requires_tier' => 'business',
-			),
-			'cloud_management'             => array(
-				'local'         => false,
-				'community'     => true,
-				'requires_tier' => 'business',
-			),
-			'registration_rules_unlimited' => array(
-				'local'         => true,
-				'community'     => true,
-				'requires_tier' => 'professional',
-			),
-			'user_management'              => array(
-				'local'         => true,
-				'community'     => true,
-				'requires_tier' => 'business',
-			),
-			'2fa_policies'                 => array(
-				'local'         => true,
-				'community'     => true,
-				'requires_tier' => 'professional',
 			),
 		);
 
@@ -399,27 +329,13 @@ class ReportedIP_Hive_Mode_Manager {
 			'advanced_analytics'           => array( __( 'Advanced Analytics', 'reportedip-hive' ), __( 'Access advanced threat analytics and trends', 'reportedip-hive' ) ),
 			'threat_intelligence'          => array( __( 'Threat Intelligence', 'reportedip-hive' ), __( 'Receive threat intelligence from the community', 'reportedip-hive' ) ),
 			'coordinated_attack_detection' => array( __( 'Coordinated Attack Detection', 'reportedip-hive' ), __( 'Detect coordinated attacks across the network', 'reportedip-hive' ) ),
-			'mail_relay_via_api'           => array( __( 'Mail Relay via reportedip.com', 'reportedip-hive' ), __( 'Send 2FA mails through our SMTP for guaranteed deliverability, no own SMTP setup needed.', 'reportedip-hive' ) ),
-			'sms_relay_via_api'            => array( __( 'SMS Relay via reportedip.com', 'reportedip-hive' ), __( 'Send 2FA SMS via our managed EU gateway, included with Professional and Business.', 'reportedip-hive' ) ),
-			'frontend_2fa'                 => array( __( 'WooCommerce Frontend Login 2FA', 'reportedip-hive' ), __( 'Two-factor verification on My Account, classic checkout and WooCommerce blocks login, kept inside the theme frame instead of bouncing customers to wp-login.php.', 'reportedip-hive' ) ),
-			'webauthn_advanced'            => array( __( 'Advanced Security Keys', 'reportedip-hive' ), __( 'Multiple security keys per account (primary + backup), automatic model detection via attestation and key-lifecycle email alerts. One security key or passkey per account stays free.', 'reportedip-hive' ) ),
 			'decoy_pathblock'              => array( __( 'Decoy Path Block', 'reportedip-hive' ), __( 'Instant ban on the first request to a known bait path (.env.backup, wp-config.old.php, ...), distinct from the N-of-Y scan-detector.', 'reportedip-hive' ) ),
-			'hardening_mode'               => array( __( 'Hardening Mode on Coordinated Attack', 'reportedip-hive' ), __( 'Tighten failed-login and reputation thresholds network-wide for one hour after a coordinated-attack pattern is detected.', 'reportedip-hive' ) ),
-			'form_proof_pow'               => array( __( 'Computation Check on Forms', 'reportedip-hive' ), __( 'Give the form a small sum to work out in the background and check the answer on submit, so a script that copies the hidden field out of the page no longer passes for a visitor.', 'reportedip-hive' ) ),
 			'form_adapters'                => array( __( 'Contact Form Protection', 'reportedip-hive' ), __( 'Carry the execution proof into Contact Form 7, so it is covered by the same check as the comment form and needs no distorted image.', 'reportedip-hive' ) ),
-			'form_adapters_advanced'       => array( __( 'Advanced Form Protection', 'reportedip-hive' ), __( 'The same protection on WPForms, Gravity Forms, Forminator, Formidable Forms, Formidable Forms PRO, Elementor Forms and the Ultimate Member forms. An Ultimate Member sign-up also runs through the registration rules.', 'reportedip-hive' ) ),
-			'tor_blocking'                 => array( __( 'Tor Exit Node Blocking', 'reportedip-hive' ), __( 'Block login attempts from known Tor exit nodes using a signed exit-node list that is refreshed twice a day, plus the live community check.', 'reportedip-hive' ) ),
 			'waf'                          => array( __( 'Web Application Firewall', 'reportedip-hive' ), __( 'Payload-inspecting request firewall. The engine and a baseline ruleset are free; the richer, frequently-updated ruleset arrives via Priority Sync.', 'reportedip-hive' ) ),
 			'rule_sync_priority'           => array( __( 'Priority Rule Sync', 'reportedip-hive' ), __( 'Server-delivered rulesets instead of the bundled baseline: Paranoia Level 2 signatures and bot IP-range feeds refreshed weekly on Contributor; daily refresh, Paranoia Level 3 and the live disposable list from Professional.', 'reportedip-hive' ) ),
 			'bot_verification'             => array( __( 'Verified Bot Detection', 'reportedip-hive' ), __( 'Verify search-engine crawlers via IP ranges and forward-confirmed reverse DNS; flag or block user-agent spoofers.', 'reportedip-hive' ) ),
 			'disposable_email'             => array( __( 'Disposable Email Block', 'reportedip-hive' ), __( 'Block registrations from throwaway-mail providers. Baseline list is free; the live list arrives via Priority Sync.', 'reportedip-hive' ) ),
 			'security_headers'             => array( __( 'Security Headers', 'reportedip-hive' ), __( 'Site-wide X-Content-Type-Options, X-Frame-Options and Referrer-Policy.', 'reportedip-hive' ) ),
-			'security_headers_advanced'    => array( __( 'Advanced Security Headers', 'reportedip-hive' ), __( 'CSP builder, HSTS with preload, Permissions-Policy and the Cross-Origin-Opener/Embedder/Resource trio.', 'reportedip-hive' ) ),
-			'audit_log'                    => array( __( 'Audit Event Trail', 'reportedip-hive' ), __( 'Who changed what: settings with old and new value, plugins and themes, pages, menus, edited files and user accounts, with configurable triggers, filtering, CSV/JSON export and long retention.', 'reportedip-hive' ) ),
-			'cloud_management'             => array( __( 'Cloud Fleet Management', 'reportedip-hive' ), __( 'Manage this site remotely from the reportedip.com dashboard: security policies, per-site overrides and drift detection across all your Hive installations.', 'reportedip-hive' ) ),
-			'registration_rules_unlimited' => array( __( 'Unlimited Registration Rules', 'reportedip-hive' ), __( 'Unlimited prohibited-username and e-mail rule entries, regular-expression patterns and registration restricted to allowlisted IP addresses. Ten plain entries per list stay free.', 'reportedip-hive' ) ),
-			'user_management'              => array( __( 'User Account Control', 'reportedip-hive' ), __( 'Block user accounts with a message and an admin note, end their sessions and password resets, and review or terminate active sessions.', 'reportedip-hive' ) ),
-			'2fa_policies'                 => array( __( 'Configurable 2FA Policies per Role', 'reportedip-hive' ), __( 'Per-role step-up rules that ask for the second factor again on a new device, IP address, network or country, every N days or sign-ins, or above a concurrent-session limit, even on a trusted device.', 'reportedip-hive' ) ),
 		);
 
 		/**

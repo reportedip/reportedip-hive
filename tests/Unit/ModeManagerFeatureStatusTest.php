@@ -107,36 +107,37 @@ class ModeManagerFeatureStatusTest extends TestCase {
 		$this->assertSame( 'community', $status['mode_required'] );
 	}
 
-	public function test_free_tier_blocks_relay_with_tier_reason() {
+	public function test_the_free_matrix_carries_no_plan_gated_row_but_priority_sync() {
 		$this->pretend_mode( 'community' );
 		$this->pretend_tier( 'free' );
+		$mm = \ReportedIP_Hive_Mode_Manager::get_instance();
 
-		$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'sms_relay_via_api' );
-
-		$this->assertFalse( $status['available'] );
-		$this->assertSame( 'tier', $status['reason'] );
-		$this->assertSame( 'professional', $status['min_tier'] );
+		foreach ( array( 'mail_relay_via_api', 'frontend_2fa', 'tor_blocking', 'webauthn_advanced', 'user_management' ) as $feature ) {
+			$this->assertSame( 'unknown', $mm->feature_status( $feature )['reason'], "{$feature} is registered by the add-on" );
+		}
+		$this->assertSame( 'contributor', $mm->feature_status( 'rule_sync_priority' )['min_tier'] );
+		$this->assertTrue( $mm->feature_status( 'login_monitoring' )['available'] );
 	}
 
-	public function test_professional_tier_unlocks_relay() {
+	public function test_an_add_on_row_is_read_with_its_tier() {
+		add_filter(
+			'reportedip_hive_feature_matrix',
+			static function ( $matrix ) {
+				$matrix['extra_feature'] = array(
+					'local'         => true,
+					'community'     => true,
+					'requires_tier' => 'business',
+				);
+				return $matrix;
+			}
+		);
+		$mm = \ReportedIP_Hive_Mode_Manager::get_instance();
+		$mm->flush_feature_matrix();
 		$this->pretend_mode( 'community' );
 		$this->pretend_tier( 'professional' );
-
-		$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'mail_relay_via_api' );
-
-		$this->assertTrue( $status['available'] );
-		$this->assertSame( 'ok', $status['reason'] );
-	}
-
-	public function test_local_mode_takes_precedence_over_tier_check() {
-		$this->pretend_mode( 'local' );
-		$this->pretend_tier( 'enterprise' );
-
-		$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'mail_relay_via_api' );
-
-		$this->assertFalse( $status['available'] );
-		$this->assertSame( 'mode', $status['reason'] );
-		$this->assertSame( 'community', $status['mode_required'] );
+		$this->assertSame( 'tier', $mm->feature_status( 'extra_feature' )['reason'] );
+		$this->pretend_tier( 'business' );
+		$this->assertSame( 'ok', $mm->feature_status( 'extra_feature' )['reason'] );
 	}
 
 	public function test_tier_at_least_walks_the_order() {
@@ -163,49 +164,6 @@ class ModeManagerFeatureStatusTest extends TestCase {
 		$this->assertFalse( $mm->tier_at_least( 'professional' ) );
 	}
 
-	public function test_new_feature_keys_report_their_tiers() {
-		define( 'WP_CLI', true );
-
-		$expected = array(
-			'registration_rules_unlimited' => 'professional',
-			'user_management'              => 'business',
-			'2fa_policies'                 => 'professional',
-		);
-		$mm       = \ReportedIP_Hive_Mode_Manager::get_instance();
-
-		$this->pretend_mode( 'community' );
-		$this->pretend_tier( 'free' );
-		foreach ( $expected as $feature => $min_tier ) {
-			$status = $mm->feature_status( $feature );
-
-			$this->assertFalse( $status['available'], "$feature must be locked on Free" );
-			$this->assertSame( 'tier', $status['reason'] );
-			$this->assertSame( $min_tier, $status['min_tier'] );
-			$this->assertNotSame( '', $status['label'], "$feature needs a label" );
-			$this->assertNotSame( '', $status['description'], "$feature needs a description" );
-		}
-
-		$this->pretend_tier( 'professional' );
-		$this->assertFalse(
-			$mm->feature_status( 'user_management' )['available'],
-			'user_management must stay locked on Professional'
-		);
-		$this->assertTrue(
-			$mm->feature_status( 'registration_rules_unlimited' )['available'],
-			'registration_rules_unlimited must open on Professional'
-		);
-
-		$this->pretend_tier( 'business' );
-		foreach ( array_keys( $expected ) as $feature ) {
-			$this->assertSame( 'ok', $mm->feature_status( $feature )['reason'], "$feature must open on Business" );
-		}
-
-		$this->pretend_mode( 'local' );
-		foreach ( array_keys( $expected ) as $feature ) {
-			$this->assertTrue( $mm->feature_status( $feature )['available'], "$feature must not depend on Community mode" );
-		}
-	}
-
 	public function test_get_tier_info_returns_display_tokens_for_known_tier() {
 		$info = \ReportedIP_Hive_Mode_Manager::get_instance()->get_tier_info( 'professional' );
 
@@ -219,60 +177,6 @@ class ModeManagerFeatureStatusTest extends TestCase {
 		$info = \ReportedIP_Hive_Mode_Manager::get_instance()->get_tier_info( 'galactic_emperor' );
 
 		$this->assertSame( 'free', $info['key'] );
-	}
-
-	public function test_frontend_2fa_blocked_for_free_tier() {
-		$this->pretend_mode( 'community' );
-		$this->pretend_tier( 'free' );
-
-		$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
-
-		$this->assertFalse( $status['available'] );
-		$this->assertSame( 'tier', $status['reason'] );
-		$this->assertSame( 'professional', $status['min_tier'] );
-	}
-
-	public function test_frontend_2fa_blocked_for_contributor_tier() {
-		$this->pretend_mode( 'community' );
-		$this->pretend_tier( 'contributor' );
-
-		$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
-
-		$this->assertFalse( $status['available'] );
-		$this->assertSame( 'tier', $status['reason'] );
-	}
-
-	public function test_frontend_2fa_unlocked_for_professional_tier() {
-		$this->pretend_mode( 'community' );
-		$this->pretend_tier( 'professional' );
-
-		$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
-
-		$this->assertTrue( $status['available'] );
-		$this->assertSame( 'ok', $status['reason'] );
-	}
-
-	public function test_frontend_2fa_works_in_local_mode_with_pro_tier() {
-		$this->pretend_mode( 'local' );
-		$this->pretend_tier( 'professional' );
-
-		$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
-
-		$this->assertTrue( $status['available'] );
-		$this->assertSame( 'ok', $status['reason'] );
-	}
-
-	public function test_frontend_2fa_unlocked_for_business_and_enterprise() {
-		$this->pretend_mode( 'community' );
-
-		foreach ( array( 'business', 'enterprise' ) as $tier ) {
-			$this->pretend_tier( $tier );
-
-			$status = \ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'frontend_2fa' );
-
-			$this->assertTrue( $status['available'], "Tier $tier should open frontend_2fa" );
-			$this->assertSame( 'ok', $status['reason'] );
-		}
 	}
 
 	public function test_known_tier_option_is_durable_tier_fallback() {
