@@ -163,7 +163,6 @@ class ReportedIP_Hive {
 		add_action( 'wp_login', array( $this, 'handle_successful_login' ), 10, 2 );
 
 		add_action( 'admin_init', array( $this, 'block_admin_access' ) );
-		add_action( 'admin_notices', array( $this, 'display_api_status_notices' ) );
 
 		add_action( 'reportedip_hive_ip_blocked', array( __CLASS__, 'flush_ip_verdict_cache' ) );
 		add_action( 'reportedip_hive_ip_unblocked', array( __CLASS__, 'flush_ip_verdict_cache' ) );
@@ -1656,23 +1655,23 @@ class ReportedIP_Hive {
 	}
 
 	/**
-	 * Display admin notices for API status issues
+	 * Print the API status notices: failed reports, a growing report queue
+	 * and, in Community mode, a missing Community Access Key.
+	 *
+	 * Called from {@see ReportedIP_Hive_Admin_Settings::render_inline_notices()},
+	 * so the notices appear on the plugin pages only. `admin_notices`
+	 * callbacks are removed there, and the WordPress dashboard stays free of
+	 * them. The domain-limit notice prints from the same funnel.
+	 *
+	 * @return void
 	 */
 	public function display_api_status_notices() {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			return;
 		}
 
-		$screen = get_current_screen();
-		if ( ! $screen ) {
-			return;
-		}
-
-		$show_on_screens = array( 'toplevel_page_reportedip-hive', 'reportedip-hive_page_reportedip-hive-logs' );
-		$screen_id       = (string) $screen->id;
-		$is_plugin_page  = strpos( $screen_id, 'reportedip-hive' ) !== false;
-
-		if ( ! in_array( $screen_id, $show_on_screens ) && ! $is_plugin_page ) {
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! $screen || false === strpos( (string) $screen->id, 'reportedip-hive' ) ) {
 			return;
 		}
 
@@ -1795,7 +1794,7 @@ class ReportedIP_Hive {
 		}
 
 		$api_key = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
-		if ( empty( $api_key ) && $is_plugin_page ) {
+		if ( empty( $api_key ) && ReportedIP_Hive_Mode_Manager::get_instance()->is_community_mode() ) {
 			$settings_url = ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive' );
 			$body         = sprintf(
 				'<strong>%1$s</strong> %2$s',
@@ -1813,10 +1812,6 @@ class ReportedIP_Hive {
 					'body'        => $body,
 				)
 			);
-		}
-
-		if ( class_exists( 'ReportedIP_Hive_Admin_Settings' ) ) {
-			ReportedIP_Hive_Admin_Settings::maybe_render_domain_limit_notice();
 		}
 	}
 

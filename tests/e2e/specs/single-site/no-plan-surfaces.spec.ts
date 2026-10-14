@@ -78,4 +78,25 @@ test.describe('free plugin without the add-on', () => {
 		await expect(page.locator('.rip-header__title')).toBeVisible();
 		await expect(page.locator('.notice', { hasText: 'ReportedIP Hive Pro add-on' })).toHaveCount(0);
 	});
+	test('the API status notices show on the plugin pages, never on the WordPress dashboard', async ({ page }) => {
+		const QUEUE = "ReportedIP_Hive_Schema::table( 'reportedip_hive_api_queue' )";
+		const CLEAR = `global $wpdb; $wpdb->delete( ${QUEUE}, array( 'ip_address' => '203.0.113.250' ) );`;
+		wpEval(`${CLEAR} $wpdb->insert( ${QUEUE}, array( 'ip_address' => '203.0.113.250', 'category_ids' => '18', 'status' => 'failed', 'created_at' => gmdate( 'Y-m-d H:i:s' ) ) );`);
+		try {
+			await loginAsAdmin(page);
+			for (const url of ['/wp-admin/admin.php?page=reportedip-hive', '/wp-admin/admin.php?page=reportedip-hive-protection']) {
+				await page.goto(url);
+				const notice = page.locator('.notice', { hasText: 'API reports failed' });
+				await expect(notice, url).toHaveCount(1);
+				await expect(notice.locator('a', { hasText: 'View queue' })).toHaveCount(1);
+				await expect(notice.locator('#retry-failed-reports-notice')).toHaveCount(1);
+			}
+			await expect(page.locator('body')).not.toContainText('Upgrade API tier');
+
+			await page.goto('/wp-admin/');
+			await expect(page.locator('.notice', { hasText: 'API reports failed' }), 'never on the WordPress dashboard').toHaveCount(0);
+		} finally {
+			wpEval(CLEAR);
+		}
+	});
 });

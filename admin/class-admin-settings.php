@@ -1462,8 +1462,8 @@ class ReportedIP_Hive_Admin_Settings {
 	 * Render the over-limit domain notice when the last service snapshot says
 	 * the account uses more domains than the plan includes.
 	 *
-	 * Shared between the plugin pages (via {@see render_inline_notices()}) and
-	 * the wp-admin dashboard (via the admin_notices callback in the bootstrap).
+	 * Printed on the plugin pages through {@see render_inline_notices()},
+	 * never on the WordPress dashboard.
 	 * Gated on Community mode + configured key and dismissible per user/day.
 	 *
 	 * @return void
@@ -1531,6 +1531,7 @@ class ReportedIP_Hive_Admin_Settings {
 			);
 		}
 
+		ReportedIP_Hive::get_instance()->display_api_status_notices();
 		self::maybe_render_domain_limit_notice();
 		self::maybe_render_reputation_notice();
 		ReportedIP_Hive_Addon_Notice::render();

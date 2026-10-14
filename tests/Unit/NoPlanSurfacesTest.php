@@ -56,6 +56,14 @@ class NoPlanSurfacesTest extends TestCase {
 
 	public function test_the_api_notices_stay_off_the_wordpress_dashboard(): void {
 		$source = $this->source( 'reportedip-hive.php' );
-		$this->assertStringContainsString( "\$show_on_screens = array( 'toplevel_page_reportedip-hive', 'reportedip-hive_page_reportedip-hive-logs' );", $source );
+		$this->assertStringNotContainsString( "add_action( 'admin_notices', array( \$this, 'display_api_status_notices' ) );", $source, 'admin_notices would reach the WordPress dashboard' );
+		$this->assertStringContainsString( "if ( ! \$screen || false === strpos( (string) \$screen->id, 'reportedip-hive' ) ) {", $source );
+
+		$settings = $this->source( 'admin/class-admin-settings.php' );
+		$inline   = strpos( $settings, 'public static function render_inline_notices()' );
+		$call     = strpos( $settings, 'ReportedIP_Hive::get_instance()->display_api_status_notices();' );
+		$this->assertNotFalse( $call, 'the plugin pages print the API notices through the inline funnel' );
+		$this->assertGreaterThan( $inline, $call );
+		$this->assertLessThan( strpos( $settings, 'self::maybe_render_domain_limit_notice();', $inline ), $call );
 	}
 }
