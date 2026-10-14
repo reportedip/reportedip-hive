@@ -397,7 +397,6 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-relay-usage-tracker.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/interface-mail-provider.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/mail-providers/class-mail-provider-wordpress.php';
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/mail-providers/class-mail-provider-relay.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-mailer.php';
 
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-crypto.php';

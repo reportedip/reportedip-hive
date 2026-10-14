@@ -287,17 +287,7 @@ class ReportedIP_Hive_Mailer {
 			return $this->resolved_provider;
 		}
 
-		$wp_provider = new ReportedIP_Hive_Mail_Provider_WordPress();
-		$default     = $wp_provider;
-
-		// Tier- and mode-aware switch: only PRO+ Community-mode customers get the relay.
-		if ( class_exists( 'ReportedIP_Hive_Mode_Manager' )
-			&& class_exists( 'ReportedIP_Hive_Mail_Provider_Relay' ) ) {
-			$mgr = ReportedIP_Hive_Mode_Manager::get_instance();
-			if ( method_exists( $mgr, 'is_relay_available' ) && $mgr->is_relay_available( 'mail' ) ) {
-				$default = new ReportedIP_Hive_Mail_Provider_Relay( $wp_provider );
-			}
-		}
+		$default = new ReportedIP_Hive_Mail_Provider_WordPress();
 
 		/**
 		 * Replace the default mail provider with a custom transport.

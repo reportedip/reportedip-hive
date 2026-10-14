@@ -89,6 +89,32 @@ class MailerTemplateTest extends TestCase {
 		$this->assertSame( array(), $GLOBALS['rip_test_wp_mail_calls'], 'wp_mail must NOT be called when a custom provider takes over.' );
 	}
 
+	/**
+	 * The free plugin alone never picks the managed relay, whatever plan the
+	 * key is on: mail goes through wp_mail() and no request leaves the site.
+	 */
+	public function test_without_a_filter_mail_goes_through_wp_mail_on_every_plan() {
+		$GLOBALS['wp_options']['reportedip_hive_operation_mode'] = 'community';
+		$GLOBALS['wp_options']['reportedip_hive_api_key']        = 'test-key';
+		$GLOBALS['wp_transients']['reportedip_hive_api_status']  = array(
+			'value'   => array( 'userRole' => 'reportedip_business' ),
+			'expires' => time() + 600,
+		);
+
+		$this->assertInstanceOf( \ReportedIP_Hive_Mail_Provider_WordPress::class, ReportedIP_Hive_Mailer::get_instance()->resolve_provider() );
+		$this->assertTrue(
+			ReportedIP_Hive_Mailer::get_instance()->send(
+				array(
+					'to'         => 'user@example.org',
+					'subject'    => '[Example Site] Code',
+					'intro_text' => 'Your code.',
+				)
+			)
+		);
+		$this->assertCount( 1, $GLOBALS['rip_test_wp_mail_calls'] );
+		unset( $GLOBALS['wp_transients']['reportedip_hive_api_status'] );
+	}
+
 	public function test_html_body_contains_brand_chrome_and_slots() {
 		$provider = $this->install_capturing_provider();
 

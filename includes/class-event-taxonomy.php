@@ -544,14 +544,6 @@ class ReportedIP_Hive_Event_Taxonomy {
 				'label' => __( 'Quickstart Value Rejected', 'reportedip-hive' ),
 				'group' => 'ops_system',
 			),
-			'mail_relay_error'                  => array(
-				'label' => __( 'Mail Relay Error', 'reportedip-hive' ),
-				'group' => 'ops_system',
-			),
-			'mail_relay_fallback'               => array(
-				'label' => __( 'Mail Relay Fallback', 'reportedip-hive' ),
-				'group' => 'ops_system',
-			),
 			'notification_rate_limited'         => array(
 				'label' => __( 'Notification Rate Limited', 'reportedip-hive' ),
 				'group' => 'ops_system',
