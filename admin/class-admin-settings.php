@@ -1660,8 +1660,6 @@ class ReportedIP_Hive_Admin_Settings {
 			);
 		}
 
-		ReportedIP_Hive_Whats_New::maybe_render();
-
 		self::maybe_render_domain_limit_notice();
 		self::maybe_render_reputation_notice();
 

@@ -355,7 +355,6 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-api-client.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-monitor.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-admin-notice.php';
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-whats-new.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-path-block.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-htaccess-block-writer.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-decoy-htaccess-writer.php';
