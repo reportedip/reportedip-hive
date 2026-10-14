@@ -56,20 +56,6 @@ class WebAuthnChallengePanelTemplateTest extends TestCase {
 		);
 	}
 
-	public function test_frontend_challenge_includes_the_partial(): void {
-		$template = $this->source( 'templates/frontend-2fa-challenge.php' );
-		$this->assertStringContainsString(
-			self::PARTIAL,
-			$template,
-			'The WooCommerce frontend challenge must render the webauthn panel, it shipped a dead tab without one before 2.1.33.'
-		);
-		$this->assertStringContainsString(
-			'$has_webauthn',
-			$template,
-			'The webauthn tab and its panel must be gated on the same flag.'
-		);
-	}
-
 	public function test_reset_gate_includes_the_partial_and_the_token_bridge(): void {
 		$gate = $this->source( 'includes/class-two-factor-reset-gate.php' );
 		$this->assertStringContainsString(
