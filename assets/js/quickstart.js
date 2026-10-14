@@ -12,11 +12,10 @@
 	'use strict';
 
 	var cfg = window.reportedipQuickstart || {};
-	var RANK = { free: 0, contributor: 0, professional: 1, business: 2, enterprise: 2 };
 
 	var Quickstart = {
 		validatedKey: cfg.savedApiKey || '',
-		tier: (cfg.tier || 'free').toLowerCase(),
+		rank: parseInt(cfg.rank, 10) || 0,
 
 		init: function () {
 			$(document).on('click', '.rip-mode-card', this.onModeClick.bind(this));
@@ -63,15 +62,14 @@
 		},
 
 		/**
-		 * Grey out rows above the effective tier. Local Shield never
-		 * unlocks paid rows because the recommendation treats it as free.
+		 * Grey out rows that rank above the checked key. Only rows with a
+		 * data-rank take part; Local Shield counts as rank 0 because the
+		 * recommendation treats it as free.
 		 */
 		renderFeatureLocks: function () {
-			var effective = this.mode() === 'community' ? this.tier : 'free';
-			var rank = RANK[effective] || 0;
-			$('#rip-quickstart-features li').each(function () {
-				var rowRank = RANK[$(this).data('tier')] || 0;
-				$(this).toggleClass('rip-quickstart__feature--locked', rowRank > rank);
+			var rank = this.mode() === 'community' ? this.rank : 0;
+			$('#rip-quickstart-features li[data-rank]').each(function () {
+				$(this).toggleClass('rip-quickstart__feature--locked', (parseInt($(this).attr('data-rank'), 10) || 0) > rank);
 			});
 		},
 
@@ -94,7 +92,7 @@
 				.done(function (r) {
 					if (r && r.success && r.data && r.data.valid) {
 						Quickstart.validatedKey = key;
-						Quickstart.tier = (r.data.tier || 'free').toLowerCase();
+						Quickstart.rank = parseInt(r.data.rank, 10) || 0;
 						var text = s.valid + ' · ' + $('<span>').text(r.data.tier_label).html();
 						if (r.data.domains_limit !== null && r.data.domains_limit > 0) {
 							text += ' · ' + s.domains.replace('%1$s', r.data.domains_used).replace('%2$s', r.data.domains_limit);
@@ -103,7 +101,7 @@
 						$input.addClass('rip-input--valid').removeClass('rip-input--invalid');
 						if (r.data.tier_badge_html) { $('#rip-quickstart-tier-badge').html(r.data.tier_badge_html); }
 						Quickstart.renderFeatureLocks();
-						if (RANK[Quickstart.tier] >= 1) { $('#rip-quickstart-teaser').remove(); }
+						if (Quickstart.rank >= 1) { $('#rip-quickstart-teaser').remove(); }
 					} else {
 						var msg = (r && r.data && r.data.message) ? r.data.message : s.invalid;
 						$status.html(Quickstart.statusHtml('error', $('<span>').text(msg).html()));

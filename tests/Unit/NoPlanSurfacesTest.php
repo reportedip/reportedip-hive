@@ -40,6 +40,23 @@ class NoPlanSurfacesTest extends TestCase {
 		}
 	}
 
+	public function test_no_admin_page_links_the_pricing_page_or_draws_a_plan_lock(): void {
+		$files = array_merge( glob( dirname( __DIR__, 2 ) . '/admin/*.php' ), array( dirname( __DIR__, 2 ) . '/reportedip-hive.php' ) );
+		foreach ( $files as $path ) {
+			$source = (string) file_get_contents( $path );
+			$file   = basename( $path );
+			foreach ( array( 'reportedip.com/pricing', 'pricing_url', 'render_tier_marker', 'render_tier_included', 'tier_at_least(', 'unlockable', 'Unlocks with' ) as $needle ) {
+				$this->assertStringNotContainsString( $needle, $source, "{$file}: {$needle}" );
+			}
+		}
+	}
+
+	public function test_the_plugin_pages_carry_no_inline_script(): void {
+		foreach ( array( 'admin/class-admin-settings.php', 'admin/class-admin-firewall.php', 'admin/class-protection-page.php', 'admin/class-quickstart.php', 'reportedip-hive.php' ) as $file ) {
+			$this->assertStringNotContainsString( '<script', $this->source( $file ), $file );
+		}
+	}
+
 	public function test_the_header_badge_links_only_through_the_filter(): void {
 		$source = $this->source( 'admin/class-admin-settings.php' );
 		$this->assertStringContainsString( "\$tier_opts = apply_filters( 'reportedip_hive_header_badge', array(), \$tier_key );", $source );

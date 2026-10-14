@@ -196,14 +196,18 @@ class ReportedIP_Hive_Quickstart {
 	}
 
 	/**
-	 * Feature rows shown under "What gets switched on", as label => tier.
+	 * Feature rows shown under "What gets switched on".
 	 *
-	 * The dashboard reuses this list, so it lives here as a static.
+	 * The free rows, then one row per catalog entry of the add-on (marked
+	 * `addon`, so the page lists them apart as what the add-on brings), then
+	 * whatever `reportedip_hive_quickstart_feature_rows` adds. A row with a
+	 * `rank` (0 free, 1 Professional, 2 Business) is greyed out while the
+	 * checked key ranks lower, the way the add-on lists its own features.
 	 *
-	 * @return array<int, array{label:string, tier:string}>
+	 * @return array<int, array{label:string, tier:string, addon?:bool, rank?:int}>
 	 */
 	public static function feature_rows() {
-		return array_merge(
+		$rows = array_merge(
 			array(
 				array(
 					'label' => __( 'Brute-force protection with automatic blocking (Balanced level)', 'reportedip-hive' ),
@@ -230,42 +234,37 @@ class ReportedIP_Hive_Quickstart {
 					'tier'  => 'free',
 				),
 			),
-			self::form_plugin_rows( 'free' ),
-			array(
-				array(
-					'label' => __( 'Hardening Mode during attack waves', 'reportedip-hive' ),
-					'tier'  => 'professional',
-				),
-				array(
-					'label' => __( 'Block Tor exit nodes', 'reportedip-hive' ),
-					'tier'  => 'professional',
-				),
-				array(
-					'label' => __( 'HSTS header', 'reportedip-hive' ),
-					'tier'  => 'professional',
-				),
-				array(
-					'label' => __( 'Storefront 2FA for WooCommerce customers', 'reportedip-hive' ),
-					'tier'  => 'professional',
-				),
-				array(
-					'label' => __( '2FA mails and SMS through the EU relay, logs for 90 days', 'reportedip-hive' ),
-					'tier'  => 'professional',
-				),
-			),
-			array(
-				array(
-					'label' => __( 'Audit trail and account blocking, logs for one year', 'reportedip-hive' ),
-					'tier'  => 'business',
-				),
-			),
-			self::form_plugin_rows( 'business' )
+			self::form_plugin_rows( 'free' )
 		);
+
+		foreach ( ReportedIP_Hive_Catalog::features() as $feature => $row ) {
+			/** This filter is documented in admin/class-protection-page.php */
+			if ( apply_filters( 'reportedip_hive_catalog_row_hidden', false, (string) $feature ) ) {
+				continue;
+			}
+			$rows[] = array(
+				'label' => (string) $row['label'],
+				'tier'  => (string) $row['tier'],
+				'addon' => true,
+			);
+		}
+
+		/**
+		 * Rows of the quickstart's feature list, as `label`, `tier` and the
+		 * optional `addon` and `rank`. A result that is not an array is
+		 * ignored.
+		 *
+		 * @param array<int, array<string, mixed>> $rows Rows in display order.
+		 * @since 3.0.0
+		 */
+		$filtered = apply_filters( 'reportedip_hive_quickstart_feature_rows', $rows );
+		return is_array( $filtered ) ? array_values( $filtered ) : $rows;
 	}
 
 	/**
 	 * One feature row naming the third-party form plugins of a plan that are
-	 * active on this site.
+	 * active on this site. Public, so the add-on can name its own plans' form
+	 * plugins the same way.
 	 *
 	 * Nothing is said when none of them is installed, because a line about a
 	 * form plugin the operator does not run is noise on a setup screen. Which
@@ -276,7 +275,7 @@ class ReportedIP_Hive_Quickstart {
 	 * @return array<int, array{label:string, tier:string}>
 	 * @since  2.1.59
 	 */
-	private static function form_plugin_rows( $tier ) {
+	public static function form_plugin_rows( $tier ) {
 		if ( ! class_exists( 'ReportedIP_Hive_Form_Adapters' ) ) {
 			return array();
 		}
@@ -363,6 +362,7 @@ class ReportedIP_Hive_Quickstart {
 				'nonce'       => wp_create_nonce( self::NONCE ),
 				'savedApiKey' => (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' ),
 				'tier'        => $tier,
+				'rank'        => ReportedIP_Hive_Defaults::recommendation_rank( (string) $tier ),
 				'strings'     => array(
 					'validating'  => __( 'Checking...', 'reportedip-hive' ),
 					'valid'       => __( 'Key is valid.', 'reportedip-hive' ),
@@ -467,10 +467,20 @@ class ReportedIP_Hive_Quickstart {
 					<h3><?php esc_html_e( 'What gets switched on', 'reportedip-hive' ); ?></h3>
 				</div>
 				<div class="rip-config-card__body">
-					<ul class="rip-quickstart__features" id="rip-quickstart-features" data-tier="<?php echo esc_attr( $tier ); ?>">
-						<?php foreach ( self::feature_rows() as $row ) : ?>
-							<?php $locked = ! $this->mode_manager->tier_at_least( $row['tier'] ); ?>
-							<li class="rip-quickstart__feature <?php echo $locked ? 'rip-quickstart__feature--locked' : ''; ?>" data-tier="<?php echo esc_attr( $row['tier'] ); ?>">
+					<?php
+					$rows  = self::feature_rows();
+					$addon = array_filter(
+						$rows,
+						static function ( $row ) {
+							return ! empty( $row['addon'] );
+						}
+					);
+					$rank  = 'community' === $mode ? ReportedIP_Hive_Defaults::recommendation_rank( (string) $tier ) : 0;
+					?>
+					<ul class="rip-quickstart__features" id="rip-quickstart-features" data-rank="<?php echo esc_attr( (string) $rank ); ?>">
+						<?php foreach ( array_diff_key( $rows, $addon ) as $row ) : ?>
+							<?php $row_rank = isset( $row['rank'] ) ? (int) $row['rank'] : null; ?>
+							<li class="rip-quickstart__feature<?php echo null !== $row_rank && $row_rank > $rank ? ' rip-quickstart__feature--locked' : ''; ?>"<?php echo null !== $row_rank ? ' data-rank="' . esc_attr( (string) $row_rank ) . '"' : ''; ?>>
 								<?php echo $check_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static inline SVG. ?>
 								<span><?php echo esc_html( $row['label'] ); ?></span>
 								<?php if ( 'free' !== $row['tier'] ) : ?>
@@ -479,6 +489,20 @@ class ReportedIP_Hive_Quickstart {
 							</li>
 						<?php endforeach; ?>
 					</ul>
+					<?php if ( array() !== $addon ) : ?>
+						<p class="rip-input-help">
+							<?php esc_html_e( 'Available in the ReportedIP Hive Pro add-on:', 'reportedip-hive' ); ?>
+							<a href="<?php echo esc_url( ReportedIP_Hive_Catalog::PRODUCT_URL ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Learn more', 'reportedip-hive' ); ?></a>
+						</p>
+						<ul class="rip-quickstart__features rip-quickstart__features--addon" id="rip-quickstart-addon">
+							<?php foreach ( $addon as $row ) : ?>
+								<li class="rip-quickstart__feature rip-quickstart__feature--addon">
+									<span><?php echo esc_html( $row['label'] ); ?></span>
+									<?php ReportedIP_Hive_Admin_Settings::render_tier_badge( $row['tier'], array( 'small' => true ) ); ?>
+								</li>
+							<?php endforeach; ?>
+						</ul>
+					<?php endif; ?>
 
 					<label class="rip-toggle">
 						<input type="checkbox" id="rip-quickstart-2fa" checked>
@@ -621,17 +645,27 @@ class ReportedIP_Hive_Quickstart {
 			? $result['domains']
 			: $this->mode_manager->get_domains_snapshot();
 
-		wp_send_json_success(
-			array(
-				'valid'           => true,
-				'key_name'        => (string) ( $result['keyName'] ?? '' ),
-				'tier'            => $tier,
-				'tier_label'      => $this->mode_manager->get_tier_info( $tier )['label'],
-				'tier_badge_html' => $badge,
-				'domains_used'    => $domains ? (int) $domains['used'] : null,
-				'domains_limit'   => $domains ? (int) $domains['limit'] : null,
-			)
+		$response = array(
+			'valid'           => true,
+			'key_name'        => (string) ( $result['keyName'] ?? '' ),
+			'tier'            => $tier,
+			'tier_label'      => $this->mode_manager->get_tier_info( $tier )['label'],
+			'tier_badge_html' => $badge,
+			'rank'            => ReportedIP_Hive_Defaults::recommendation_rank( (string) $tier ),
+			'domains_used'    => $domains ? (int) $domains['used'] : null,
+			'domains_limit'   => $domains ? (int) $domains['limit'] : null,
 		);
+
+		/**
+		 * Answer of the quickstart key check, as sent to the page. A result
+		 * that is not an array is ignored.
+		 *
+		 * @param array<string, mixed> $response Answer (`valid`, `key_name`, `tier`, `tier_label`, `tier_badge_html`, `rank`, `domains_used`, `domains_limit`).
+		 * @param array<string, mixed> $result   Key-check result of the API.
+		 * @since 3.0.0
+		 */
+		$filtered = apply_filters( 'reportedip_hive_quickstart_key_result', $response, $result );
+		wp_send_json_success( is_array( $filtered ) ? $filtered : $response );
 	}
 
 	/**
