@@ -388,11 +388,10 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * AJAX: judge one self-test pass of the form execution proof.
 	 *
 	 * The three passes run one request each. Nothing is rebuilt here: the
-	 * verdict comes out of the same pure `evaluate()` and `resolve()` every real
-	 * submission goes through, and the single-use record is spent by the same
-	 * {@see ReportedIP_Hive_Form_Challenge::verify()}, so a pass that comes back
-	 * green means the enforced path is green and the replay pass reads the
-	 * record the visitor pass wrote.
+	 * verdict comes out of the same pure `evaluate()` every real submission
+	 * goes through, and an add-on that revises a real verdict revises this one
+	 * the same way, so a pass that comes back green means the enforced path is
+	 * green and the replay pass reads whatever record the visitor pass wrote.
 	 *
 	 * @return void
 	 * @since  2.1.58
@@ -408,9 +407,16 @@ class ReportedIP_Hive_Ajax_Handler {
 			wp_send_json_error( array( 'message' => __( 'Unknown self-test pass.', 'reportedip-hive' ) ) );
 		}
 
-		$payload  = isset( $_POST['proof'] ) ? sanitize_text_field( wp_unslash( $_POST['proof'] ) ) : '';
-		$proof    = ReportedIP_Hive_Form_Proof::get_instance();
-		$required = $proof->pow_required();
+		$payload = isset( $_POST['proof'] ) ? sanitize_text_field( wp_unslash( $_POST['proof'] ) ) : '';
+
+		/**
+		 * Whether a proof value is good only once, so the replay pass has to
+		 * come back refused.
+		 *
+		 * @param bool $single_use Default false: the plain marker can be sent again.
+		 * @since 3.0.0
+		 */
+		$required = (bool) apply_filters( 'reportedip_hive_form_proof_single_use', false );
 		$decoy    = ReportedIP_Hive_Tools_Page::SELFTEST_DECOY;
 		$field    = ReportedIP_Hive_Tools_Page::SELFTEST_FIELD;
 
@@ -420,8 +426,17 @@ class ReportedIP_Hive_Ajax_Handler {
 		);
 
 		$verdict = ReportedIP_Hive_Form_Proof::evaluate( $submission, $field, $decoy );
-		$solved  = ReportedIP_Hive_Form_Proof::PROVED === $verdict && $required && 'ok' === ReportedIP_Hive_Form_Challenge::judge( $payload );
-		$actual  = ReportedIP_Hive_Form_Proof::resolve( $verdict, $required, $solved );
+
+		/**
+		 * Revise the verdict of one self-test pass the way a real submission
+		 * would be revised.
+		 *
+		 * @param string $verdict Structural verdict.
+		 * @param string $run     Run identifier (visitor, replay, bot).
+		 * @param string $payload Submitted proof value.
+		 * @since 3.0.0
+		 */
+		$actual = (string) apply_filters( 'reportedip_hive_form_proof_selftest_result', $verdict, $run, $payload );
 
 		$key          = 'reportedip_hive_selftest_' . get_current_user_id();
 		$seen         = 'visitor' === $run ? array() : (array) get_transient( $key );
@@ -442,6 +457,17 @@ class ReportedIP_Hive_Ajax_Handler {
 			);
 		}
 
+		/**
+		 * Reword what one self-test pass means for the operator.
+		 *
+		 * @param string $meaning  Sentence.
+		 * @param string $run      Run identifier.
+		 * @param bool   $ok       Whether the verdict matched.
+		 * @param bool   $required Whether a proof value is good only once.
+		 * @since 3.0.0
+		 */
+		$meaning = (string) apply_filters( 'reportedip_hive_selftest_meaning', ReportedIP_Hive_Tools_Page::selftest_meaning( $run, $matched, $required ), $run, $matched, $required );
+
 		wp_send_json_success(
 			array(
 				'run'            => $run,
@@ -451,7 +477,7 @@ class ReportedIP_Hive_Ajax_Handler {
 				'actual'         => $actual,
 				'actual_label'   => ReportedIP_Hive_Tools_Page::selftest_verdict_label( $actual ),
 				'ok'             => $matched,
-				'meaning'        => ReportedIP_Hive_Tools_Page::selftest_meaning( $run, $matched, $required ),
+				'meaning'        => $meaning,
 				'summary'        => $summary,
 			)
 		);
