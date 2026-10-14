@@ -2,7 +2,10 @@
 /**
  * Audit rows a 2.x release left behind keep their retention, export and
  * erasure while no add-on claims the table, and only then; the group list
- * of 2.x goes with the data on uninstall.
+ * of 2.x goes with the data on uninstall. Without the add-on that syncs
+ * the group, every block and whitelist entry the 2.x group sync placed is
+ * released through the IP manager, the group list emptied and the left-over
+ * cron event unscheduled; with the add-on nothing of that happens.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -17,7 +20,53 @@ declare(strict_types=1);
 
 namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-database.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-ip-manager.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-legacy-data.php';
+
+	if ( ! function_exists( 'wp_clear_scheduled_hook' ) ) {
+		/**
+		 * Records the hooks a test unschedules.
+		 *
+		 * @param string $hook Cron hook.
+		 * @return int
+		 */
+		function wp_clear_scheduled_hook( $hook ) {
+			$GLOBALS['rip_cleared_hooks'][] = (string) $hook;
+			return 1;
+		}
+	}
+
+	/**
+	 * IP manager double: records the lifted blocks and removed whitelist
+	 * entries, refuses nothing.
+	 */
+	class Test_Legacy_Data_IP_Manager extends \ReportedIP_Hive_IP_Manager {
+
+		/** @var string[] */
+		public $unblocked = array();
+
+		/** @var array<int,array{0:string,1:string}> */
+		public $unwhitelisted = array();
+
+		public function __construct() {
+		}
+
+		public function unblock_ip( $ip_address ) {
+			$this->unblocked[] = $ip_address;
+			return array(
+				'success' => true,
+				'message' => '',
+			);
+		}
+
+		public function remove_from_whitelist( $ip_address, $source = 'manual' ) {
+			$this->unwhitelisted[] = array( $ip_address, $source );
+			return array(
+				'success' => true,
+				'message' => '',
+			);
+		}
+	}
 
 	/**
 	 * A `$wpdb` double: one optional audit table, with or without the object
@@ -30,6 +79,15 @@ namespace {
 
 		/** @var bool */
 		public $has_table = true;
+
+		/** @var bool */
+		public $has_group_table = true;
+
+		/** @var string[] Whitelist rows of source group. */
+		public $group_whitelist = array();
+
+		/** @var string[] Active blocks of type group. */
+		public $group_blocks = array();
 
 		/** @var bool */
 		public $has_objects = true;
@@ -69,6 +127,9 @@ namespace {
 		 */
 		public function get_var( $sql ) {
 			$this->queries[] = $sql;
+			if ( 0 === strpos( $sql, 'SHOW TABLES' ) && false !== strpos( $sql, 'group' ) ) {
+				return $this->has_group_table ? 'wp_reportedip_hive_group_entries' : null;
+			}
 			if ( 0 === strpos( $sql, 'SHOW TABLES' ) ) {
 				return $this->has_table ? 'wp_reportedip_hive_audit_log' : null;
 			}
@@ -76,6 +137,18 @@ namespace {
 				return $this->has_objects ? '1' : '0';
 			}
 			return null;
+		}
+
+		/**
+		 * @param string $sql Statement.
+		 * @return string[]
+		 */
+		public function get_col( $sql ) {
+			$this->queries[] = $sql;
+			if ( false !== strpos( $sql, 'reportedip_hive_whitelist' ) ) {
+				return $this->group_whitelist;
+			}
+			return false !== strpos( $sql, 'reportedip_hive_blocked' ) ? $this->group_blocks : array();
 		}
 
 		/**
@@ -118,6 +191,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 		/** @var \Test_Legacy_Data_WPDB */
 		private $db;
 
+		/** @var \Test_Legacy_Data_IP_Manager */
+		private $ip_manager;
+
+		/** @var mixed */
+		private $ip_manager_before;
+
 		protected function set_up(): void {
 			parent::set_up();
 			$this->wpdb_before    = $GLOBALS['wpdb'] ?? null;
@@ -125,9 +204,16 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->db             = new \Test_Legacy_Data_WPDB();
 			$GLOBALS['wpdb']      = $this->db;
 			unset( $GLOBALS['wp_filters']['reportedip_hive_schema_tables'] );
+
+			$this->ip_manager        = new \Test_Legacy_Data_IP_Manager();
+			$instance                = new \ReflectionProperty( \ReportedIP_Hive_IP_Manager::class, 'instance' );
+			$this->ip_manager_before = $instance->getValue();
+			$instance->setValue( null, $this->ip_manager );
+			$GLOBALS['rip_cleared_hooks'] = array();
 		}
 
 		protected function tear_down(): void {
+			( new \ReflectionProperty( \ReportedIP_Hive_IP_Manager::class, 'instance' ) )->setValue( null, $this->ip_manager_before );
 			$GLOBALS['wpdb']       = $this->wpdb_before;
 			$GLOBALS['wp_filters'] = $this->filters_before;
 			parent::tear_down();
@@ -176,6 +262,76 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->claim( true );
 			\ReportedIP_Hive_Schema::drop_all_tables();
 			$this->assertSame( 1, count( array_keys( $this->db->queries, 'DROP TABLE IF EXISTS wp_reportedip_hive_audit_log', true ) ), 'Claimed: listed once, not twice.' );
+		}
+
+		/**
+		 * Seed the 2.x group state: one group whitelist range, two group
+		 * blocks, the runtime options of the sync and a current schema.
+		 */
+		private function seed_group_state(): void {
+			$this->db->group_whitelist = array( '10.9.0.0/16' );
+			$this->db->group_blocks    = array( '198.51.100.10', '198.51.100.11' );
+			$this->set_mocked_option( 'reportedip_hive_db_version', 21 );
+			foreach ( \ReportedIP_Hive_Legacy_Data::GROUP_OPTIONS as $option ) {
+				$this->set_mocked_option( $option, 'x' );
+			}
+		}
+
+		public function test_without_the_add_on_the_group_state_is_released_through_the_ip_manager(): void {
+			$this->claim( false );
+			$this->seed_group_state();
+
+			$this->assertSame( 3, \ReportedIP_Hive_Legacy_Data::release_groups() );
+			$this->assertSame( array( array( '10.9.0.0/16', 'group' ) ), $this->ip_manager->unwhitelisted, 'Only the group source may remove the entry, and only group rows are asked for.' );
+			$this->assertSame( array( '198.51.100.10', '198.51.100.11' ), $this->ip_manager->unblocked );
+			$this->assertContains( "SELECT ip_address FROM wp_reportedip_hive_whitelist WHERE source = 'group' AND is_active = 1", $this->db->queries );
+			$this->assertContains( "SELECT ip_address FROM wp_reportedip_hive_blocked WHERE block_type = 'group' AND is_active = 1", $this->db->queries );
+			$this->assertContains( 'DELETE FROM wp_reportedip_hive_group_entries', $this->db->queries );
+			foreach ( \ReportedIP_Hive_Legacy_Data::GROUP_OPTIONS as $option ) {
+				$this->assertFalse( get_option( $option, false ), $option );
+			}
+		}
+
+		public function test_with_the_add_on_the_group_state_is_left_to_it(): void {
+			$this->claim( true );
+			$this->seed_group_state();
+
+			$this->assertSame( 0, \ReportedIP_Hive_Legacy_Data::release_groups() );
+			\ReportedIP_Hive_Legacy_Data::on_group_sync_event();
+			$this->assertSame( array(), $this->db->queries );
+			$this->assertSame( array(), $this->ip_manager->unblocked );
+			$this->assertSame( array(), $GLOBALS['rip_cleared_hooks'], 'The add-on keeps its cron job.' );
+			$this->assertSame( 'x', get_option( 'reportedip_hive_group_etag', false ) );
+		}
+
+		public function test_a_schema_without_the_group_columns_is_left_alone(): void {
+			$this->claim( false );
+			$this->seed_group_state();
+			$this->set_mocked_option( 'reportedip_hive_db_version', 19 );
+
+			$this->assertSame( 0, \ReportedIP_Hive_Legacy_Data::release_groups() );
+			$this->assertSame( array(), $this->db->queries, 'whitelist.source arrived in v20; asking for it earlier would fail.' );
+		}
+
+		public function test_a_missing_group_table_still_releases_the_rows(): void {
+			$this->claim( false );
+			$this->seed_group_state();
+			$this->db->has_group_table = false;
+
+			$this->assertSame( 3, \ReportedIP_Hive_Legacy_Data::release_groups() );
+			$this->assertNotContains( 'DELETE FROM wp_reportedip_hive_group_entries', $this->db->queries );
+		}
+
+		public function test_the_left_over_cron_event_releases_once_and_unschedules_itself(): void {
+			$this->claim( false );
+			$this->seed_group_state();
+
+			\ReportedIP_Hive_Legacy_Data::on_group_sync_event();
+			$this->assertSame( array( '198.51.100.10', '198.51.100.11' ), $this->ip_manager->unblocked );
+			$this->assertSame( array( 'reportedip_hive_sync_group' ), $GLOBALS['rip_cleared_hooks'] );
+
+			$cron = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-cron-handler.php' );
+			$this->assertStringContainsString( "add_action( 'reportedip_hive_sync_group', array( 'ReportedIP_Hive_Legacy_Data', 'on_group_sync_event' ) );", $cron );
 		}
 
 		public function test_a_claimed_table_is_left_to_the_add_on(): void {

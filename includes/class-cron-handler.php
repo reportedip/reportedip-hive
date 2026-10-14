@@ -84,7 +84,7 @@ class ReportedIP_Hive_Cron_Handler {
 		add_action( 'reportedip_hive_process_queue', array( $this, 'cron_process_queue' ) );
 		add_action( 'reportedip_hive_refresh_quota', array( $this, 'cron_refresh_quota' ) );
 		add_action( 'reportedip_hive_sync_rulesets', array( $this, 'cron_sync_rulesets' ) );
-		add_action( 'reportedip_hive_sync_group', array( $this, 'cron_sync_group' ) );
+		add_action( 'reportedip_hive_sync_group', array( 'ReportedIP_Hive_Legacy_Data', 'on_group_sync_event' ) );
 
 		add_filter( 'cron_schedules', array( __CLASS__, 'add_cron_intervals' ) );
 	}
@@ -103,7 +103,6 @@ class ReportedIP_Hive_Cron_Handler {
 		'reportedip_hive_process_queue'   => 'fifteen_minutes',
 		'reportedip_hive_refresh_quota'   => 'six_hours',
 		'reportedip_hive_sync_rulesets'   => 'six_hours',
-		'reportedip_hive_sync_group'      => 'fifteen_minutes',
 	);
 
 	/**
@@ -214,6 +213,9 @@ class ReportedIP_Hive_Cron_Handler {
 	 * left behind while no add-on claims their table
 	 * ({@see ReportedIP_Hive_Legacy_Data::cleanup()}); an add-on that owns
 	 * the trail sweeps it in its `reportedip_hive_cron_cleanup_done` listener.
+	 * `released_group` counts the blocks and whitelist entries a 2.x group
+	 * sync placed that went because no add-on syncs the group any more
+	 * ({@see ReportedIP_Hive_Legacy_Data::release_groups()}).
 	 */
 	public function cron_cleanup() {
 		try {
@@ -226,7 +228,8 @@ class ReportedIP_Hive_Cron_Handler {
 			$expired_entries = $this->ip_manager->cleanup_expired_entries();
 			$lifted_self     = $this->lift_own_server_blocks();
 
-			$cleaned_audit = ReportedIP_Hive_Legacy_Data::cleanup();
+			$cleaned_audit  = ReportedIP_Hive_Legacy_Data::cleanup();
+			$released_group = ReportedIP_Hive_Legacy_Data::release_groups();
 
 			/**
 			 * Fires after the daily retention cleanup of the free tables.
@@ -245,6 +248,7 @@ class ReportedIP_Hive_Cron_Handler {
 					'anonymized_entries' => $anonymized,
 					'cleaned_logs'       => $cleaned_logs,
 					'cleaned_audit'      => $cleaned_audit,
+					'released_group'     => $released_group,
 					'expired_entries'    => $expired_entries,
 					'lifted_self_blocks' => $lifted_self,
 					'retention_days'     => $retention_days,
@@ -516,27 +520,6 @@ class ReportedIP_Hive_Cron_Handler {
 	}
 
 	/**
-	 * Cron job: mirror the group ban list (runs every 15 minutes).
-	 *
-	 * Delegates to {@see ReportedIP_Hive_Group_Sync::sync()}, which checks
-	 * community mode, the key and the API back-off itself and never throws
-	 * on a bad answer.
-	 *
-	 * @return void
-	 * @since  2.1.67
-	 */
-	public function cron_sync_group() {
-		if ( ! class_exists( 'ReportedIP_Hive_Group_Sync' ) ) {
-			return;
-		}
-		try {
-			ReportedIP_Hive_Group_Sync::get_instance()->sync();
-		} catch ( \Throwable $e ) {
-			$this->logger->error( 'Group list sync failed: ' . $e->getMessage(), 'system' );
-		}
-	}
-
-	/**
 	 * Manual trigger for cron jobs (for testing)
 	 *
 	 * @param string $job_name Job name to trigger ('cleanup', 'sync', 'queue', 'quota', 'all').
@@ -559,9 +542,6 @@ class ReportedIP_Hive_Cron_Handler {
 				break;
 			case 'quota':
 				$this->cron_refresh_quota();
-				break;
-			case 'group':
-				$this->cron_sync_group();
 				break;
 			case 'all':
 			default:

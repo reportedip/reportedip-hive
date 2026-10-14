@@ -344,7 +344,6 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-block-ref.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rule-store.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-rule-sync.php';
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-group-sync.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-database.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-proxy-trust.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-request-path.php';

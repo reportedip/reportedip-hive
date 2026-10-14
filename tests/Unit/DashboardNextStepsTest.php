@@ -141,7 +141,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_step_actions_map_every_advisory_key(): void {
-			foreach ( array( 'hide_login_off', 'frontend_2fa_available', 'badge_off', 'dropin_not_running', 'community_pending', 'group_available', 'own_2fa_missing' ) as $key ) {
+			foreach ( array( 'hide_login_off', 'frontend_2fa_available', 'badge_off', 'dropin_not_running', 'community_pending', 'own_2fa_missing' ) as $key ) {
 				$this->assertArrayHasKey( $key, ReportedIP_Hive_Dashboard_Next_Steps::step_actions(), $key );
 			}
 			$this->assertSame( array( 'reportedip_hive_auto_footer_enabled' => 1 ), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'badge_off', array() ) );
@@ -155,10 +155,35 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 			$this->assertSame( array(), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'community_pending', array() ), 'link-only steps write nothing' );
 
-			$group = ReportedIP_Hive_Dashboard_Next_Steps::step_actions()['group_available'];
-			$this->assertSame( 'https://reportedip.com/dashboard/groups/', $group['url'], 'The group step opens the portal, not a local page.' );
-			$this->assertSame( 'https://reportedip.com/docs/blocking/groups/', $group['doc'] );
+			$this->assertArrayNotHasKey( 'group_available', ReportedIP_Hive_Dashboard_Next_Steps::step_actions(), 'The group step comes with the add-on.' );
 			$this->assertSame( array(), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'group_available', array() ) );
+		}
+
+		public function test_an_add_on_adds_a_link_step_and_a_broken_result_changes_nothing(): void {
+			$filters_before = $GLOBALS['wp_filters'] ?? array();
+			try {
+				add_filter(
+					'reportedip_hive_next_step_actions',
+					static function ( $actions ) {
+						$actions['extra_issue'] = array(
+							'label' => 'Open',
+							'write' => false,
+						);
+						return $actions;
+					}
+				);
+				$this->assertSame( 'Open', ReportedIP_Hive_Dashboard_Next_Steps::step_actions()['extra_issue']['label'] );
+
+				$GLOBALS['wp_filters']['reportedip_hive_next_step_actions'] = array();
+				add_filter( 'reportedip_hive_next_step_actions', static fn() => null );
+				$this->assertArrayHasKey( 'badge_off', ReportedIP_Hive_Dashboard_Next_Steps::step_actions() );
+			} finally {
+				$GLOBALS['wp_filters'] = $filters_before;
+			}
+
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-dashboard-next-steps.php' );
+			$this->assertStringNotContainsString( 'How groups work', $source, 'The documentation label travels with the action.' );
+			$this->assertStringContainsString( "! empty( \$action['doc'] ) && ! empty( \$action['doc_label'] )", $source );
 		}
 	}
 }

@@ -72,9 +72,10 @@ final class ReportedIP_Hive_Schema {
 	 * Tables a 2.x release created in this plugin that an add-on owns since
 	 * 3.0.0. While no add-on claims one through `reportedip_hive_schema_tables`
 	 * the free plugin still removes it on uninstall, empties it on reset and
-	 * deletes a deleted site's rows from it, as 2.x did; retention, export
-	 * and erasure live in {@see ReportedIP_Hive_Legacy_Data}. It never
-	 * creates or writes such a table.
+	 * deletes a deleted site's rows from it, as 2.x did; retention, export,
+	 * erasure and the release of the 2.x group state live in
+	 * {@see ReportedIP_Hive_Legacy_Data}. It never creates such a table and
+	 * never adds a row to one.
 	 *
 	 * @var string[]
 	 */

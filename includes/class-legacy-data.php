@@ -30,6 +30,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  * per-site cleanup run through the schema's table list. It never writes a
  * row and renders nothing.
  *
+ * The group ban list of 2.x left more than a table: blocks of type `group`
+ * and whitelist entries of source `group` in the free tables, kept current
+ * by a sync that ran every fifteen minutes. Without the add-on nothing
+ * refreshes them, and a group whitelist entry the group later dropped
+ * would trust an address forever (it cannot even be removed by hand, see
+ * {@see ReportedIP_Hive_IP_Manager::remove_from_whitelist()}). 2.x dropped
+ * everything the sync placed as soon as groups were no longer available
+ * (plan without groups, no key, Local Shield); {@see release_groups()} does
+ * the same while no add-on claims the group table, through the IP manager,
+ * so both firewall layers learn about every lifted block and every removed
+ * whitelist entry.
+ *
  * @since 3.0.0
  */
 final class ReportedIP_Hive_Legacy_Data {
@@ -38,6 +50,38 @@ final class ReportedIP_Hive_Legacy_Data {
 	 * The audit trail table of 2.x.
 	 */
 	const AUDIT_LOG = 'reportedip_hive_audit_log';
+
+	/**
+	 * The group list table of 2.x.
+	 */
+	const GROUP_ENTRIES = 'reportedip_hive_group_entries';
+
+	/**
+	 * Cron hook of the 2.x group sync. An update from 2.x leaves the event
+	 * scheduled; while no add-on claims the group table, its next run
+	 * releases the group state and unschedules it.
+	 */
+	const GROUP_SYNC_HOOK = 'reportedip_hive_sync_group';
+
+	/**
+	 * Block type and whitelist source the 2.x group sync wrote.
+	 */
+	const GROUP_SOURCE = 'group';
+
+	/**
+	 * Free schema version from which both group columns exist
+	 * (`blocked.block_type` value `group` in v19, `whitelist.source` in v20).
+	 */
+	const GROUP_MIN_DB_VERSION = 20;
+
+	/**
+	 * Runtime options of the 2.x group sync that a release clears, as 2.x
+	 * did: the group, the ETag, the plan refusal marker and the wait of a
+	 * key without a group.
+	 *
+	 * @var string[]
+	 */
+	const GROUP_OPTIONS = array( 'reportedip_hive_group', 'reportedip_hive_group_etag', 'reportedip_hive_group_error', 'reportedip_hive_group_idle_until' );
 
 	/**
 	 * Retention per legacy table: stored option, 2.x default in days and the
@@ -86,6 +130,82 @@ final class ReportedIP_Hive_Legacy_Data {
 			);
 		}
 		return $deleted;
+	}
+
+	/**
+	 * Whether an add-on claims a legacy table right now.
+	 *
+	 * @param string $suffix Table suffix.
+	 * @return bool
+	 */
+	private static function claimed( $suffix ) {
+		return ! in_array( $suffix, ReportedIP_Hive_Schema::unclaimed_legacy_tables(), true );
+	}
+
+	/**
+	 * Lift every group block, remove every group whitelist entry and empty
+	 * the group list while no add-on claims the group table. Called from the
+	 * daily cleanup and from the left-over cron event of the 2.x sync.
+	 *
+	 * Each row goes through the IP manager, which fires
+	 * `reportedip_hive_ip_unblocked` and `reportedip_hive_whitelist_changed`,
+	 * so the pre-WordPress guard drops the block from its list and is rebaked
+	 * without the whitelist entry. Manual and automatic rows are never
+	 * touched. Idempotent: a second run finds nothing.
+	 *
+	 * @return int Blocks lifted plus whitelist entries removed.
+	 */
+	public static function release_groups() {
+		if ( self::claimed( self::GROUP_ENTRIES ) ) {
+			return 0;
+		}
+		if ( (int) get_site_option( ReportedIP_Hive_Migration_Manager::VERSION_OPTION, 0 ) < self::GROUP_MIN_DB_VERSION ) {
+			return 0;
+		}
+
+		global $wpdb;
+		$ip_manager = ReportedIP_Hive_IP_Manager::get_instance();
+		$whitelist  = ReportedIP_Hive_Schema::table( ReportedIP_Hive_Schema::TABLE_WHITELIST );
+		$blocked    = ReportedIP_Hive_Schema::table( ReportedIP_Hive_Schema::TABLE_BLOCKED );
+		$released   = 0;
+
+		foreach ( (array) $wpdb->get_col( $wpdb->prepare( "SELECT ip_address FROM {$whitelist} WHERE source = %s AND is_active = 1", self::GROUP_SOURCE ) ) as $address ) {
+			$result = $ip_manager->remove_from_whitelist( (string) $address, self::GROUP_SOURCE );
+			if ( ! empty( $result['success'] ) ) {
+				++$released;
+			}
+		}
+		foreach ( (array) $wpdb->get_col( $wpdb->prepare( "SELECT ip_address FROM {$blocked} WHERE block_type = %s AND is_active = 1", self::GROUP_SOURCE ) ) as $address ) {
+			$result = $ip_manager->unblock_ip( (string) $address );
+			if ( ! empty( $result['success'] ) ) {
+				++$released;
+			}
+		}
+
+		if ( self::orphaned( self::GROUP_ENTRIES ) ) {
+			$wpdb->query( 'DELETE FROM ' . ReportedIP_Hive_Schema::table( self::GROUP_ENTRIES ) );
+		}
+		foreach ( self::GROUP_OPTIONS as $option ) {
+			ReportedIP_Hive_Option_Routing::delete( $option );
+		}
+
+		return $released;
+	}
+
+	/**
+	 * Listener on the 2.x cron hook of the group sync: release the group
+	 * state and unschedule the event while no add-on claims the group table.
+	 * With an add-on that does, the add-on's sync answers the event and this
+	 * listener does nothing.
+	 *
+	 * @return void
+	 */
+	public static function on_group_sync_event() {
+		if ( self::claimed( self::GROUP_ENTRIES ) ) {
+			return;
+		}
+		self::release_groups();
+		wp_clear_scheduled_hook( self::GROUP_SYNC_HOOK );
 	}
 
 	/**

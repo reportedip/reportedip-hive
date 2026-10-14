@@ -377,8 +377,9 @@ final class ReportedIP_Hive_Support_Bundle {
 			}
 		}
 
-		$cron = array();
-		foreach ( array( 'reportedip_hive_cleanup', 'reportedip_hive_sync_reputation', 'reportedip_hive_process_queue', 'reportedip_hive_refresh_quota', 'reportedip_hive_sync_rulesets', 'reportedip_hive_sync_group' ) as $hook ) {
+		$cron  = array();
+		$hooks = class_exists( 'ReportedIP_Hive_Cron_Handler' ) ? ReportedIP_Hive_Cron_Handler::get_hook_names() : array( 'reportedip_hive_cleanup', 'reportedip_hive_sync_reputation', 'reportedip_hive_process_queue', 'reportedip_hive_refresh_quota', 'reportedip_hive_sync_rulesets' );
+		foreach ( $hooks as $hook ) {
 			$next   = wp_next_scheduled( $hook );
 			$cron[] = array(
 				'hook'    => str_replace( 'reportedip_hive_', '', $hook ),

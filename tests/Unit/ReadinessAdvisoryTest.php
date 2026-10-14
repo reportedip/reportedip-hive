@@ -48,11 +48,41 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertNull( ReportedIP_Hive_Readiness::community_pending( 'community' ) );
 		}
 
-		public function test_group_available_only_on_a_connected_plan_without_a_group(): void {
-			$this->assertSame( 'group_available', ReportedIP_Hive_Readiness::group_available( true, true, false )['key'] );
-			$this->assertNull( ReportedIP_Hive_Readiness::group_available( false, true, false ), 'not connected' );
-			$this->assertNull( ReportedIP_Hive_Readiness::group_available( true, false, false ), 'plan without groups' );
-			$this->assertNull( ReportedIP_Hive_Readiness::group_available( true, true, true ), 'already in a group' );
+		/**
+		 * The group advisory left with the add-on; an add-on's issue reaches
+		 * its deep link through the links filter, and a broken filter result
+		 * leaves the free list.
+		 */
+		public function test_an_add_on_issue_gets_its_link_through_the_filter(): void {
+			$this->assertFalse( method_exists( ReportedIP_Hive_Readiness::class, 'group_available' ) );
+			$links = new \ReflectionMethod( ReportedIP_Hive_Readiness::class, 'links' );
+			$this->assertArrayNotHasKey( 'group_available', $links->invoke( null ) );
+
+			$filters_before = $GLOBALS['wp_filters'] ?? array();
+			try {
+				add_filter(
+					'reportedip_hive_readiness_links',
+					static function ( $rows ) {
+						$rows['extra_issue'] = array( 'reportedip-hive-community', 'community' );
+						return $rows;
+					}
+				);
+				$this->assertSame( array( 'reportedip-hive-community', 'community' ), $links->invoke( null )['extra_issue'] );
+
+				$GLOBALS['wp_filters']['reportedip_hive_readiness_links'] = array();
+				add_filter( 'reportedip_hive_readiness_links', static fn() => null );
+				$this->assertArrayHasKey( 'community_pending', $links->invoke( null ) );
+			} finally {
+				$GLOBALS['wp_filters'] = $filters_before;
+			}
+
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-readiness.php' );
+			$after  = strpos( $source, "\$raised[] = self::community_pending(" );
+			$filter = strpos( $source, "apply_filters( 'reportedip_hive_readiness_issues', \$raised )" );
+			$forms  = strpos( $source, 'foreach ( self::form_adapters() as $slug => $row )' );
+			$this->assertNotFalse( $filter );
+			$this->assertGreaterThan( $after, $filter, 'Add-on advisories follow community_pending, where 2.1.74 raised the group advisory.' );
+			$this->assertLessThan( $forms, $filter );
 		}
 
 		public function test_dropin_not_running_only_where_the_server_could_run_it(): void {

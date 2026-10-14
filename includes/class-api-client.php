@@ -1556,13 +1556,22 @@ class ReportedIP_Hive_API {
 			);
 		}
 
-		foreach ( array( 'group', 'reputation' ) as $field ) {
-			if ( is_array( $status[ $field ] ?? null ) ) {
-				ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_' . $field, $status[ $field ] );
-			} else {
-				ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_' . $field );
-			}
+		if ( is_array( $status['reputation'] ?? null ) ) {
+			ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_reputation', $status['reputation'] );
+		} else {
+			ReportedIP_Hive_Option_Routing::delete( 'reportedip_hive_reputation' );
 		}
+
+		/**
+		 * Fires after a verified key status was stored, before the tier
+		 * comparison. `$status` carries the parsed verify-key answer,
+		 * including fields the free plugin does not store itself
+		 * (`group`: the group the key belongs to, or null).
+		 *
+		 * @param array $status Verified status payload.
+		 * @since 3.0.0
+		 */
+		do_action( 'reportedip_hive_api_status_persisted', $status );
 
 		$new_role = (string) ( $status['userRole'] ?? '' );
 		$new_tier = '' !== $new_role ? ReportedIP_Hive_Mode_Manager::tier_from_role( $new_role ) : 'free';
