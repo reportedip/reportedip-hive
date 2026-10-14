@@ -55,11 +55,15 @@ class ReportedIP_Hive_Split_Purge_Test extends WP_UnitTestCase {
 	/**
 	 * Run the upgrade seed from a stored version and count the purges.
 	 *
+	 * Every default is seeded first: a fresh default's side effects purge
+	 * the caches as well, and only the purge after the split counts here.
+	 *
 	 * @param string $from      Seeded version before the update.
 	 * @param int    $pow_since Stored start of the 2.x computation grace.
 	 * @return int Purges the run fired.
 	 */
 	private function purges_after_seed( $from, $pow_since ) {
+		ReportedIP_Hive_Defaults::seed_missing();
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_seeded_version', $from );
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_form_proof_pow_since', $pow_since );
 		$before = did_action( 'reportedip_hive_page_caches_purged' );
