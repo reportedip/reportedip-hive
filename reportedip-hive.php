@@ -213,7 +213,6 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Decoy_Path_Block::get_instance()->register_hooks();
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->register_hooks();
 		ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()->register_hooks();
-		ReportedIP_Hive_Audit_Logger::get_instance()->register_hooks();
 		ReportedIP_Hive_User_Block::register_hooks();
 		ReportedIP_Hive_User_Sessions::register_hooks();
 	}
@@ -385,8 +384,6 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-honeypot.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-comment-spam-filter.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-security-headers.php';
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-audit-registry.php';
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-audit-logger.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-block.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-user-sessions.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-score.php';
@@ -1125,9 +1122,9 @@ class ReportedIP_Hive {
 	 * same request, `wp_login_failed`. The application-password sensor has
 	 * already logged and counted that wire attempt, so this listener consumes
 	 * its claim and stands down for the duplicate row and attempt count while
-	 * still feeding spray and coordinated-attack detection. The audit trail in
-	 * `ReportedIP_Hive_Audit_Logger::on_login_failed()` is a separate
-	 * compliance record and deliberately unaffected.
+	 * still feeding spray and coordinated-attack detection. An audit trail
+	 * an add-on keeps on `wp_login_failed` is a separate compliance record
+	 * and deliberately unaffected.
 	 *
 	 * A refused sign-in of a blocked account is not a credential attack: the
 	 * password was correct. Counting it would let a blocked ex-employee lock

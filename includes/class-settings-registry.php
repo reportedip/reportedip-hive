@@ -1236,49 +1236,6 @@ final class ReportedIP_Hive_Settings_Registry {
 				'label'       => __( 'Auto-anonymize after (days)', 'reportedip-hive' ),
 				'description' => __( 'How long before addresses in old events are shortened. Keeps the statistics while dropping the identifying part.', 'reportedip-hive' ),
 			),
-			'reportedip_hive_audit_enabled'                => array(
-				'section'     => 'privacy_logs',
-				'kind'        => 'bool',
-				'tier'        => 'audit_log',
-				'remote'      => true,
-				'label'       => __( 'Audit trail', 'reportedip-hive' ),
-				'description' => __( 'Keep a separate, append-only record of who changed what: settings, plugins, pages, menus, files and accounts, each with the acting user.', 'reportedip-hive' ),
-			),
-			'reportedip_hive_audit_triggers'               => array(
-				'ui_lock'     => 'audit_log',
-				'choices'     => 'audit_groups',
-				'section'     => 'privacy_logs',
-				'kind'        => 'json_list',
-				'json_filter' => array( 'ReportedIP_Hive_Audit_Registry', 'filter_groups' ),
-				'remote'      => true,
-				'label'       => __( 'Audit trail triggers', 'reportedip-hive' ),
-				'description' => __( 'Which kinds of changes the audit trail records. Sign-ins are off by default because they are the loudest rows; the other groups are what a support case needs.', 'reportedip-hive' ),
-			),
-			'reportedip_hive_audit_retention_days'         => array(
-				'ui_lock'     => 'audit_log',
-				'section'     => 'privacy_logs',
-				'kind'        => 'int',
-				'min'         => 1,
-				'max'         => 365,
-				'remote'      => true,
-				'label'       => __( 'Audit retention (days)', 'reportedip-hive' ),
-				'description' => __( 'How long audit entries are kept. Compliance requirements usually set this, not convenience.', 'reportedip-hive' ),
-			),
-			'reportedip_hive_audit_anonymize_ip'           => array(
-				'section'     => 'privacy_logs',
-				'kind'        => 'bool',
-				'remote'      => true,
-				'label'       => __( 'Anonymize IPs in the audit trail', 'reportedip-hive' ),
-				'description' => __( 'Store only the network part of the address in the audit trail, so the record survives a data-protection review.', 'reportedip-hive' ),
-			),
-			'reportedip_hive_audit_new_ip_alert'           => array(
-				'section'     => 'privacy_logs',
-				'kind'        => 'bool',
-				'tier'        => 'audit_log',
-				'remote'      => true,
-				'label'       => __( 'Mail an alert on a sign-in from a new address', 'reportedip-hive' ),
-				'description' => __( 'Mail the notification recipients when an account signs in from an address it has never used. Rate-limited per account so a dynamic connection does not flood the inbox.', 'reportedip-hive' ),
-			),
 			'reportedip_hive_detailed_logging'             => array(
 				'section'     => 'privacy_logs',
 				'kind'        => 'bool',
@@ -1713,7 +1670,7 @@ final class ReportedIP_Hive_Settings_Registry {
 	 * each entry's `choice_label`, so a method an add-on registers is
 	 * offered while the add-on is active.
 	 *
-	 * @param string $source `roles`, `methods` or `audit_groups`.
+	 * @param string $source `roles`, `methods` or a source an add-on resolves.
 	 * @return array<string,string>
 	 */
 	public static function choice_values( $source ) {
@@ -1724,13 +1681,18 @@ final class ReportedIP_Hive_Settings_Registry {
 			}
 		} elseif ( 'roles' === $source ) {
 			$map = array_map( 'strval', wp_roles()->get_names() );
-		} elseif ( 'audit_groups' === $source ) {
-			foreach ( ReportedIP_Hive_Audit_Registry::groups() as $slug => $group ) {
-				if ( $group['multisite_only'] && ! is_multisite() ) {
-					continue;
-				}
-				$map[ $slug ] = $group['label'];
-			}
+		} else {
+			/**
+			 * Choices of a `choices` source the free plugin does not know,
+			 * value to label. Read by the Protection page checkbox groups
+			 * and the `allowed` list of the remote schema.
+			 *
+			 * @param array<string,string> $choices Value to label, empty.
+			 * @param string               $source  Source name from the spec entry.
+			 * @since 3.0.0
+			 */
+			$map = apply_filters( 'reportedip_hive_protection_choices', array(), (string) $source );
+			$map = is_array( $map ) ? array_map( 'strval', $map ) : array();
 		}
 		return $map;
 	}

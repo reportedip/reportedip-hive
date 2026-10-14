@@ -292,18 +292,20 @@ final class ReportedIP_Hive_User_Block {
 		WP_Session_Tokens::get_instance( $user_id )->destroy_all();
 		ReportedIP_Hive_Two_Factor::revoke_all_trusted_devices( $user_id );
 
-		ReportedIP_Hive_Audit_Logger::get_instance()->record(
-			'user_block',
-			'blocked',
-			array(
-				'by'          => get_current_user_id(),
-				'has_message' => '' !== $texts['message'] ? 1 : 0,
-				'has_note'    => '' !== $texts['note'] ? 1 : 0,
-			),
-			get_current_user_id(),
-			(string) wp_get_current_user()->user_login,
-			ReportedIP_Hive_Audit_Logger::user_object( $user, $user_id )
-		);
+		if ( class_exists( 'ReportedIP_Hive_Audit_Logger' ) ) {
+			ReportedIP_Hive_Audit_Logger::get_instance()->record(
+				'user_block',
+				'blocked',
+				array(
+					'by'          => get_current_user_id(),
+					'has_message' => '' !== $texts['message'] ? 1 : 0,
+					'has_note'    => '' !== $texts['note'] ? 1 : 0,
+				),
+				get_current_user_id(),
+				(string) wp_get_current_user()->user_login,
+				ReportedIP_Hive_Audit_Logger::user_object( $user, $user_id )
+			);
+		}
 
 		return true;
 	}
@@ -349,14 +351,16 @@ final class ReportedIP_Hive_User_Block {
 		delete_user_meta( $user_id, self::META );
 		self::$count_memo = array();
 
-		ReportedIP_Hive_Audit_Logger::get_instance()->record(
-			'user_block',
-			'unblocked',
-			array( 'by' => get_current_user_id() ),
-			get_current_user_id(),
-			(string) wp_get_current_user()->user_login,
-			ReportedIP_Hive_Audit_Logger::user_object( $user, $user_id )
-		);
+		if ( class_exists( 'ReportedIP_Hive_Audit_Logger' ) ) {
+			ReportedIP_Hive_Audit_Logger::get_instance()->record(
+				'user_block',
+				'unblocked',
+				array( 'by' => get_current_user_id() ),
+				get_current_user_id(),
+				(string) wp_get_current_user()->user_login,
+				ReportedIP_Hive_Audit_Logger::user_object( $user, $user_id )
+			);
+		}
 
 		return true;
 	}

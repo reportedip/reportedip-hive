@@ -116,7 +116,7 @@ class SettingsImportExportTest extends TestCase {
 		}
 		$this->assertContains( 'reportedip_hive_headers_enabled', $keys );
 		$this->assertContains( 'reportedip_hive_csp_policy', $keys );
-		$this->assertContains( 'reportedip_hive_audit_retention_days', $keys );
+		$this->assertNotContains( 'reportedip_hive_audit_retention_days', $keys, 'The audit keys come with the add-on.' );
 
 		$this->assertNotContains( 'reportedip_hive_waf_dropin_enabled', $keys, 'Drop-in toggle is host-specific and must stay local.' );
 		$this->assertNotContains( 'reportedip_hive_rule_sync_last_run', $keys, 'Sync timestamps are runtime state.' );

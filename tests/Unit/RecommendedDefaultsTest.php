@@ -84,9 +84,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 0, \ReportedIP_Hive_Defaults::recommendation_rank( 'reportedip_honeypot' ) );
 		}
 
-		public function test_business_unlocks_audit_and_one_year_retention(): void {
+		public function test_business_lifts_retention_to_one_year(): void {
 			$biz = \ReportedIP_Hive_Defaults::recommended( 'business' );
-			$this->assertSame( 1, $biz['reportedip_hive_audit_enabled'] );
+			$this->assertArrayNotHasKey( 'reportedip_hive_audit_enabled', $biz, 'The audit trail is recommended by the add-on.' );
 			$this->assertSame( 365, $biz['reportedip_hive_data_retention_days'] );
 			$this->assertSame( $biz, \ReportedIP_Hive_Defaults::recommended( 'enterprise' ) );
 		}

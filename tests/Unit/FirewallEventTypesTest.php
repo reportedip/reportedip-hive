@@ -181,16 +181,15 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * Every literal event slug a logging call writes into the logs table.
 		 *
 		 * Dynamically built slugs do not match and are covered by the threshold
-		 * branch of {@see assert_has_writer()} instead. `Audit_Logger::log_event()`
-		 * is excluded because it writes the separate audit table, which has its
-		 * own small vocabulary and its own filter.
+		 * branch of {@see assert_has_writer()} instead. The audit trail of the
+		 * add-on writes a separate table with its own vocabulary; a call
+		 * through `Audit_Logger::` is therefore excluded.
 		 *
 		 * @return string[]
 		 */
 		private function logged_event_types(): array {
-			$audit  = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-audit-logger.php' );
-			$blob   = str_replace( $audit, '', $this->sources() );
-			$call   = '(?<!Audit_Logger::)(?:log_security_event|log_event|log_denied|log_denial)\(\s*\'([a-z0-9_]{3,})\'\s*,';
+			$blob = $this->sources();
+			$call = '(?<!Audit_Logger::)(?:log_security_event|log_event|log_denied|log_denial)\(\s*\'([a-z0-9_]{3,})\'\s*,';
 			preg_match_all( '/' . $call . '/s', $blob, $matches );
 
 			return array_values( array_unique( $matches[1] ) );

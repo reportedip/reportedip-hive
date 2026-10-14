@@ -287,18 +287,20 @@ class ReportedIP_Hive_User_Admin {
 
 		++$ended;
 		$user = get_userdata( $user_id );
-		ReportedIP_Hive_Audit_Logger::get_instance()->record(
-			'session',
-			'terminated',
-			array(
-				'by'             => get_current_user_id(),
-				'target_user_id' => $user_id,
-				'verifier'       => substr( (string) $verifier, 0, 8 ),
-			),
-			get_current_user_id(),
-			(string) wp_get_current_user()->user_login,
-			ReportedIP_Hive_Audit_Logger::user_object( $user, (int) $user_id )
-		);
+		if ( class_exists( 'ReportedIP_Hive_Audit_Logger' ) ) {
+			ReportedIP_Hive_Audit_Logger::get_instance()->record(
+				'session',
+				'terminated',
+				array(
+					'by'             => get_current_user_id(),
+					'target_user_id' => $user_id,
+					'verifier'       => substr( (string) $verifier, 0, 8 ),
+				),
+				get_current_user_id(),
+				(string) wp_get_current_user()->user_login,
+				ReportedIP_Hive_Audit_Logger::user_object( $user, (int) $user_id )
+			);
+		}
 	}
 
 	/**
@@ -320,18 +322,20 @@ class ReportedIP_Hive_User_Admin {
 		$ended += $count;
 
 		$user = get_userdata( $user_id );
-		ReportedIP_Hive_Audit_Logger::get_instance()->record(
-			'session',
-			'terminated_all',
-			array(
-				'by'             => get_current_user_id(),
-				'target_user_id' => (int) $user_id,
-				'count'          => $count,
-			),
-			get_current_user_id(),
-			(string) wp_get_current_user()->user_login,
-			ReportedIP_Hive_Audit_Logger::user_object( $user, (int) $user_id )
-		);
+		if ( class_exists( 'ReportedIP_Hive_Audit_Logger' ) ) {
+			ReportedIP_Hive_Audit_Logger::get_instance()->record(
+				'session',
+				'terminated_all',
+				array(
+					'by'             => get_current_user_id(),
+					'target_user_id' => (int) $user_id,
+					'count'          => $count,
+				),
+				get_current_user_id(),
+				(string) wp_get_current_user()->user_login,
+				ReportedIP_Hive_Audit_Logger::user_object( $user, (int) $user_id )
+			);
+		}
 	}
 
 	/* --------------------------------------------------------------------- *
@@ -452,7 +456,7 @@ class ReportedIP_Hive_User_Admin {
 			? __( 'The account is blocked.', 'reportedip-hive' )
 			: __( 'The account is not blocked.', 'reportedip-hive' );
 
-		$known = get_user_meta( $user->ID, ReportedIP_Hive_Audit_Logger::KNOWN_IPS_META, true );
+		$known = get_user_meta( $user->ID, '_reportedip_hive_known_ips', true );
 		$known = is_array( $known ) ? $known : array();
 		$last  = empty( $known ) ? '' : (string) end( $known );
 		if ( '' !== $last ) {

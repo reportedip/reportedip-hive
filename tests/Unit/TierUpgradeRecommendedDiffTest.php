@@ -82,7 +82,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 			$this->assertSame(
 				array(
-					'reportedip_hive_audit_enabled'       => 1,
 					'reportedip_hive_data_retention_days' => 365,
 				),
 				$selected

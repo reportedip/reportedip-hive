@@ -117,7 +117,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_promo_enabled' => 'bool',
 				'reportedip_hive_quota_notif_enabled' => 'bool',
 				'reportedip_hive_tier_change_mail_enabled' => 'bool',
-				'reportedip_hive_audit_new_ip_alert' => 'bool',
 				'reportedip_hive_trusted_ip_header'             => 'enum',
 				'reportedip_hive_trusted_proxy_ranges'          => 'textarea',
 				'reportedip_hive_monitor_failed_logins'         => 'bool',
@@ -202,10 +201,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_log_user_agents'               => 'bool',
 				'reportedip_hive_data_retention_days'           => 'int',
 				'reportedip_hive_auto_anonymize_days'           => 'int',
-				'reportedip_hive_audit_enabled'                 => 'bool',
-				'reportedip_hive_audit_retention_days'          => 'int',
-				'reportedip_hive_audit_triggers'                => 'json_list',
-				'reportedip_hive_audit_anonymize_ip'            => 'bool',
 				'reportedip_hive_notify_admin'                  => 'bool',
 				'reportedip_hive_notify_recipients'             => 'email_list',
 				'reportedip_hive_notify_from_name'              => 'text',
@@ -496,7 +491,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				if ( 'json_list' !== $entry['kind'] ) {
 					continue;
 				}
-				$this->assertContains( $entry['choices'] ?? '', array( 'roles', 'methods', 'audit_groups' ), "{$key} has no choices source." );
+				$this->assertContains( $entry['choices'] ?? '', array( 'roles', 'methods' ), "{$key} has no choices source." );
 			}
 		}
 
@@ -518,8 +513,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_hsts_preload'         => 'security_headers_advanced',
 				'reportedip_hive_csp_policy'           => 'security_headers_advanced',
 				'reportedip_hive_csp_report_uri'       => 'security_headers_advanced',
-				'reportedip_hive_audit_triggers'       => 'audit_log',
-				'reportedip_hive_audit_retention_days' => 'audit_log',
 			);
 			foreach ( $expected as $key => $feature ) {
 				$this->assertSame( $feature, $spec[ $key ]['ui_lock'] ?? '', $key );

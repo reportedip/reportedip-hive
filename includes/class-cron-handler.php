@@ -209,6 +209,11 @@ class ReportedIP_Hive_Cron_Handler {
 
 	/**
 	 * Cron job: Daily cleanup
+	 *
+	 * `cleaned_audit` in the log line counts the audit rows a 2.x release
+	 * left behind while no add-on claims their table
+	 * ({@see ReportedIP_Hive_Legacy_Data::cleanup()}); an add-on that owns
+	 * the trail sweeps it in its `reportedip_hive_cron_cleanup_done` listener.
 	 */
 	public function cron_cleanup() {
 		try {
@@ -221,11 +226,7 @@ class ReportedIP_Hive_Cron_Handler {
 			$expired_entries = $this->ip_manager->cleanup_expired_entries();
 			$lifted_self     = $this->lift_own_server_blocks();
 
-			$cleaned_audit = 0;
-			if ( class_exists( 'ReportedIP_Hive_Audit_Logger' ) ) {
-				$audit_retention = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_audit_retention_days', 90 );
-				$cleaned_audit   = ReportedIP_Hive_Audit_Logger::cleanup( $audit_retention );
-			}
+			$cleaned_audit = ReportedIP_Hive_Legacy_Data::cleanup();
 
 			/**
 			 * Fires after the daily retention cleanup of the free tables.
