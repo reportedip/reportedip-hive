@@ -1081,7 +1081,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Check passwords against known breaches', 'reportedip-hive' ),
-				'description' => __( 'Reject passwords that appear in known breach lists. Only the first five characters of a hash leave the site, never the password.', 'reportedip-hive' ),
+				'description' => __( 'Check a new password against the Have I Been Pwned breach list. Only the first five characters of the SHA-1 hash of the password are sent to api.pwnedpasswords.com; the password itself never leaves the site. Off until you switch it on.', 'reportedip-hive' ),
 			),
 
 			'reportedip_hive_log_level'                    => array(

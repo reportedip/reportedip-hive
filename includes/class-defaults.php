@@ -194,7 +194,7 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_password_policy_enabled'         => true,
 		'reportedip_hive_password_min_length'             => 12,
 		'reportedip_hive_password_min_classes'            => 3,
-		'reportedip_hive_password_check_hibp'             => true,
+		'reportedip_hive_password_check_hibp'             => false,
 		'reportedip_hive_password_policy_all_users'       => false,
 
 		'reportedip_hive_2fa_enabled_global'              => false,

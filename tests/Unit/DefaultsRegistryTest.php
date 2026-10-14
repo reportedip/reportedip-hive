@@ -45,6 +45,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		public function test_hibp_check_is_opt_in() {
+			$this->assertFalse( \ReportedIP_Hive_Defaults::all_option_defaults()['reportedip_hive_password_check_hibp'] );
+		}
+
 		public function test_two_factor_enforce_roles_default_is_resolved_to_administrator() {
 			$defaults = \ReportedIP_Hive_Defaults::all_option_defaults();
 			$this->assertArrayHasKey( 'reportedip_hive_2fa_enforce_roles', $defaults );

@@ -195,7 +195,7 @@ class ReportedIP_Hive_Password_Strength {
 			return __( 'Password is too common and is on a public breach list.', 'reportedip-hive' );
 		}
 
-		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_check_hibp', true ) ) {
+		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_check_hibp', false ) ) {
 			$hibp = $this->is_password_pwned( $password );
 			if ( true === $hibp ) {
 				return __( 'Password appears in a public data breach. Choose a different password.', 'reportedip-hive' );
