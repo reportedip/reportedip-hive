@@ -2,9 +2,10 @@
 /**
  * Unit tests for the 2.1.35 attestation / identification layer.
  *
- * Covers AAGUID extraction and formatting, the AAGUID-to-model registry,
- * the fail-open packed-attestation verification (self-attestation path),
- * the opaque user handle, and the RP-ID / origin flexibility filters.
+ * Covers AAGUID extraction and formatting, the fail-open packed-attestation
+ * verification (self-attestation path), the opaque user handle, and the
+ * RP-ID / origin flexibility filters. The AAGUID-to-model registry lives in
+ * the add-on.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -34,14 +35,12 @@ namespace {
 	}
 
 	require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor-webauthn.php';
-	require_once dirname( __DIR__, 2 ) . '/includes/class-webauthn-aaguid-registry.php';
 }
 
 namespace ReportedIP\Hive\Tests\Unit {
 
 	use ReportedIP\Hive\Tests\TestCase;
 	use ReportedIP_Hive_Two_Factor_WebAuthn;
-	use ReportedIP_Hive_WebAuthn_Aaguid_Registry;
 
 	/**
 	 * @runTestsInSeparateProcesses
@@ -103,22 +102,6 @@ PEM;
 			$parsed = $this->call( 'parse_authenticator_data', $this->attested_auth_data( str_repeat( "\0", 16 ) ) );
 			$this->assertIsArray( $parsed );
 			$this->assertSame( '', $parsed['aaguid'], 'The zero AAGUID (attestation stripped) must read as absent.' );
-		}
-
-		public function test_registry_resolves_yubikey_models(): void {
-			$info = ReportedIP_Hive_WebAuthn_Aaguid_Registry::lookup( '2fc0579f-8113-47ea-b116-bb5a8db9202a' );
-			$this->assertNotNull( $info );
-			$this->assertStringContainsString( 'YubiKey 5', $info['label'] );
-			$this->assertSame( 'key', $info['icon'] );
-
-			$hello = ReportedIP_Hive_WebAuthn_Aaguid_Registry::lookup( '08987058-cadc-4b81-b6e1-30de50dcbe96' );
-			$this->assertNotNull( $hello );
-			$this->assertSame( 'Windows Hello', $hello['label'] );
-			$this->assertSame( 'device', $hello['icon'] );
-
-			$this->assertNull( ReportedIP_Hive_WebAuthn_Aaguid_Registry::lookup( '00000000-0000-0000-0000-000000000000' ) );
-			$this->assertNull( ReportedIP_Hive_WebAuthn_Aaguid_Registry::lookup( 'ffffffff-ffff-ffff-ffff-ffffffffffff' ) );
-			$this->assertNull( ReportedIP_Hive_WebAuthn_Aaguid_Registry::lookup( '' ) );
 		}
 
 		public function test_packed_self_attestation_verifies_and_fails_open(): void {

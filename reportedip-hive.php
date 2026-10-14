@@ -413,7 +413,6 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-reset-gate.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-onboarding.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-notifications.php';
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-webauthn-aaguid-registry.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-webauthn.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-rest.php';
 
