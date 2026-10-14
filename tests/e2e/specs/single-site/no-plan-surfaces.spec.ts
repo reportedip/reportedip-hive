@@ -63,7 +63,7 @@ test.describe('free plugin without the add-on', () => {
 		const hint = page.locator('.notice', { hasText: 'ReportedIP Hive Pro add-on' });
 		await expect(hint).toHaveCount(1);
 		await expect(hint).toContainText('Business plan');
-		await expect(hint.locator('a[href="https://reportedip.com/dashboard/"]')).toHaveCount(1);
+		await expect(hint.locator('a[href="https://reportedip.com/login/?redirect_to=https%3A%2F%2Freportedip.com%2Fdashboard%2F&rc=hive-plugin"]')).toHaveCount(1);
 
 		await page.goto('/wp-admin/');
 		await expect(page.locator('.notice', { hasText: 'ReportedIP Hive Pro add-on' }), 'never on the WordPress dashboard').toHaveCount(0);

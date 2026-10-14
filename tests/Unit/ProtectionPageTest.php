@@ -318,7 +318,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( 'data-feature="tor_blocking"', $blocking );
 			$this->assertStringContainsString( 'Available in the ReportedIP Hive Pro add-on (Professional plan).', $blocking );
 			$this->assertStringContainsString( 'Needs the Community Network.', $blocking, 'a community-only feature says so' );
-			$this->assertStringContainsString( 'href="https://reportedip.com/products/wordpress-plugin/#hive-response"', $blocking );
+			$this->assertStringContainsString( 'href="https://reportedip.com/products/wordpress-plugin/?rc=hive-plugin#hive-response"', $blocking );
 			$this->assertStringNotContainsString( 'pricing', $blocking );
 			$this->assertStringNotContainsString( 'name="reportedip_hive_block_tor', $blocking, 'a catalog row has no input' );
 

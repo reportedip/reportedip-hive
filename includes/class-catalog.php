@@ -29,7 +29,14 @@ final class ReportedIP_Hive_Catalog {
 	 * Product page every row links to; each `docs_url` adds one of its
 	 * `#hive-...` section anchors.
 	 */
-	const PRODUCT_URL = 'https://reportedip.com/products/wordpress-plugin/';
+	const PRODUCT_URL = 'https://reportedip.com/products/wordpress-plugin/?rc=hive-plugin';
+
+	/**
+	 * The account dashboard on reportedip.com, where the add-on is
+	 * downloaded. Linked through the login page, which leads a signed-out
+	 * visitor straight on to the dashboard.
+	 */
+	const ACCOUNT_URL = 'https://reportedip.com/login/?redirect_to=https%3A%2F%2Freportedip.com%2Fdashboard%2F&rc=hive-plugin';
 
 	/**
 	 * One row per add-on feature. Keys equal the feature keys the add-on

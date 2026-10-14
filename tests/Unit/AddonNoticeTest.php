@@ -20,6 +20,7 @@ if ( ! defined( 'REPORTEDIP_HIVE_SITE_URL' ) ) {
 	define( 'REPORTEDIP_HIVE_SITE_URL', 'https://reportedip.com' );
 }
 require_once dirname( __DIR__, 2 ) . '/includes/class-mode-manager.php';
+require_once dirname( __DIR__, 2 ) . '/includes/class-catalog.php';
 require_once dirname( __DIR__, 2 ) . '/includes/class-addon-notice.php';
 
 /**
@@ -31,7 +32,8 @@ class AddonNoticeTest extends TestCase {
 		foreach ( array( 'professional', 'business', 'enterprise' ) as $tier ) {
 			$body = \ReportedIP_Hive_Addon_Notice::message_for( $tier, false, false );
 			$this->assertStringContainsString( 'ReportedIP Hive Pro add-on', $body, $tier );
-			$this->assertStringContainsString( 'https://reportedip.com/dashboard/', $body, $tier );
+			$this->assertStringContainsString( esc_url( \ReportedIP_Hive_Catalog::ACCOUNT_URL ), $body, $tier );
+			$this->assertStringContainsString( 'rc=hive-plugin', $body, $tier );
 			$this->assertStringNotContainsString( 'utm_', $body, $tier );
 		}
 		$this->assertStringContainsString( 'Business', \ReportedIP_Hive_Addon_Notice::message_for( 'business', false, false ) );

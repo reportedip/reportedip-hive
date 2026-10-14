@@ -5150,7 +5150,7 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php else : ?>
 					<p><?php esc_html_e( 'The ReportedIP Hive Pro add-on adds the features below to this plugin. Download it from your account dashboard at reportedip.com and upload it under Plugins, Add New Plugin; it works with the Community Access Key of this site.', 'reportedip-hive' ); ?></p>
 					<p class="rip-flex rip-gap-2">
-						<a class="rip-button rip-button--secondary rip-button--sm" href="<?php echo esc_url( REPORTEDIP_HIVE_SITE_URL . '/dashboard/' ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open your account', 'reportedip-hive' ); ?></a>
+						<a class="rip-button rip-button--secondary rip-button--sm" href="<?php echo esc_url( ReportedIP_Hive_Catalog::ACCOUNT_URL ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open your account', 'reportedip-hive' ); ?></a>
 						<a class="rip-button rip-button--ghost rip-button--sm" href="<?php echo esc_url( ReportedIP_Hive_Catalog::PRODUCT_URL ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Learn more', 'reportedip-hive' ); ?></a>
 					</p>
 				<?php endif; ?>
