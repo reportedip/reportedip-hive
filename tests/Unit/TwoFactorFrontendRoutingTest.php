@@ -54,6 +54,9 @@ namespace {
 	if ( ! function_exists( 'is_user_logged_in' ) ) {
 		function is_user_logged_in() { return false; }
 	}
+	if ( ! function_exists( 'is_admin' ) ) {
+		function is_admin() { return ! empty( $GLOBALS['rip_test_is_admin'] ); }
+	}
 }
 
 namespace ReportedIP\Hive\Tests\Unit {
@@ -129,6 +132,26 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'https://example.org/reportedip-hive-2fa-setup/',
 				\ReportedIP_Hive_Two_Factor_Frontend::setup_url()
 			);
+		}
+	
+
+		public function test_onboarding_url_is_untouched_while_unavailable(): void {
+			$this->assertSame( 'https://example.org/wp-admin/admin.php?page=reportedip-hive-2fa-onboarding', \ReportedIP_Hive_Two_Factor_Frontend::filter_onboarding_url( 'https://example.org/wp-admin/admin.php?page=reportedip-hive-2fa-onboarding', 5 ) );
+		}
+
+		public function test_post_skip_url_keeps_the_dashboard_without_woocommerce(): void {
+			$this->assertSame( 'https://example.org/wp-admin/', \ReportedIP_Hive_Two_Factor_Frontend::filter_post_skip_url( 'https://example.org/wp-admin/', 5 ) );
+		}
+
+		public function test_frontend_onboarding_setting_only_skips_outside_wp_admin(): void {
+			$this->assertFalse( \ReportedIP_Hive_Two_Factor_Frontend::skip_onboarding_redirect( false, 5 ), 'The setting defaults to on.' );
+
+			$GLOBALS['wp_options']['reportedip_hive_2fa_frontend_onboarding'] = '0';
+			$this->assertTrue( \ReportedIP_Hive_Two_Factor_Frontend::skip_onboarding_redirect( false, 5 ), 'Switched off, the frontend catch stays quiet.' );
+
+			$GLOBALS['rip_test_is_admin'] = true;
+			$this->assertFalse( \ReportedIP_Hive_Two_Factor_Frontend::skip_onboarding_redirect( false, 5 ), 'wp-admin keeps redirecting to the wizard.' );
+			$this->assertTrue( \ReportedIP_Hive_Two_Factor_Frontend::skip_onboarding_redirect( true, 5 ), 'An earlier skip stands.' );
 		}
 	}
 }

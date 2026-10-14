@@ -141,6 +141,9 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 		add_filter( 'reportedip_hive_2fa_redirect_url', array( __CLASS__, 'filter_redirect_url' ), 10, 4 );
 		add_action( 'reportedip_hive_2fa_render_challenge_' . self::CONTEXT, array( __CLASS__, 'render_challenge_view' ), 10, 2 );
 		add_action( 'reportedip_hive_2fa_render_expired_' . self::CONTEXT, array( __CLASS__, 'render_expired_view' ), 10, 2 );
+		add_filter( 'reportedip_hive_2fa_onboarding_url', array( __CLASS__, 'filter_onboarding_url' ), 10, 2 );
+		add_filter( 'reportedip_hive_2fa_post_skip_url', array( __CLASS__, 'filter_post_skip_url' ), 10, 2 );
+		add_filter( 'reportedip_2fa_skip_onboarding_redirect', array( __CLASS__, 'skip_onboarding_redirect' ), 10, 2 );
 	}
 
 	/**
@@ -472,8 +475,16 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 		}
 
 		if ( class_exists( 'ReportedIP_Hive_Two_Factor_Onboarding' ) ) {
+			$has_wc     = function_exists( 'wc_get_page_permalink' );
 			$onboarding = new ReportedIP_Hive_Two_Factor_Onboarding();
-			$onboarding->render_page( 'frontend' );
+			$onboarding->render_page(
+				'frontend',
+				array(
+					'optional'   => (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_customer_optional', true ),
+					'exit_url'   => $has_wc ? (string) wc_get_page_permalink( 'myaccount' ) : '',
+					'exit_label' => $has_wc ? __( 'Back to My Account', 'reportedip-hive' ) : '',
+				)
+			);
 			return;
 		}
 
@@ -892,6 +903,98 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 		</main>
 		<?php
 		self::close_theme_frame();
+	}
+
+	/**
+	 * Listener on `reportedip_hive_2fa_onboarding_url`. While the module is
+	 * available, a frontend request and a user who cannot reach wp-admin
+	 * (neither `manage_options` nor `edit_posts`) get the themed setup slug,
+	 * so an administrator who signed in via My Account stays on the
+	 * storefront too. Everything else keeps the wp-admin wizard.
+	 *
+	 * @param string $url     Wizard URL so far.
+	 * @param int    $user_id Current user.
+	 * @return string
+	 * @since  3.0.0
+	 */
+	public static function filter_onboarding_url( $url, $user_id ) {
+		unset( $user_id );
+		if ( ! self::is_available() ) {
+			return (string) $url;
+		}
+		if ( self::is_frontend_request() ) {
+			return self::setup_url();
+		}
+		if ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'edit_posts' ) ) {
+			return self::setup_url();
+		}
+		return (string) $url;
+	}
+
+	/**
+	 * Listener on `reportedip_hive_2fa_post_skip_url`. Customers and
+	 * Subscribers cannot reach `wp-admin/`, so a hard dashboard target lands
+	 * them on a 403/redirect loop; on a WooCommerce site they go back to My
+	 * Account.
+	 *
+	 * @param string $url     Dashboard URL.
+	 * @param int    $user_id User who skipped.
+	 * @return string
+	 * @since  1.7.0
+	 */
+	public static function filter_post_skip_url( $url, $user_id ) {
+		$user_id = (int) $user_id;
+		if ( $user_id > 0
+			&& ! user_can( $user_id, 'manage_options' )
+			&& ! user_can( $user_id, 'edit_posts' )
+			&& function_exists( 'wc_get_page_permalink' ) ) {
+			$account_url = (string) wc_get_page_permalink( 'myaccount' );
+			if ( '' !== $account_url ) {
+				return $account_url;
+			}
+		}
+		return (string) $url;
+	}
+
+	/**
+	 * Listener on `reportedip_2fa_skip_onboarding_redirect`: outside
+	 * wp-admin the setting "Send storefront users to themed onboarding"
+	 * (default on) decides whether a user who still has to enrol is sent to
+	 * the wizard from the frontend.
+	 *
+	 * @param bool $skip    Skip so far.
+	 * @param int  $user_id User.
+	 * @return bool
+	 * @since  3.0.0
+	 */
+	public static function skip_onboarding_redirect( $skip, $user_id ) {
+		unset( $user_id );
+		if ( $skip || is_admin() ) {
+			return (bool) $skip;
+		}
+		return ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_onboarding', true );
+	}
+
+	/**
+	 * Whether the current request is a frontend (theme) request, as
+	 * opposed to wp-admin, REST, AJAX, cron or CLI.
+	 *
+	 * @return bool
+	 */
+	private static function is_frontend_request() {
+		if ( wp_doing_ajax() || wp_doing_cron() ) {
+			return false;
+		}
+		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+			return false;
+		}
+		if ( defined( 'WP_CLI' ) && WP_CLI ) {
+			return false;
+		}
+		if ( function_exists( 'is_admin' ) && is_admin() ) {
+			return false;
+		}
+		return true;
 	}
 
 	/**

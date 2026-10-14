@@ -678,4 +678,21 @@ class ExtensionApiTest extends TestCase {
 		$this->assertStringContainsString( "self::challenge_redirect( 'locked', wp_login_url() . '?reportedip_2fa_locked=1', \$context, \$nonce_data )", $source );
 		$this->assertStringContainsString( "self::challenge_redirect( 'signed_in', admin_url(), \$context, array() )", $source );
 	}
+
+	/**
+	 * The onboarding knows no storefront: the wizard URL and the target
+	 * after a skip go through filters, a frontend render is described by
+	 * its caller.
+	 */
+	public function test_onboarding_has_no_storefront_knowledge() {
+		$source = (string) file_get_contents( REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-onboarding.php' );
+
+		foreach ( array( 'wc_get_page_permalink', 'Two_Factor_Frontend', '2fa_frontend_', 'My Account' ) as $needle ) {
+			$this->assertStringNotContainsString( $needle, $source, $needle );
+		}
+		$this->assertStringContainsString( "apply_filters( 'reportedip_hive_2fa_onboarding_url', \$default, get_current_user_id() )", $source );
+		$this->assertStringContainsString( "apply_filters( 'reportedip_hive_2fa_post_skip_url', \$default, (int) \$user_id )", $source );
+		$this->assertStringContainsString( "public function render_page( \$context = 'admin', array \$surface = array() ) {", $source );
+		$this->assertStringContainsString( "add_action( 'template_redirect', array( \$this, 'maybe_frontend_redirect' ) );", $source, 'Flagged users are still sent to the wizard from the frontend without the add-on.' );
+	}
 }

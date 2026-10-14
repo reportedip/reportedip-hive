@@ -245,13 +245,11 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	/**
 	 * template_redirect callback, catch users who land on the frontend after login.
 	 *
-	 * Controlled by the "Enforce onboarding on the frontend" setting (default on).
+	 * An add-on that offers a setting for it answers
+	 * `reportedip_2fa_skip_onboarding_redirect` outside wp-admin.
 	 */
 	public function maybe_frontend_redirect() {
 		if ( is_admin() ) {
-			return;
-		}
-		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_onboarding', true ) ) {
 			return;
 		}
 
@@ -308,31 +306,35 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 
 	/**
 	 * Render the onboarding page (standalone style, no admin chrome).
+	 *
+	 * An add-on that serves the wizard on its own surface calls it with the
+	 * context `frontend` and describes that surface:
+	 *  - `optional`   (bool)   the user may enrol voluntarily there, even
+	 *                          when no role requires it;
+	 *  - `exit_url`   (string) where "leave" and the nothing-to-do redirect
+	 *                          go instead of the dashboard;
+	 *  - `exit_label` (string) the text of that link.
+	 *
+	 * @param string              $context `admin` or `frontend`.
+	 * @param array<string,mixed> $surface Surface of a `frontend` render, see above.
+	 * @return void
 	 */
-	public function render_page( $context = 'admin' ) {
+	public function render_page( $context = 'admin', array $surface = array() ) {
 		$user_id = get_current_user_id();
 		$user    = wp_get_current_user();
 
 		$is_frontend           = ( 'frontend' === $context );
-		$frontend_self_service = false;
-		if ( $is_frontend && class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' ) ) {
-			$customer_optional     = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_2fa_frontend_customer_optional', true );
-			$has_2fa_already       = ReportedIP_Hive_Two_Factor::is_user_enabled( $user_id );
-			$frontend_self_service = (
-				ReportedIP_Hive_Two_Factor_Frontend::is_available()
-				&& $customer_optional
-				&& ! $has_2fa_already
-			);
-		}
+		$exit_url              = $is_frontend ? (string) ( $surface['exit_url'] ?? '' ) : '';
+		$frontend_self_service = $is_frontend
+			&& ! empty( $surface['optional'] )
+			&& ! ReportedIP_Hive_Two_Factor::is_user_enabled( $user_id );
 
 		$has_2fa                    = ! empty( ReportedIP_Hive_Two_Factor::get_user_enabled_methods( $user_id ) );
 		$voluntary_admin_onboarding = ! $is_frontend && ! $has_2fa;
 
 		if ( ! self::user_needs_onboarding( $user_id ) && ! $frontend_self_service && ! $voluntary_admin_onboarding ) {
 			delete_transient( self::TRANSIENT_PREFIX . $user_id );
-			$fallback = $is_frontend && function_exists( 'wc_get_page_permalink' )
-				? (string) wc_get_page_permalink( 'myaccount' )
-				: ( is_network_admin() ? network_admin_url() : admin_url() );
+			$fallback = '' !== $exit_url ? $exit_url : ( is_network_admin() ? network_admin_url() : admin_url() );
 			wp_safe_redirect( $fallback );
 			exit;
 		}
@@ -359,9 +361,9 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 
 		$dashboard_url   = is_network_admin() ? network_admin_url() : admin_url();
 		$dashboard_label = __( 'Go to dashboard', 'reportedip-hive' );
-		if ( $is_frontend && function_exists( 'wc_get_page_permalink' ) ) {
-			$dashboard_url   = (string) wc_get_page_permalink( 'myaccount' );
-			$dashboard_label = __( 'Back to My Account', 'reportedip-hive' );
+		if ( '' !== $exit_url ) {
+			$dashboard_url   = $exit_url;
+			$dashboard_label = (string) ( $surface['exit_label'] ?? $dashboard_label );
 		}
 
 		$data = array(
@@ -528,85 +530,42 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	}
 
 	/**
-	 * Get the canonical onboarding URL.
-	 *
-	 * Routing matrix:
-	 *  - Frontend module unavailable        -> classic wp-admin onboarding page.
-	 *  - Frontend request (template_redirect, WC-account redirect, ...)
-	 *    AND Frontend module available      -> themed setup slug, regardless of
-	 *                                          the user's role. Keeps an admin
-	 *                                          who signed in via My Account on
-	 *                                          the storefront instead of dumping
-	 *                                          them into wp-admin.
-	 *  - Admin request                      -> classic wp-admin onboarding page.
-	 *  - Frontend module available + low-cap user (no manage_options / edit_posts)
-	 *                                       -> themed setup slug.
+	 * Get the canonical onboarding URL: the wp-admin wizard, unless a
+	 * listener routes the user to another surface.
 	 *
 	 * @return string
 	 */
 	public static function get_onboarding_url() {
-		$frontend_available = class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' )
-			&& ReportedIP_Hive_Two_Factor_Frontend::is_available();
+		$default = is_network_admin() ? network_admin_url( 'admin.php?page=' . self::PAGE_SLUG ) : admin_url( 'admin.php?page=' . self::PAGE_SLUG );
 
-		if ( $frontend_available && self::is_frontend_request() ) {
-			return ReportedIP_Hive_Two_Factor_Frontend::setup_url();
-		}
-
-		if ( $frontend_available
-			&& ! current_user_can( 'manage_options' )
-			&& ! current_user_can( 'edit_posts' ) ) {
-			return ReportedIP_Hive_Two_Factor_Frontend::setup_url();
-		}
-		return is_network_admin() ? network_admin_url( 'admin.php?page=' . self::PAGE_SLUG ) : admin_url( 'admin.php?page=' . self::PAGE_SLUG );
+		/**
+		 * Route the enrolment wizard to another surface.
+		 *
+		 * @param string $url     Wizard URL.
+		 * @param int    $user_id Current user.
+		 * @since 3.0.0
+		 */
+		return (string) apply_filters( 'reportedip_hive_2fa_onboarding_url', $default, get_current_user_id() );
 	}
 
 	/**
-	 * Pick a sensible "no longer here" target for the skip handler.
+	 * Pick a sensible "no longer here" target for the skip handler: the
+	 * dashboard, unless a listener knows a better place for the user.
 	 *
-	 * Customers and Subscribers cannot reach `wp-admin/`, so a hard
-	 * `admin_url()` lands them on a 403/redirect loop. WooCommerce sites
-	 * route them back to My Account; everyone else (administrators,
-	 * editors, ...) keeps the wp-admin dashboard.
-	 *
-	 * @param int $user_id
+	 * @param int $user_id User who skipped.
 	 * @return string
 	 * @since  1.7.0
 	 */
 	private static function default_post_skip_url( $user_id ) {
-		$user_id = (int) $user_id;
-		if ( $user_id > 0
-			&& ! user_can( $user_id, 'manage_options' )
-			&& ! user_can( $user_id, 'edit_posts' )
-			&& function_exists( 'wc_get_page_permalink' ) ) {
-			$account_url = (string) wc_get_page_permalink( 'myaccount' );
-			if ( '' !== $account_url ) {
-				return $account_url;
-			}
-		}
-		return is_network_admin() ? network_admin_url() : admin_url();
-	}
+		$default = is_network_admin() ? network_admin_url() : admin_url();
 
-	/**
-	 * Whether the current request is a frontend (theme) request, as
-	 * opposed to wp-admin, REST, AJAX, cron or CLI. Used by
-	 * {@see self::get_onboarding_url()} to keep customers on the
-	 * storefront after sign-in regardless of their role.
-	 *
-	 * @return bool
-	 */
-	private static function is_frontend_request() {
-		if ( wp_doing_ajax() || wp_doing_cron() ) {
-			return false;
-		}
-		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
-			return false;
-		}
-		if ( defined( 'WP_CLI' ) && WP_CLI ) {
-			return false;
-		}
-		if ( function_exists( 'is_admin' ) && is_admin() ) {
-			return false;
-		}
-		return true;
+		/**
+		 * Target after a skipped enrolment.
+		 *
+		 * @param string $url     Dashboard URL.
+		 * @param int    $user_id User who skipped.
+		 * @since 3.0.0
+		 */
+		return (string) apply_filters( 'reportedip_hive_2fa_post_skip_url', $default, (int) $user_id );
 	}
 }
