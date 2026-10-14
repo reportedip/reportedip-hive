@@ -285,6 +285,43 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		public function test_clone_warning_mails_the_user_once_per_key_and_hour(): void {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
+			require_once dirname( __DIR__, 2 ) . '/includes/interface-mail-provider.php';
+			require_once dirname( __DIR__, 2 ) . '/includes/mail-providers/class-mail-provider-wordpress.php';
+			require_once dirname( __DIR__, 2 ) . '/includes/class-mailer.php';
+			require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor-notifications.php';
+			$GLOBALS['rip_test_wp_mail_calls'] = array();
+
+			$notifications = new \ReportedIP_Hive_Two_Factor_Notifications();
+			$notifications->on_counter_regression( self::USER_ID, 'cred-a', 'Desk key' );
+			$notifications->on_counter_regression( self::USER_ID, 'cred-a', 'Desk key' );
+
+			$mails = $GLOBALS['rip_test_wp_mail_calls'];
+			$this->assertCount( 1, $mails, 'A replayed assertion must not send a second mail within the hour.' );
+			$this->assertSame( 'jane@example.org', $mails[0]['to'] );
+			$this->assertStringContainsString( 'Suspicious security-key sign-in blocked', $mails[0]['subject'] );
+			$this->assertStringContainsString( 'Desk key', $mails[0]['message'] );
+
+			$notifications->on_counter_regression( self::USER_ID, 'cred-b', 'Spare key' );
+			$this->assertCount( 2, $GLOBALS['rip_test_wp_mail_calls'], 'The hourly limit is per key, a second key still warns.' );
+
+			$GLOBALS['wp_transients'] = array();
+			$notifications->on_counter_regression( self::USER_ID, 'cred-a', 'Desk key' );
+			$this->assertCount( 3, $GLOBALS['rip_test_wp_mail_calls'], 'Once the hour has passed, the same key warns again.' );
+		}
+
+		public function test_registration_consumes_the_challenge_before_any_check(): void {
+			$source = $this->source( 'includes/class-two-factor-webauthn.php' );
+			$body   = substr( $source, (int) strpos( $source, 'public function ajax_register_verify(' ) );
+			$this->assertStringContainsString(
+				"|| ! delete_transient( self::TRANSIENT_PREFIX . 'register_' . \$user_id ) )",
+				$body,
+				'Only the request whose delete removed the challenge may store a key.'
+			);
+			$this->assertLessThan( strpos( $body, 'parse_attestation(' ), strpos( $body, 'delete_transient(' ) );
+		}
+
 		public function test_first_key_is_free_and_more_keys_are_gated(): void {
 			$this->assertTrue(
 				ReportedIP_Hive_Two_Factor_WebAuthn::can_add_key( self::USER_ID ),

@@ -324,11 +324,15 @@ class ReportedIP_Hive_Two_Factor_WebAuthn {
 			wp_send_json_error( array( 'message' => self::key_limit_message( $user_id ) ) );
 		}
 
+		/*
+		 * The challenge is consumed before any check: only the request whose
+		 * delete actually removed the transient may go on, so two parallel
+		 * completions of the same ceremony cannot both store a key.
+		 */
 		$stored_challenge_b64 = get_transient( self::TRANSIENT_PREFIX . 'register_' . $user_id );
-		if ( empty( $stored_challenge_b64 ) ) {
+		if ( empty( $stored_challenge_b64 ) || ! delete_transient( self::TRANSIENT_PREFIX . 'register_' . $user_id ) ) {
 			wp_send_json_error( array( 'message' => __( 'Challenge expired, please start again.', 'reportedip-hive' ) ) );
 		}
-		delete_transient( self::TRANSIENT_PREFIX . 'register_' . $user_id );
 		$stored_challenge = base64_decode( $stored_challenge_b64 );
 
 		$client_data_json = self::b64url_decode( $credential['response']['clientDataJSON'] ?? '' );
