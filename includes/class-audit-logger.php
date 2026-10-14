@@ -751,7 +751,7 @@ class ReportedIP_Hive_Audit_Logger {
 	/**
 	 * Record an IP against a user's LRU list, returning whether it was new.
 	 *
-	 * Shared with {@see ReportedIP_Hive_Login_Context}: the list itself is
+	 * Shared with the sign-in history of the adaptive 2FA: the list itself is
 	 * plain sign-in history, so it is written on every login. The Business
 	 * gate applies to the audit row this method's return value flags, not to
 	 * the list.
