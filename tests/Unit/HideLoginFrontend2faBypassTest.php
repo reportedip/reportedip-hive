@@ -1,14 +1,14 @@
 <?php
 /**
- * Unit tests for the Hide-Login bypass that protects the
- * frontend 2FA challenge / setup slugs.
+ * Unit tests for the Hide-Login bypass that protects the frontend 2FA
+ * challenge / setup slugs.
  *
- * Hide-Login's `should_bypass()` is the choke-point that decides whether
- * the request gets rewritten or rendered as a fake 404 / block-page.
- * The frontend 2FA module exposes two public slugs (challenge and setup)
- * that MUST always pass through, otherwise enabling Hide-Login on a
- * customer-facing site silently breaks the second-factor for every
- * WooCommerce user.
+ * Hide-Login's `is_environment_bypassed()` is the choke-point that decides
+ * whether the request gets rewritten or rendered as a fake 404 / block-page.
+ * The frontend 2FA module hands both of its public slugs (challenge and
+ * setup) to `reportedip_hive_hide_login_bypass_paths`, otherwise enabling
+ * Hide-Login on a customer-facing site silently breaks the second factor for
+ * every WooCommerce user.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -23,49 +23,48 @@ namespace ReportedIP\Hive\Tests\Unit;
 
 use ReportedIP\Hive\Tests\TestCase;
 
+/**
+ * @runTestsInSeparateProcesses
+ * @preserveGlobalState disabled
+ */
 class HideLoginFrontend2faBypassTest extends TestCase {
 
-	private function source(): string {
-		return (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-hide-login.php' );
+	protected function set_up() {
+		parent::set_up();
+		$GLOBALS['wp_options'] = array();
+		require_once dirname( __DIR__, 2 ) . '/includes/class-mode-manager.php';
+		require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor-frontend.php';
+		\ReportedIP_Hive_Two_Factor_Frontend::flush_memo();
 	}
 
-	public function test_should_bypass_pulls_slugs_from_frontend_module(): void {
-		$source = $this->source();
-
-		$this->assertStringContainsString(
-			"ReportedIP_Hive_Two_Factor_Frontend::get_challenge_slug()",
-			$source,
-			'should_bypass() must read the configured challenge slug from the Frontend module so admins who customised the slug do not lock themselves out.'
-		);
-		$this->assertStringContainsString(
-			"ReportedIP_Hive_Two_Factor_Frontend::get_setup_slug()",
-			$source,
-			'should_bypass() must read the configured setup slug from the Frontend module, the onboarding wizard is on its own slug.'
+	public function test_both_default_slugs_are_bypassed(): void {
+		$this->assertSame(
+			array( '/kept', '/reportedip-hive-2fa', '/reportedip-hive-2fa-setup' ),
+			\ReportedIP_Hive_Two_Factor_Frontend::bypass_paths( array( '/kept' ) )
 		);
 	}
 
-	public function test_should_bypass_returns_true_for_frontend_paths(): void {
-		$source = $this->source();
+	public function test_configured_slugs_are_bypassed(): void {
+		$GLOBALS['wp_options']['reportedip_hive_2fa_frontend_slug']       = 'shop-verify';
+		$GLOBALS['wp_options']['reportedip_hive_2fa_frontend_setup_slug'] = 'shop-verify-setup';
+		\ReportedIP_Hive_Two_Factor_Frontend::flush_memo();
 
-		$this->assertMatchesRegularExpression(
-			'/foreach\s*\(\s*\$rip_2fa_slugs\s+as\s+\$rip_slug\s*\)/',
-			$source,
-			'The bypass must iterate both slugs and short-circuit on a match, a single hardcoded slug would break the moment the operator renames either one.'
-		);
-		$this->assertStringContainsString(
-			"str_starts_with( \$path, '/' . \$rip_slug . '/' )",
-			$source,
-			'The match has to cover both bare-slug and trailing-segment paths so a future onboarding step like /reportedip-hive-2fa-setup/totp/ stays bypassed.'
+		$this->assertSame(
+			array( '/shop-verify', '/shop-verify-setup' ),
+			\ReportedIP_Hive_Two_Factor_Frontend::bypass_paths( array() ),
+			'Admins who customised the slugs must not lock their customers out.'
 		);
 	}
 
-	public function test_bypass_guarded_by_class_exists(): void {
-		$source = $this->source();
+	public function test_bypass_does_not_depend_on_the_plan(): void {
+		$this->assertFalse( \ReportedIP_Hive_Two_Factor_Frontend::is_available() );
+		$this->assertCount( 2, \ReportedIP_Hive_Two_Factor_Frontend::bypass_paths( array() ), 'Like 2.1.x the slugs stay reachable while the module is parked, so a stale link is not answered by the Hide Login block page.' );
+	}
 
+	public function test_listener_is_wired_in_init(): void {
 		$this->assertStringContainsString(
-			"class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' )",
-			$source,
-			'The bypass branch must be wrapped in a class_exists() guard so old installs without the Frontend module keep parsing this file without fatals.'
+			"add_filter( 'reportedip_hive_hide_login_bypass_paths', array( __CLASS__, 'bypass_paths' ) );",
+			(string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-two-factor-frontend.php' )
 		);
 	}
 }

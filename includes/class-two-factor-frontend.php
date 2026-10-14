@@ -144,6 +144,7 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 		add_filter( 'reportedip_hive_2fa_onboarding_url', array( __CLASS__, 'filter_onboarding_url' ), 10, 2 );
 		add_filter( 'reportedip_hive_2fa_post_skip_url', array( __CLASS__, 'filter_post_skip_url' ), 10, 2 );
 		add_filter( 'reportedip_2fa_skip_onboarding_redirect', array( __CLASS__, 'skip_onboarding_redirect' ), 10, 2 );
+		add_filter( 'reportedip_hive_hide_login_bypass_paths', array( __CLASS__, 'bypass_paths' ) );
 	}
 
 	/**
@@ -995,6 +996,23 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 			return false;
 		}
 		return true;
+	}
+
+	/**
+	 * Listener on `reportedip_hive_hide_login_bypass_paths`: both themed
+	 * slugs stay reachable while Hide Login is on, otherwise enabling Hide
+	 * Login on a customer-facing site silently breaks the second factor
+	 * for every WooCommerce user.
+	 *
+	 * @param string[] $paths Paths so far.
+	 * @return string[]
+	 * @since  3.0.0
+	 */
+	public static function bypass_paths( $paths ) {
+		$paths   = (array) $paths;
+		$paths[] = '/' . self::get_challenge_slug();
+		$paths[] = '/' . self::get_setup_slug();
+		return $paths;
 	}
 
 	/**

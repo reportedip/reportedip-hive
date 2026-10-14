@@ -209,18 +209,22 @@ class ReportedIP_Hive_Hide_Login {
 			return true;
 		}
 
-		if ( class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' ) ) {
-			$rip_2fa_slugs = array(
-				ReportedIP_Hive_Two_Factor_Frontend::get_challenge_slug(),
-				ReportedIP_Hive_Two_Factor_Frontend::get_setup_slug(),
-			);
-			foreach ( $rip_2fa_slugs as $rip_slug ) {
-				if ( '' === (string) $rip_slug ) {
-					continue;
-				}
-				if ( '/' . $rip_slug === $path || str_starts_with( $path, '/' . $rip_slug . '/' ) ) {
-					return true;
-				}
+		/**
+		 * Paths that stay reachable while Hide Login is on, for example a
+		 * second-factor page of an add-on. A path also covers everything
+		 * below it.
+		 *
+		 * @param string[] $paths Paths with a leading slash, no trailing slash.
+		 * @since 3.0.0
+		 */
+		foreach ( (array) apply_filters( 'reportedip_hive_hide_login_bypass_paths', array() ) as $bypass ) {
+			$bypass = trim( (string) $bypass, '/' );
+			if ( '' === $bypass ) {
+				continue;
+			}
+			$bypass = '/' . $bypass;
+			if ( $bypass === $path || str_starts_with( $path, $bypass . '/' ) ) {
+				return true;
 			}
 		}
 

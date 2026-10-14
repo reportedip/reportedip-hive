@@ -165,6 +165,52 @@ class HideLoginTest extends TestCase {
 		return \ReportedIP_Hive_Hide_Login::get_instance();
 	}
 
+	/**
+	 * A path handed in through `reportedip_hive_hide_login_bypass_paths`
+	 * stays reachable, with everything below it, and nothing else does.
+	 */
+	public function test_bypass_paths_filter_keeps_listed_paths_reachable() {
+		global $wp_filters;
+		$saved = $wp_filters['reportedip_hive_hide_login_bypass_paths'] ?? null;
+		add_filter(
+			'reportedip_hive_hide_login_bypass_paths',
+			static function ( $paths ) {
+				$paths[] = '/shop-verify';
+				$paths[] = 'shop-setup/';
+				$paths[] = '';
+				return $paths;
+			}
+		);
+
+		$cases = array(
+			'/shop-verify'      => true,
+			'/shop-verify/step' => true,
+			'/shop-setup'       => true,
+			'/shop-verifyx'     => false,
+			'/'                 => false,
+			'/sample-page'      => false,
+		);
+		foreach ( $cases as $path => $expected ) {
+			$inst = ( new \ReflectionClass( \ReportedIP_Hive_Hide_Login::class ) )->newInstanceWithoutConstructor();
+			( new \ReflectionProperty( $inst, 'request_path' ) )->setValue( $inst, $path );
+			$this->assertSame( $expected, ( new \ReflectionMethod( $inst, 'is_environment_bypassed' ) )->invoke( $inst ), $path );
+		}
+
+		if ( null === $saved ) {
+			unset( $wp_filters['reportedip_hive_hide_login_bypass_paths'] );
+		} else {
+			$wp_filters['reportedip_hive_hide_login_bypass_paths'] = $saved;
+		}
+	}
+
+	/**
+	 * Hide Login names no add-on class: the bypass list is a filter.
+	 */
+	public function test_bypass_names_no_add_on_class() {
+		$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-hide-login.php' );
+		$this->assertStringNotContainsString( 'Two_Factor_Frontend', $source );
+	}
+
 	public function test_response_mode_accepts_block_page() {
 		$this->assertSame( 'block_page', $this->instance()->sanitize_response_mode( 'block_page' ) );
 	}
