@@ -593,4 +593,18 @@ class ExtensionApiTest extends TestCase {
 		$this->assertStringContainsString( 'value="dummy"  disabled', \ReportedIP_Hive_Protection_Page::field_markup( $key, $entry, '["totp"]', $status, $locked ), 'A locked choice that is not stored cannot be added.' );
 		$this->assertStringNotContainsString( $hidden, \ReportedIP_Hive_Protection_Page::field_markup( $key, $entry, '["totp","dummy"]', $status, $open ), 'A selectable choice travels as its checkbox.' );
 	}
+
+	/**
+	 * The sub-site 2FA page offers a slot for further read-only blocks and
+	 * names no add-on class itself.
+	 */
+	public function test_site_2fa_page_offers_the_settings_slot() {
+		$source = (string) file_get_contents( REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-admin-settings.php' );
+		$body   = substr( $source, (int) strpos( $source, 'public function render_site_2fa_settings_page(' ) );
+		$body   = substr( $body, 0, (int) strpos( $body, 'private function render_site_admin_header(' ) );
+
+		$this->assertStringContainsString( "do_action( 'reportedip_hive_site_2fa_settings_after', \$all_roles );", $body );
+		$this->assertStringNotContainsString( 'Two_Factor_Policies', $body );
+		$this->assertLessThan( strpos( $body, 'submit_button(' ), strpos( $body, 'reportedip_hive_site_2fa_settings_after' ), 'The slot sits above the submit button.' );
+	}
 }

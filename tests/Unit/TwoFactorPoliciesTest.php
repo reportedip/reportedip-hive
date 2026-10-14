@@ -187,6 +187,22 @@ namespace {
 		}
 	}
 
+	if ( ! class_exists( 'ReportedIP_Hive_Admin_Settings' ) ) {
+		/**
+		 * Admin double: the tier marker renders a fixed token.
+		 */
+		class ReportedIP_Hive_Admin_Settings {
+			/**
+			 * @param array<string, mixed> $status Feature status.
+			 * @return void
+			 */
+			public static function render_tier_marker( $status ) {
+				unset( $status );
+				echo '[tier-marker]';
+			}
+		}
+	}
+
 	require_once dirname( __DIR__, 2 ) . '/includes/class-option-routing.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-audit-logger.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-user-sessions.php';
@@ -474,6 +490,25 @@ namespace ReportedIP\Hive\Tests\Unit {
 				\ReportedIP_Hive_Two_Factor_Policies::section_state( $default, 'twofa_policies', $current )
 			);
 			$this->assertSame( $default, \ReportedIP_Hive_Two_Factor_Policies::section_state( $default, 'waf', $current ) );
+		}
+
+		public function test_site_policy_block_lists_every_trigger_read_only(): void {
+			$this->configure( 'new_ip', array( 'editor' ) );
+
+			ob_start();
+			\ReportedIP_Hive_Two_Factor_Policies::render_site_policy_block(
+				array(
+					'editor'        => 'Editor',
+					'administrator' => 'Administrator',
+				)
+			);
+			$html = (string) ob_get_clean();
+
+			$this->assertSame( 7, substr_count( $html, '<li>' ) );
+			$this->assertSame( 1, substr_count( $html, '<span class="rip-badge rip-badge--info">Editor</span>' ) );
+			$this->assertSame( 6, substr_count( $html, 'rip-badge--neutral' ) );
+			$this->assertStringNotContainsString( '<input', $html );
+			$this->assertStringContainsString( '[tier-marker]', $html );
 		}
 
 		public function test_roles_for_drops_unknown_slugs(): void {

@@ -296,6 +296,48 @@ final class ReportedIP_Hive_Two_Factor_Policies {
 	}
 
 	/**
+	 * Listener on `reportedip_hive_site_2fa_settings_after`: the network's
+	 * trigger matrix, read-only, on a sub-site's 2FA page.
+	 *
+	 * @param array<string,string> $all_roles Role slug => display name.
+	 * @return void
+	 * @since  3.0.0
+	 */
+	public static function render_site_policy_block( $all_roles ) {
+		$all_roles     = (array) $all_roles;
+		$policy_status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( self::FEATURE );
+		$policy_matrix = self::matrix();
+		$policy_texts  = self::trigger_texts();
+		?>
+		<div class="rip-settings-section">
+			<h2 class="rip-settings-section__title">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+				<?php esc_html_e( 'Adaptive 2FA triggers (network policy)', 'reportedip-hive' ); ?>
+				&nbsp;<?php ReportedIP_Hive_Admin_Settings::render_tier_marker( $policy_status ); ?>
+			</h2>
+			<p class="rip-settings-section__desc">
+				<?php esc_html_e( 'The Super Admin decides which roles are asked for their second factor again when something about a sign-in changes. The rules apply on this site too and cannot be overridden here.', 'reportedip-hive' ); ?>
+			</p>
+
+			<ul class="rip-network-state">
+				<?php foreach ( self::TRIGGERS as $policy_trigger ) : ?>
+					<li>
+						<?php echo esc_html( $policy_texts[ $policy_trigger ]['label'] ); ?>:
+						<?php if ( empty( $policy_matrix[ $policy_trigger ] ) ) : ?>
+							<span class="rip-badge rip-badge--neutral"><?php esc_html_e( 'off', 'reportedip-hive' ); ?></span>
+						<?php else : ?>
+							<?php foreach ( $policy_matrix[ $policy_trigger ] as $policy_role ) : ?>
+								<span class="rip-badge rip-badge--info"><?php echo esc_html( $all_roles[ $policy_role ] ?? $policy_role ); ?></span>
+							<?php endforeach; ?>
+						<?php endif; ?>
+					</li>
+				<?php endforeach; ?>
+			</ul>
+		</div>
+		<?php
+	}
+
+	/**
 	 * Trigger labels and one-line descriptions for the settings matrix.
 	 *
 	 * @return array<string, array{label:string, description:string}>
