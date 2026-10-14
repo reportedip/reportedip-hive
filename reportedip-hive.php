@@ -267,7 +267,7 @@ class ReportedIP_Hive {
 
 	/**
 	 * React to an API-key change so the tier cache is populated without the
-	 * front-end ever polling `/relay-quota` live.
+	 * front-end ever polling the API live.
 	 *
 	 * Fires on both single-site (`update_option_*`) and Multisite
 	 * (`update_site_option_*`) save paths, and therefore covers Settings-API,

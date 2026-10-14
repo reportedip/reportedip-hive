@@ -106,7 +106,7 @@ class ReportedIP_Hive_Mailer {
 	/**
 	 * Split a recipient string into one or more single addresses.
 	 *
-	 * The relay endpoint (`POST /relay-mail`) accepts only one recipient per
+	 * The add-on's mail relay accepts only one recipient per
 	 * request, `sanitize_email()` + `is_email()` strictly validate a single
 	 * address, so passing a comma-separated list fails 422 and the whole
 	 * mail is dropped. Callers like {@see ReportedIP_Hive_Security_Monitor::send_admin_alert()}

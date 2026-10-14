@@ -354,37 +354,12 @@ This plugin connects to external services only when explicitly configured. *Loca
 * Terms: [reportedip.com/nutzungsbedingungen/](https://reportedip.com/nutzungsbedingungen/)
 * Privacy / DPA: [reportedip.com/datenschutzerklaerung/](https://reportedip.com/datenschutzerklaerung/)
 
-= ReportedIP Managed Mail Relay =
-
-* Service URL: `https://reportedip.com/wp-json/reportedip/v2/relay-mail`
-* Purpose: route 2FA verification mails through the reportedip.com transactional mail infrastructure (clean SPF / DKIM / DMARC)
-* Default: off, only available for Professional, Business and Enterprise plans, only when the user enabled the email 2FA factor; on any error (cap reached HTTP 402, recipient backoff HTTP 429, network error) the plugin falls back to the local `wp_mail()` transport so the 2FA flow never breaks
-* Data transmitted: recipient email, subject, HTML and plain-text body, headers, optional Reply-To, the site domain
-* Privacy / DPA: [reportedip.com/legal/avv/](https://reportedip.com/legal/avv/)
-
-= ReportedIP Managed SMS Relay =
-
-* Service URL: `https://reportedip.com/wp-json/reportedip/v2/relay-sms` (and `relay-quota` for monthly usage display)
-* Purpose: deliver 2FA OTP messages without requiring the site operator to maintain their own SMS-provider contract
-* Default: off, only available for Professional, Business and Enterprise plans, only when a user actively enrolled SMS as a 2FA factor; routing is worldwide except for a small number of high-cost destinations that are unsupported by the managed relay (HTTP 422 with code `country_not_supported` is returned to the plugin in that case)
-* Data transmitted: recipient phone number (E.164), the verification code, expiry minutes, language code, the site domain
-* Privacy / DPA: [reportedip.com/legal/avv/](https://reportedip.com/legal/avv/)
-
 = ReportedIP Rule Sync =
 
 * Service URL: `https://reportedip.com/wp-json/reportedip/v2/rules/{ruleset}` (one call per ruleset: `waf`, `bot_signatures`, `disposable_domains`, `scan_paths`, `tor_exits`)
 * Purpose: fetch signed firewall rule updates; the bundled baseline rulesets stay active without any connection, and Professional plans receive the deeper, frequently-updated rulesets through this channel
 * Default: off, only active in Community Network mode AND with a configured API key AND the Rule Sync toggle enabled; runs every six hours via cron, and conditional `If-None-Match` requests return HTTP 304 when nothing changed
 * Data transmitted: the API key, the current ETag, the site domain and the plugin/WordPress version; each downloaded ruleset carries an Ed25519 signature that the plugin verifies against a bundled public key before applying it
-* Terms: [reportedip.com/nutzungsbedingungen/](https://reportedip.com/nutzungsbedingungen/)
-* Privacy / DPA: [reportedip.com/datenschutzerklaerung/](https://reportedip.com/datenschutzerklaerung/)
-
-= ReportedIP Release-Notes Feed ("What's new" banner) =
-
-* Service URL: `https://reportedip.com/wp-json/reportedip/v2/hive/whats-new`
-* Purpose: fetch the release highlights shown once per version in the dismissible "What's new" banner on plugin admin pages
-* Default: on, one keyless GET per installed version (with backoff on failure), admin pages only
-* Data transmitted: no API key; the request identifies the installation wp.org-style (site address plus plugin and WordPress version in the User-Agent)
 * Terms: [reportedip.com/nutzungsbedingungen/](https://reportedip.com/nutzungsbedingungen/)
 * Privacy / DPA: [reportedip.com/datenschutzerklaerung/](https://reportedip.com/datenschutzerklaerung/)
 

@@ -402,7 +402,7 @@ class ReportedIP_Hive_Mode_Manager {
 	}
 
 	/**
-	 * Whether the cached tier (from /verify-key or /relay-quota) is at least $minimum.
+	 * Whether the cached tier (from /verify-key or the relay quota) is at least $minimum.
 	 *
 	 * The `honeypot` tier is not part of {@see TIER_ORDER}; a honeypot
 	 * operator is a Contributor for every feature gate (see
@@ -425,10 +425,10 @@ class ReportedIP_Hive_Mode_Manager {
 	}
 
 	/**
-	 * Determine the current tier from cached API state (verify-key, relay-quota
+	 * Determine the current tier from cached API state (verify-key, relay quota
 	 * or the durable known-tier baseline).
 	 *
-	 * Never performs a live `/relay-quota` call: this method runs on hot,
+	 * Never performs a live API call: this method runs on hot,
 	 * per-request paths (WAF, security headers, bot verification via
 	 * {@see feature_status()}), where a synchronous HTTP round-trip would both
 	 * delay the response and, on installs whose cache cannot be populated.
@@ -813,7 +813,7 @@ class ReportedIP_Hive_Mode_Manager {
 	}
 
 	/**
-	 * Canonical tier lookup. Never triggers a live `/relay-quota` API call.
+	 * Canonical tier lookup. Never triggers a live API call.
 	 *
 	 * This is the single read path for the current tier on both admin and
 	 * front-end requests; {@see get_current_tier()} and {@see tier_at_least()}
@@ -825,7 +825,7 @@ class ReportedIP_Hive_Mode_Manager {
 	 *   2. `reportedip_hive_api_status` transient, `userRole` (5 min)
 	 *   3. `reportedip_hive_relay_quota` transient, `tier` (12 h)
 	 *   4. `reportedip_hive_known_tier` option, durable baseline that survives
-	 *      relay-mail/sms cache busting and the gap between six-hour cron runs,
+	 *      relay cache busting and the gap between six-hour cron runs,
 	 *      so a paid site is never mis-read as `free` mid-window
 	 *   5. `free`
 	 *
@@ -939,7 +939,7 @@ class ReportedIP_Hive_Mode_Manager {
 	 * Short-circuits before consulting the tier-cap helper when none of the
 	 * bucket counters has ticked this hour, the snapshot would otherwise
 	 * trigger a `get_current_tier()` lookup that can fall through to a live
-	 * `/relay-quota` call on installs without a cached tier (30 s timeout
+	 * API call on installs without a cached tier (30 s timeout
 	 * per admin page load).
 	 *
 	 * @return bool

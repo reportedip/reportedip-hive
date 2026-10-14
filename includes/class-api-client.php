@@ -982,22 +982,30 @@ class ReportedIP_Hive_API {
 	 * the call counts toward the hourly limit and the health statistics of
 	 * that bucket, as the free calls do; without one it is not counted.
 	 *
+	 * The request never leaves the configured API base: the endpoint is
+	 * appended to it as a path, so an absolute (`https://host/x`) or
+	 * protocol-relative (`//host/x`) value ends up below the base as well.
+	 * Under `REPORTEDIP_DEBUG` the URL and the answer go to debug.log; a
+	 * JSON body is never logged, and `$log` false keeps the call out of the
+	 * log altogether.
+	 *
 	 * @param string     $method   HTTP method.
 	 * @param string     $endpoint Endpoint path relative to the API base.
 	 * @param array      $params   Query parameters.
 	 * @param mixed      $body     Form fields (array), a JSON string or null.
 	 * @param int|null   $timeout  Timeout in seconds, null for the default.
 	 * @param string     $bucket   `reputation`, `submission`, `meta` or '' for none.
+	 * @param bool       $log      Whether the debug log may record the call.
 	 * @return array|WP_Error Raw response or error.
 	 * @since  3.0.0
 	 */
-	public function request( $method, $endpoint, $params = array(), $body = null, $timeout = null, $bucket = '' ) {
+	public function request( $method, $endpoint, $params = array(), $body = null, $timeout = null, $bucket = '', $log = true ) {
 		if ( '' === (string) $bucket ) {
-			return $this->make_request( $method, $endpoint, $params, $body, $timeout );
+			return $this->make_request( $method, $endpoint, $params, $body, $timeout, (bool) $log );
 		}
 
 		$start_time    = microtime( true );
-		$response      = $this->make_request( $method, $endpoint, $params, $body, $timeout );
+		$response      = $this->make_request( $method, $endpoint, $params, $body, $timeout, (bool) $log );
 		$response_time = round( ( microtime( true ) - $start_time ) * 1000, 2 );
 
 		if ( is_wp_error( $response ) ) {
@@ -1015,8 +1023,16 @@ class ReportedIP_Hive_API {
 	 * Make HTTP request to API. An array body is sent as form fields, a
 	 * string body as JSON. Only form fields reach the debug log: the JSON
 	 * bodies of add-on calls carry 2FA codes.
+	 *
+	 * @param string   $method   HTTP method.
+	 * @param string   $endpoint Endpoint path relative to the API base.
+	 * @param array    $params   Query parameters.
+	 * @param mixed    $body     Form fields, a JSON string or null.
+	 * @param int|null $timeout  Timeout in seconds, null for the default.
+	 * @param bool     $log      Whether the debug log may record the call.
+	 * @return array|WP_Error
 	 */
-	private function make_request( $method, $endpoint, $params = array(), $body = null, $timeout = null ) {
+	private function make_request( $method, $endpoint, $params = array(), $body = null, $timeout = null, $log = true ) {
 		$url = rtrim( $this->api_endpoint, '/' ) . '/' . ltrim( $endpoint, '/' );
 
 		if ( ! empty( $params ) ) {
@@ -1057,7 +1073,7 @@ class ReportedIP_Hive_API {
 			$args['headers'] = $headers;
 		}
 
-		if ( defined( 'REPORTEDIP_DEBUG' ) && REPORTEDIP_DEBUG ) {
+		if ( $log && defined( 'REPORTEDIP_DEBUG' ) && REPORTEDIP_DEBUG ) {
 			$safe_url = preg_replace( '/([?&])(key|api_key|apikey)=[^&]+/', '$1$2=***REDACTED***', $url );
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Plugin diagnostic logging gated behind REPORTEDIP_DEBUG; debug.log only.
 			error_log( "ReportedIP Hive API Request: $method $safe_url" );
@@ -1071,7 +1087,7 @@ class ReportedIP_Hive_API {
 
 		$response = wp_remote_request( $url, $args );
 
-		if ( defined( 'REPORTEDIP_DEBUG' ) && REPORTEDIP_DEBUG && ! is_wp_error( $response ) ) {
+		if ( $log && defined( 'REPORTEDIP_DEBUG' ) && REPORTEDIP_DEBUG && ! is_wp_error( $response ) ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- Plugin diagnostic logging gated behind REPORTEDIP_DEBUG; debug.log only.
 			error_log( 'ReportedIP Hive API Response: ' . wp_remote_retrieve_response_code( $response ) . ' ' . (string) wp_remote_retrieve_body( $response ) );
 		}
@@ -1709,7 +1725,7 @@ class ReportedIP_Hive_API {
 	/**
 	 * Opportunistically refresh the cached daily quota from the X-RateLimit
 	 * headers the API sends on every response, so the dashboard counter stays
-	 * fresh between the 6-hour cron runs (same pattern as the relay-quota
+	 * fresh between the 6-hour cron runs (same pattern as the relay quota
 	 * patching on each relay send).
 	 *
 	 * Only numeric header values are applied ("unlimited" is skipped), and

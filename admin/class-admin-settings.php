@@ -1182,11 +1182,12 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Standalone "Domains" section for Community tiers below Professional.
+	 * Standalone "Licensed domains" section.
 	 *
-	 * Free/Contributor accounts have the smallest domain allowances, so they
-	 * need the used/limit view even though the relay quota section (the card's
-	 * PRO+ home) never renders for them. Renders nothing without a snapshot.
+	 * The Community tab shows it on every plan. The dashboard shows it for a
+	 * Community site from the Professional plan up, where 2.1.74 showed the
+	 * card inside the relay quota section; with the add-on, its relay
+	 * section carries the card instead. Renders nothing without a snapshot.
 	 *
 	 * @param ReportedIP_Hive_Mode_Manager $mode_manager Mode manager instance.
 	 * @return void
@@ -3281,9 +3282,16 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php ReportedIP_Hive_Dashboard_Next_Steps::render(); ?>
 
 				<?php
+				if ( ! has_action( 'reportedip_hive_dashboard_after_next_steps' ) && $mode_manager->is_community_mode() && ReportedIP_Hive_Defaults::recommendation_rank( $mode_manager->get_current_tier() ) > 0 ) {
+					$this->render_domains_section( $mode_manager );
+				}
+
 				/**
 				 * Print a section on the dashboard below the next steps,
-				 * above the charts, as `div.rip-settings-section`.
+				 * above the charts, as `div.rip-settings-section`. While a
+				 * listener is hooked, the free plugin leaves out its own
+				 * "Licensed domains" section there; the listener shows the
+				 * card through {@see render_domains_card()} if it wants it.
 				 *
 				 * @since 3.0.0
 				 */
