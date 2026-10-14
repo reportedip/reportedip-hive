@@ -250,11 +250,11 @@ class ReportedIP_Hive_Tools_Page {
 		}
 
 		if ( empty( $adapter['covered'] ) ) {
-			return self::selftest_row( $label, 'info', __( 'Inactive', 'reportedip-hive' ), __( 'The form plugin is here, your plan does not cover this adapter.', 'reportedip-hive' ) );
+			return self::selftest_row( $label, 'info', __( 'Inactive', 'reportedip-hive' ), self::selftest_adapter_note( 'unavailable', __( 'The form plugin is here, this adapter is not available on this site.', 'reportedip-hive' ), $adapter ) );
 		}
 
 		if ( empty( $adapter['option'] ) ) {
-			return self::selftest_row( $label, 'warning', __( 'Inactive', 'reportedip-hive' ), __( 'The form plugin is here and your plan covers it, the switch on the Protection page is off.', 'reportedip-hive' ) );
+			return self::selftest_row( $label, 'warning', __( 'Inactive', 'reportedip-hive' ), self::selftest_adapter_note( 'off', __( 'The form plugin is here, the switch on the Protection page is off.', 'reportedip-hive' ), $adapter ) );
 		}
 
 		if ( ! $enabled ) {
@@ -262,6 +262,27 @@ class ReportedIP_Hive_Tools_Page {
 		}
 
 		return self::selftest_row( $label, 'success', __( 'Active', 'reportedip-hive' ), __( 'Submissions through this form plugin are judged like a comment.', 'reportedip-hive' ) );
+	}
+
+	/**
+	 * Note of an inactive adapter row, open to an extension.
+	 *
+	 * @param string               $state   `unavailable` or `off`.
+	 * @param string               $note    Default note.
+	 * @param array<string, mixed> $adapter Adapter state.
+	 * @return string
+	 * @since  3.0.0
+	 */
+	private static function selftest_adapter_note( $state, $note, array $adapter ) {
+		/**
+		 * Note of an inactive form adapter in the self-test overview.
+		 *
+		 * @param string               $note    Default note.
+		 * @param string               $state   `unavailable` (the adapter is not available here) or `off` (the switch is off).
+		 * @param array<string, mixed> $adapter Adapter state (`name`, `detected`, `covered`, `option`).
+		 * @since 3.0.0
+		 */
+		return (string) apply_filters( 'reportedip_hive_selftest_adapter_note', $note, $state, $adapter );
 	}
 
 	/**

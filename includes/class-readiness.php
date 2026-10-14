@@ -233,13 +233,13 @@ final class ReportedIP_Hive_Readiness {
 	}
 
 	/**
-	 * Advisory: a third-party form plugin is active, the plan covers the
-	 * execution proof for it and the switch is still off.
+	 * Advisory: a third-party form plugin is active, the execution proof is
+	 * available for it and the switch is still off.
 	 *
 	 * @param string $slug      Adapter slug (`cf7`, `formidable`, `elementor`).
 	 * @param string $label     Display name of the form plugin.
 	 * @param bool   $detected  Form plugin is active here.
-	 * @param bool   $available Plan includes the adapter.
+	 * @param bool   $available The adapter is available here.
 	 * @param bool   $enabled   Option state.
 	 * @return array<string,mixed>|null
 	 * @since  2.1.58
@@ -248,16 +248,28 @@ final class ReportedIP_Hive_Readiness {
 		if ( ! $detected || ! $available || $enabled ) {
 			return null;
 		}
+		$message = sprintf(
+			/* translators: %s: name of the form plugin, for example Contact Form 7. */
+			__( '%s is active here and Hive can check it, but the switch is still off. A visitor sees nothing new once it runs, no image to read and no extra step.', 'reportedip-hive' ),
+			$label
+		);
+
+		/**
+		 * Text of the advisory for a form plugin whose adapter is switched off.
+		 *
+		 * @param string $message Advisory text.
+		 * @param string $slug    Adapter slug.
+		 * @param string $label   Display name of the form plugin.
+		 * @since 3.0.0
+		 */
+		$message = (string) apply_filters( 'reportedip_hive_form_adapter_off_message', $message, $slug, $label );
+
 		return self::issue(
 			'form_adapter_' . $slug,
 			self::SEV_ADVISORY,
 			/* translators: %s: name of the form plugin, for example Contact Form 7. */
 			sprintf( __( '%s is not covered yet', 'reportedip-hive' ), $label ),
-			sprintf(
-				/* translators: %s: name of the form plugin, for example Contact Form 7. */
-				__( '%s is active here and your plan includes the check for it, but the switch is still off. A visitor sees nothing new once it runs, no image to read and no extra step.', 'reportedip-hive' ),
-				$label
-			)
+			$message
 		);
 	}
 

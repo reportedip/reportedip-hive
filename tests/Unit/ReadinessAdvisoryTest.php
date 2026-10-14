@@ -34,6 +34,26 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertNull( ReportedIP_Hive_Readiness::hide_login_off( true ) );
 		}
 
+		public function test_the_adapter_advisory_names_no_plan_and_a_listener_words_it(): void {
+			$GLOBALS['wp_filters'] = array();
+			$issue                 = ReportedIP_Hive_Readiness::form_adapter_off( 'cf7', 'Contact Form 7', true, true, false );
+			$this->assertSame( 'Contact Form 7 is active here and Hive can check it, but the switch is still off. A visitor sees nothing new once it runs, no image to read and no extra step.', $issue['message'] );
+
+			add_filter(
+				'reportedip_hive_form_adapter_off_message',
+				static function ( $message, $slug, $label ) {
+					return $slug . '|' . $label;
+				},
+				10,
+				3
+			);
+			try {
+				$this->assertSame( 'cf7|Contact Form 7', ReportedIP_Hive_Readiness::form_adapter_off( 'cf7', 'Contact Form 7', true, true, false )['message'] );
+			} finally {
+				$GLOBALS['wp_filters'] = array();
+			}
+		}
+
 		public function test_badge_off_and_community_pending(): void {
 			$this->assertSame( 'badge_off', ReportedIP_Hive_Readiness::badge_off( false )['key'] );
 			$this->assertNull( ReportedIP_Hive_Readiness::badge_off( true ) );

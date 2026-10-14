@@ -107,11 +107,32 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( 'Contact Form 7 is not active', $row['note'] );
 		}
 
-		public function test_an_uncovered_adapter_names_the_plan_not_the_switch(): void {
+		public function test_an_uncovered_adapter_names_neither_a_plan_nor_the_switch(): void {
 			$row = $this->adapter_row( $this->state( array( 'adapters' => array( $this->adapter( true, false, true ) ) ) ) );
 
 			$this->assertSame( 'info', $row['badge'] );
-			$this->assertStringContainsString( 'plan', $row['note'] );
+			$this->assertSame( 'The form plugin is here, this adapter is not available on this site.', $row['note'] );
+			$this->assertStringNotContainsString( 'plan', $row['note'] );
+		}
+
+		public function test_a_listener_words_the_inactive_adapter_rows(): void {
+			$GLOBALS['wp_filters'] = array();
+			add_filter(
+				'reportedip_hive_selftest_adapter_note',
+				static function ( $note, $state ) {
+					return $state . ': ' . $note;
+				},
+				10,
+				2
+			);
+			try {
+				$off = $this->adapter_row( $this->state( array( 'adapters' => array( $this->adapter( true, true, false ) ) ) ) );
+				$this->assertSame( 'off: The form plugin is here, the switch on the Protection page is off.', $off['note'] );
+				$unavailable = $this->adapter_row( $this->state( array( 'adapters' => array( $this->adapter( true, false, true ) ) ) ) );
+				$this->assertStringStartsWith( 'unavailable: ', $unavailable['note'] );
+			} finally {
+				$GLOBALS['wp_filters'] = array();
+			}
 		}
 
 		public function test_an_installed_and_covered_adapter_with_its_switch_off(): void {
