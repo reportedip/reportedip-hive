@@ -413,9 +413,6 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-tier-upgrade.php';
 		ReportedIP_Hive_Tier_Upgrade::init();
 
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-quota-notifier.php';
-		ReportedIP_Hive_Quota_Notifier::init();
-
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-recommend.php';
 		ReportedIP_Hive_Two_Factor_Recommend::init();
 

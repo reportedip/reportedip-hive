@@ -2869,14 +2869,6 @@ class ReportedIP_Hive_Admin_Settings {
 		);
 		register_setting(
 			'reportedip_hive_protection_notifications',
-			'reportedip_hive_quota_notif_enabled',
-			array(
-				'type'              => 'boolean',
-				'sanitize_callback' => ReportedIP_Hive_Settings_Registry::settings_api_callback( 'reportedip_hive_quota_notif_enabled' ),
-			)
-		);
-		register_setting(
-			'reportedip_hive_protection_notifications',
 			'reportedip_hive_tier_change_mail_enabled',
 			array(
 				'type'              => 'boolean',

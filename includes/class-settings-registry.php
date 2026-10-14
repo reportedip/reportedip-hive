@@ -1417,13 +1417,6 @@ final class ReportedIP_Hive_Settings_Registry {
 				'label'       => __( 'Show upgrade hints in the admin', 'reportedip-hive' ),
 				'description' => __( 'Off hides every plan promotion in wp-admin: dashboard cards, inline hints and the WooCommerce banner. Security notices are not affected.', 'reportedip-hive' ),
 			),
-			'reportedip_hive_quota_notif_enabled'          => array(
-				'section'     => 'notifications',
-				'kind'        => 'bool',
-				'remote'      => true,
-				'label'       => __( 'Mail when the relay quota reaches 80 % or 100 %', 'reportedip-hive' ),
-				'description' => __( 'One mail per channel and stage per month, sent to the alert recipients.', 'reportedip-hive' ),
-			),
 			'reportedip_hive_tier_change_mail_enabled'     => array(
 				'section'     => 'notifications',
 				'kind'        => 'bool',
