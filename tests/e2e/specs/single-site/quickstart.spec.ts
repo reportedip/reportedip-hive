@@ -134,7 +134,8 @@ test.describe('quickstart', () => {
 
 		expect(wpOption('reportedip_hive_operation_mode')).toBe('community');
 		expect(wpOption('reportedip_hive_known_tier')).toBe('professional');
-		expect(wpOption('reportedip_hive_block_tor')).toBe('1');
+		/* Tor blocking is a row of the add-on matrix: without the add-on the recommendation cannot switch it on. */
+		expect(wpOption('reportedip_hive_block_tor')).toBe('0');
 		expect(wpOption('reportedip_hive_data_retention_days')).toBe('90');
 		expect(wpOption('reportedip_hive_bot_action')).toBe('block');
 		expect(wpOption('reportedip_hive_2fa_enabled_global')).toBe('1');

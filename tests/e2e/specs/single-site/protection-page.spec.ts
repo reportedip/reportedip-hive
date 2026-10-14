@@ -123,16 +123,6 @@ test.describe('protection page', () => {
 		await expect(page.locator('#detection .rip-protection__status')).toContainText('Strict');
 	});
 
-	test('a plan-locked switch shows the plan and a link instead of a control', async ({ page }) => {
-		await loginAsAdmin(page);
-		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
-		const field = page.locator('#blocking .rip-protection__field[data-key="reportedip_hive_block_tor"]');
-		await expect(field).toHaveClass(/rip-protection__field--locked/);
-		await expect(field.locator('input')).toHaveCount(0);
-		await expect(field.locator('.rip-protection__plan .rip-badge')).toContainText(/professional/i);
-		await expect(field.locator('.rip-protection__plan a')).toHaveAttribute('href', /pricing\/#tor_blocking/);
-	});
-
 	test('a switched-on plan feature stays editable after a downgrade and a locked value survives a save', async ({ page }) => {
 		wp('option update reportedip_hive_block_tor 1');
 		wp('option update reportedip_hive_permissions_policy "camera=()"');
