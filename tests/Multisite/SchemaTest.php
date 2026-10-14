@@ -65,15 +65,6 @@ class ReportedIP_Hive_Schema_Multisite_Test extends WP_UnitTestCase {
 		);
 	}
 
-	public function test_audit_log_carries_the_object_columns() {
-		foreach ( array( 'object_type', 'object_id', 'object_label' ) as $column ) {
-			$this->assertTrue(
-				ReportedIP_Hive_Schema::column_exists( 'reportedip_hive_audit_log', $column ),
-				"audit_log.{$column} must exist after schema v17"
-			);
-		}
-	}
-
 	public function test_waf_exceptions_table_exists_network_wide() {
 		$this->assertTrue(
 			ReportedIP_Hive_Schema::column_exists( 'reportedip_hive_waf_exceptions', 'scope' )
@@ -123,6 +114,7 @@ class ReportedIP_Hive_Schema_Multisite_Test extends WP_UnitTestCase {
 		$sent   = array();
 
 		try {
+			$wpdb->query( 'DROP TABLE IF EXISTS ' . ReportedIP_Hive_Schema::table( 'reportedip_hive_audit_log' ) );
 			$wpdb->query( "DROP TABLE IF EXISTS $scoped" );
 			$wpdb->query( "DROP TABLE IF EXISTS $plain" );
 			$wpdb->query( "CREATE TABLE $scoped ( blog_id int(11) unsigned NOT NULL DEFAULT 0, note varchar(20) NOT NULL DEFAULT '' )" );
@@ -157,7 +149,7 @@ class ReportedIP_Hive_Schema_Multisite_Test extends WP_UnitTestCase {
 		}
 
 		$expected = array();
-		foreach ( array( 'logs', 'api_queue', 'stats', 'audit_log', 'zz_scoped' ) as $name ) {
+		foreach ( array( 'logs', 'api_queue', 'stats', 'zz_scoped' ) as $name ) {
 			$expected[] = 'DELETE FROM ' . ReportedIP_Hive_Schema::table( 'reportedip_hive_' . $name ) . ' WHERE blog_id = 99';
 		}
 		$this->assertEqualsCanonicalizing( $expected, $sent );

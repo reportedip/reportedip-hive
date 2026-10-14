@@ -104,6 +104,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 	/**
 	 * @covers \ReportedIP_Hive_Legacy_Data
 	 * @covers \ReportedIP_Hive_Schema::unclaimed_legacy_tables
+	 * @covers \ReportedIP_Hive_Schema::drop_all_tables
 	 */
 	final class LegacyDataTest extends TestCase {
 
@@ -161,6 +162,18 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$GLOBALS['wp_filters']['reportedip_hive_schema_tables'] = array();
 			$this->claim( false );
 			$this->assertSame( array( 'reportedip_hive_audit_log' ), \ReportedIP_Hive_Schema::unclaimed_legacy_tables() );
+		}
+
+		public function test_uninstall_drops_an_unclaimed_legacy_table_once(): void {
+			$this->claim( false );
+			\ReportedIP_Hive_Schema::drop_all_tables();
+			$this->assertSame( 1, count( array_keys( $this->db->queries, 'DROP TABLE IF EXISTS wp_reportedip_hive_audit_log', true ) ) );
+
+			$this->db->queries                                     = array();
+			$GLOBALS['wp_filters']['reportedip_hive_schema_tables'] = array();
+			$this->claim( true );
+			\ReportedIP_Hive_Schema::drop_all_tables();
+			$this->assertSame( 1, count( array_keys( $this->db->queries, 'DROP TABLE IF EXISTS wp_reportedip_hive_audit_log', true ) ), 'Claimed: listed once, not twice.' );
 		}
 
 		public function test_a_claimed_table_is_left_to_the_add_on(): void {

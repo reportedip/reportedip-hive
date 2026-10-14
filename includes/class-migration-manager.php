@@ -271,12 +271,11 @@ final class ReportedIP_Hive_Migration_Manager {
 	}
 
 	/**
-	 * Schema v9: create the audit-log table.
+	 * Schema v9: created the audit-log table (2.1.2).
 	 *
-	 * Backs the Business-tier audit event trail. Created network-wide (under
-	 * `base_prefix`) so a site that later upgrades captures immediately.
-	 * Delegates to the idempotent {@see ReportedIP_Hive_Schema::ensure_tables()},
-	 * so a re-run is a no-op.
+	 * The add-on owns that table since 3.0.0 and creates it itself. The step
+	 * still delegates to the idempotent
+	 * {@see ReportedIP_Hive_Schema::ensure_tables()}, so a re-run is a no-op.
 	 *
 	 * @return void
 	 * @since  2.1.2
@@ -506,18 +505,16 @@ final class ReportedIP_Hive_Migration_Manager {
 	}
 
 	/**
-	 * Adds the object columns to the audit trail.
+	 * Added the object columns to the audit trail (2.1.62).
 	 *
-	 * 2.1.62 widened the trail from account events to content, installer,
-	 * settings, menu and network events; every row now names the affected
-	 * object. `ensure_tables()` carries the new DDL and dbDelta adds the
-	 * columns and the index to an existing table.
+	 * Moved to the add-on in 3.0.0, kept so the counter stays linear: the
+	 * audit table belongs to the add-on, whose own schema adds the columns
+	 * to a table that lacks them.
 	 *
 	 * @return void
 	 * @since  2.1.62
 	 */
 	private static function migrate_to_v17() {
-		ReportedIP_Hive_Schema::ensure_tables();
 	}
 
 	/**
