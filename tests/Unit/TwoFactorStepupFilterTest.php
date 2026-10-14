@@ -249,4 +249,67 @@ class TwoFactorStepupFilterTest extends TestCase {
 
 		$this->assertSame( 'sessions_above_n', $context['stepup'] );
 	}
+
+	/**
+	 * Read one source file from the plugin.
+	 *
+	 * @param string $relative Path relative to the plugin root.
+	 * @return string
+	 */
+	private function source( string $relative ): string {
+		return (string) file_get_contents( dirname( __DIR__, 2 ) . '/' . $relative );
+	}
+
+	public function test_trusted_device_bypass_is_gated_by_the_stepup_verdict(): void {
+		$source = $this->source( 'includes/class-two-factor.php' );
+
+		$this->assertStringContainsString(
+			"if ( '' === \$stepup && \$this->verify_trusted_device( \$user->ID ) ) {",
+			$source,
+			'A fired trigger must override the trusted-device cookie.'
+		);
+	}
+
+	public function test_allowlist_and_bypass_filter_still_win_over_a_stepup(): void {
+		$source    = $this->source( 'includes/class-two-factor.php' );
+		$body      = substr( $source, (int) strpos( $source, 'public function filter_authenticate(' ) );
+		$bypass    = (int) strpos( $body, "apply_filters( 'reportedip_2fa_bypass'" );
+		$allowlist = (int) strpos( $body, 'self::is_ip_allowlisted()' );
+		$trusted   = (int) strpos( $body, "'' === \$stepup && \$this->verify_trusted_device(" );
+
+		$this->assertGreaterThan( 0, $bypass );
+		$this->assertGreaterThan( $bypass, $allowlist );
+		$this->assertGreaterThan( $allowlist, $trusted, 'The IP allowlist must be checked before the step-up gate.' );
+	}
+
+	public function test_enforcement_reader_is_untouched(): void {
+		$this->assertStringContainsString(
+			'ReportedIP_Hive_Option_Routing::resolve_2fa_enforce_roles()',
+			$this->source( 'includes/class-password-strength.php' ),
+			'The enforcement list is shared, the policies must not change how it is read.'
+		);
+	}
+
+	public function test_both_success_branches_announce_a_verification(): void {
+		$occurrences = substr_count(
+			$this->source( 'includes/class-two-factor.php' ),
+			'do_action( \'reportedip_hive_2fa_verified\', (int) $user_id'
+		) + substr_count(
+			$this->source( 'includes/class-two-factor-rest.php' ),
+			'do_action( \'reportedip_hive_2fa_verified\', (int) $user_id'
+		);
+
+		$this->assertSame( 2, $occurrences );
+	}
+
+	public function test_login_context_is_the_only_meta_key_added(): void {
+		$source = $this->source( 'includes/class-two-factor.php' );
+
+		$this->assertStringContainsString( "const META_LOGIN_CONTEXT = 'reportedip_hive_login_context';", $source );
+		$this->assertSame(
+			2,
+			substr_count( $source, 'self::META_LOGIN_CONTEXT,' ),
+			'The key belongs in both disable_for_user() and get_all_meta_keys().'
+		);
+	}
 }

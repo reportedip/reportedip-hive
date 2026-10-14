@@ -428,13 +428,9 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-reset-gate.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-onboarding.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-notifications.php';
-		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-policies.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-login-context.php';
 		ReportedIP_Hive_Login_Context::init();
-		add_filter( 'reportedip_hive_2fa_stepup', array( 'ReportedIP_Hive_Two_Factor_Policies', 'filter_stepup' ), 10, 4 );
 		add_filter( 'reportedip_hive_2fa_login_signals', array( 'ReportedIP_Hive_Login_Context', 'filter_signals' ) );
-		add_filter( 'reportedip_hive_section_state', array( 'ReportedIP_Hive_Two_Factor_Policies', 'section_state' ), 10, 3 );
-		add_action( 'reportedip_hive_site_2fa_settings_after', array( 'ReportedIP_Hive_Two_Factor_Policies', 'render_site_policy_block' ) );
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-webauthn-aaguid-registry.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-webauthn.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-rest.php';

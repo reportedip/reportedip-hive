@@ -220,7 +220,7 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-user-sessions.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor-notifications.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-login-context.php';
-	require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor-policies.php';
+	require_once dirname( __DIR__, 3 ) . '/reportedip-hive-pro/includes/class-two-factor-policies.php';
 }
 
 namespace ReportedIP\Hive\Tests\Unit {
