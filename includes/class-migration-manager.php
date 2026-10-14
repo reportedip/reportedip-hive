@@ -56,6 +56,13 @@ final class ReportedIP_Hive_Migration_Manager {
 	public const LOCK_OPTION = 'reportedip_hive_migration_lock';
 
 	/**
+	 * Values of the locks this request holds, keyed by lock name.
+	 *
+	 * @var array<string,string>
+	 */
+	private static $held_locks = array();
+
+	/**
 	 * Lock TTL in seconds. Stale locks beyond this window are force-released.
 	 */
 	public const LOCK_TTL = 300;
@@ -137,7 +144,12 @@ final class ReportedIP_Hive_Migration_Manager {
 				}
 				delete_site_option( $name );
 			}
-			return (bool) add_site_option( $name, time() );
+			$value = time();
+			if ( ! add_site_option( $name, $value ) ) {
+				return false;
+			}
+			self::$held_locks[ $name ] = (string) $value;
+			return true;
 		}
 
 		$table = $wpdb->base_prefix . 'options';
@@ -148,11 +160,21 @@ final class ReportedIP_Hive_Migration_Manager {
 			}
 			$wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE option_name = %s AND option_value = %s", $name, (string) $held ) );
 		}
-		return 1 === (int) $wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO {$table} (option_name, option_value, autoload) VALUES (%s, %s, 'no')", $name, (string) time() ) );
+		$value = (string) time();
+		if ( 1 !== (int) $wpdb->query( $wpdb->prepare( "INSERT IGNORE INTO {$table} (option_name, option_value, autoload) VALUES (%s, %s, 'no')", $name, $value ) ) ) {
+			return false;
+		}
+		self::$held_locks[ $name ] = $value;
+		return true;
 	}
 
 	/**
-	 * Release a mutex taken with {@see take_lock()}.
+	 * Release a mutex this request took with {@see take_lock()}.
+	 *
+	 * Only the row carrying the value this request inserted is deleted. A
+	 * holder that outlived the TTL finds its lock taken over by another
+	 * request and must not release that request's lock; a request that never
+	 * took the lock releases nothing.
 	 *
 	 * @param string $name Lock name.
 	 * @return void
@@ -160,12 +182,19 @@ final class ReportedIP_Hive_Migration_Manager {
 	 */
 	public static function drop_lock( $name ) {
 		global $wpdb;
+		if ( ! isset( self::$held_locks[ $name ] ) ) {
+			return;
+		}
+		$value = self::$held_locks[ $name ];
+		unset( self::$held_locks[ $name ] );
 		if ( ! ( $wpdb instanceof wpdb ) ) {
-			delete_site_option( $name );
+			if ( (string) get_site_option( $name, '' ) === $value ) {
+				delete_site_option( $name );
+			}
 			return;
 		}
 		$table = $wpdb->base_prefix . 'options';
-		$wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE option_name = %s", $name ) );
+		$wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE option_name = %s AND option_value = %s", $name, $value ) );
 	}
 
 	/**
