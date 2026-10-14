@@ -304,7 +304,7 @@ class ReportedIP_Hive_Protection_Page {
 		}
 		$adapters = ReportedIP_Hive_Form_Adapters::get_instance();
 		$slugs    = array();
-		foreach ( array_keys( ReportedIP_Hive_Form_Adapters::ADAPTERS ) as $slug ) {
+		foreach ( array_keys( ReportedIP_Hive_Form_Adapters::adapters() ) as $slug ) {
 			if ( $adapters->detected( $slug ) ) {
 				$slugs[] = (string) $slug;
 			}
@@ -766,7 +766,7 @@ class ReportedIP_Hive_Protection_Page {
 
 		$names = ReportedIP_Hive_Form_Adapters::names();
 
-		foreach ( ReportedIP_Hive_Form_Adapters::ADAPTERS as $slug => $adapter ) {
+		foreach ( ReportedIP_Hive_Form_Adapters::adapters() as $slug => $adapter ) {
 			if ( $adapter['option'] === (string) $key ) {
 				return array(
 					'detect' => $adapter['detect'],
