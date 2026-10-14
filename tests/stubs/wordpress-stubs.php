@@ -364,6 +364,31 @@ if ( ! function_exists( 'apply_filters' ) ) {
 	}
 }
 
+if ( ! function_exists( 'has_filter' ) ) {
+	/**
+	 * Whether a filter hook has a callback, or the priority of one callback.
+	 *
+	 * @param string        $hook_name The name of the filter hook.
+	 * @param callable|bool $callback  Callback to look for, false for any.
+	 * @return bool|int
+	 */
+	function has_filter( $hook_name, $callback = false ) {
+		global $wp_filters;
+		if ( empty( $wp_filters[ $hook_name ] ) ) {
+			return false;
+		}
+		if ( false === $callback ) {
+			return true;
+		}
+		foreach ( $wp_filters[ $hook_name ] as $filter ) {
+			if ( $filter['callback'] === $callback ) {
+				return $filter['priority'];
+			}
+		}
+		return false;
+	}
+}
+
 if ( ! function_exists( 'register_shutdown_function' ) ) {
 	// This is a PHP function, but we stub it to prevent issues in tests
 }

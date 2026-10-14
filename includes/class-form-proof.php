@@ -410,6 +410,61 @@ class ReportedIP_Hive_Form_Proof {
 	}
 
 	/**
+	 * Whether something in this request judges the computation check, which
+	 * an add-on does by listening on `reportedip_hive_form_proof_verdict`.
+	 *
+	 * @return bool
+	 * @since  3.0.0
+	 */
+	public static function computation_owned() {
+		return false !== has_filter( 'reportedip_hive_form_proof_verdict' );
+	}
+
+	/**
+	 * Whether an update of this plugin has to purge the page caches. Pure.
+	 *
+	 * Up to 2.x the computation check lived in this plugin. A page cached
+	 * then names the task endpoint and, through a combined or minified asset
+	 * cache, may still load the full script, which waits for a task the
+	 * endpoint no longer hands out once the computation left with the
+	 * add-on. While the add-on is active it restamps and purges itself; when
+	 * it is not, this plugin purges once, on the update that leaves 2.x.
+	 * Rebuilt pages carry the plain marker, which passes without a grace, so
+	 * no grace is restarted.
+	 *
+	 * @param string $from_version Version seeded before this update, empty on a fresh install.
+	 * @param mixed  $pow_since    Stored start of the 2.x computation grace, 0 while it was off.
+	 * @param bool   $owned        Whether something judges the computation now.
+	 * @return bool
+	 * @since  3.0.0
+	 */
+	public static function split_purge_needed( $from_version, $pow_since, $owned ) {
+		$from = (string) $from_version;
+
+		return '' !== $from && version_compare( $from, '3.0.0', '<' ) && (int) $pow_since > 0 && ! $owned;
+	}
+
+	/**
+	 * Purge the page caches once after an update from 2.x, see
+	 * {@see split_purge_needed()}.
+	 *
+	 * @param string $from_version Version seeded before this update.
+	 * @return bool Whether the caches were purged.
+	 * @since  3.0.0
+	 */
+	public static function purge_after_split( $from_version ) {
+		$since = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_form_proof_pow_since', 0 );
+
+		if ( ! self::split_purge_needed( $from_version, $since, self::computation_owned() ) || ! class_exists( 'ReportedIP_Hive_Cache_Flush' ) ) {
+			return false;
+		}
+
+		ReportedIP_Hive_Cache_Flush::purge_pages();
+
+		return true;
+	}
+
+	/**
 	 * Start or clear the adapter grace, called from the option side-effect
 	 * dispatcher whenever one of {@see adapter_options()} is written.
 	 *

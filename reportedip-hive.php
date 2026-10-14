@@ -2446,6 +2446,10 @@ class ReportedIP_Hive {
 	 * change (gated by a stored version marker, main-site-only on Multisite so
 	 * the network keys are written once) closes that gap.
 	 *
+	 * The update that leaves 2.x also purges the page caches when the 2.x
+	 * computation check was on and no add-on takes it over, see
+	 * {@see ReportedIP_Hive_Form_Proof::split_purge_needed()}.
+	 *
 	 * @return void
 	 * @since 2.1.2
 	 */
@@ -2457,6 +2461,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Defaults::note_first_seeded_version( $stored );
 		ReportedIP_Hive_Defaults::seed_missing();
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_seeded_version', REPORTEDIP_HIVE_VERSION );
+		ReportedIP_Hive_Form_Proof::purge_after_split( $stored );
 	}
 
 	/**

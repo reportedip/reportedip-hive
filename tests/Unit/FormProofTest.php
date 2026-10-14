@@ -517,6 +517,48 @@ namespace ReportedIP\Hive\Tests\Unit {
 			}
 		}
 
+		/**
+		 * The update that leaves 2.x purges the page caches once, and only
+		 * when the computation was on and nothing takes it over.
+		 *
+		 * @dataProvider provide_split_purges
+		 *
+		 * @param string $from     Version seeded before the update.
+		 * @param mixed  $since    Stored start of the 2.x computation grace.
+		 * @param bool   $owned    Whether an add-on judges the computation.
+		 * @param bool   $expected Whether the caches are purged.
+		 */
+		public function test_the_split_purge_decision( string $from, $since, bool $owned, bool $expected ): void {
+			$this->assertSame( $expected, \ReportedIP_Hive_Form_Proof::split_purge_needed( $from, $since, $owned ) );
+		}
+
+		/**
+		 * @return array<string, array{0:string, 1:mixed, 2:bool, 3:bool}>
+		 */
+		public static function provide_split_purges(): array {
+			return array(
+				'2.1.74 with the computation on, no add-on' => array( '2.1.74', 1760000000, false, true ),
+				'the add-on takes it over'                   => array( '2.1.74', 1760000000, true, false ),
+				'the computation was off'                    => array( '2.1.74', 0, false, false ),
+				'a fresh install'                            => array( '', 1760000000, false, false ),
+				'a later 3.x update'                         => array( '3.0.0', 1760000000, false, false ),
+				'a stored string'                            => array( '2.1.70', '1760000000', false, true ),
+			);
+		}
+
+		public function test_the_computation_is_owned_by_a_verdict_listener(): void {
+			$GLOBALS['wp_filters'] = array();
+			$this->assertFalse( \ReportedIP_Hive_Form_Proof::computation_owned() );
+
+			add_filter( 'reportedip_hive_form_proof_verdict', 'strval', 10, 4 );
+
+			try {
+				$this->assertTrue( \ReportedIP_Hive_Form_Proof::computation_owned() );
+			} finally {
+				$GLOBALS['wp_filters'] = array();
+			}
+		}
+
 		public function test_without_a_listener_the_marker_proves(): void {
 			$GLOBALS['wp_filters'] = array();
 			$proof                 = \ReportedIP_Hive_Form_Proof::get_instance();
