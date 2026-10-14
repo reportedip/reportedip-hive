@@ -33,7 +33,6 @@ class ReportedIP_Hive_Admin_Settings {
 		add_action( 'admin_notices', array( $this, 'render_cap_status_notice' ), 5 );
 		add_action( 'admin_post_reportedip_hive_cap_notice_dismiss', array( $this, 'handle_cap_notice_dismiss' ) );
 		add_action( 'admin_post_reportedip_hive_support_bundle', array( $this, 'handle_support_bundle' ) );
-		add_action( 'admin_post_reportedip_hive_group_sync_now', array( $this, 'handle_group_sync_now' ) );
 		add_action( 'updated_option', array( $this, 'maybe_sync_notifications_to_api' ), 10, 1 );
 		add_action( 'network_admin_edit_reportedip_hive_save_settings', array( $this, 'handle_network_admin_save' ) );
 	}
@@ -1197,168 +1196,94 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Group membership and the reputation of the site's own address.
+	 * Reputation of the site's own address on the Community page.
 	 *
-	 * Both come from verify-key and live in the options `reportedip_hive_group`
-	 * and `reportedip_hive_reputation`; the group sync refreshes the group
-	 * part every fifteen minutes. Renders nothing while neither is known, so a
-	 * key without a group sees the page exactly as before.
+	 * The value comes from verify-key and lives in the option
+	 * `reportedip_hive_reputation`. Renders nothing while it is unknown. An
+	 * add-on that shows the reputation inside a section of its own hooks
+	 * into `reportedip_hive_reputation_section`; while one listens, the free
+	 * section is not printed.
 	 *
-	 * @param bool $with_link Add the last sync and a link to the Group tab.
+	 * @param bool $with_link Passed to the add-on: the section may carry its links.
 	 * @return void
-	 * @since 2.1.67
+	 * @since 3.0.0
 	 */
-	private function render_group_section( $with_link = true ) {
-		$group      = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_group', null );
-		$reputation = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_reputation', null );
-		$group      = is_array( $group ) && ! empty( $group['name'] ) ? $group : null;
-		$reputation = is_array( $reputation ) && ! empty( $reputation['address'] ) ? $reputation : null;
-		if ( null === $group && null === $reputation ) {
+	private function render_reputation_section( $with_link = true ) {
+		if ( has_action( 'reportedip_hive_reputation_section' ) ) {
+			/**
+			 * Render the reputation section in place of the free one. With
+			 * a listener the free section is not printed; the listener
+			 * prints the reputation card through
+			 * {@see ReportedIP_Hive_Admin_Settings::render_reputation_card()}
+			 * when it shows the reputation at all.
+			 *
+			 * @param bool $with_link Whether the section may carry its links.
+			 * @since 3.0.0
+			 */
+			do_action( 'reportedip_hive_reputation_section', (bool) $with_link );
 			return;
 		}
 
-		$group_whitelist = 0;
-		if ( null !== $group ) {
-			foreach ( (array) ReportedIP_Hive_IP_Manager::get_instance()->get_whitelist( true ) as $row ) {
-				if ( 'group' === (string) ( $row->source ?? 'manual' ) ) {
-					++$group_whitelist;
-				}
-			}
+		$reputation = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_reputation', null );
+		if ( ! is_array( $reputation ) || empty( $reputation['address'] ) ) {
+			return;
 		}
-
-		$group_icon      = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
-		$reputation_icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
-		$listed          = null !== $reputation && ! empty( $reputation['listed'] );
 		?>
 		<div class="rip-settings-section rip-relay-quota">
 			<h2 class="rip-settings-section__title">
-				<?php echo self::kses_inline_svg( $group_icon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_inline_svg() applies wp_kses internally. ?>
-				<?php esc_html_e( 'Group and reputation', 'reportedip-hive' ); ?>
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+				<?php esc_html_e( 'Reputation', 'reportedip-hive' ); ?>
 			</h2>
-			<p class="rip-settings-section__desc"><?php esc_html_e( 'A group shares its bans: every address one member reports is blocked on every other member for the ban window. Groups are managed in the reportedip.com dashboard.', 'reportedip-hive' ); ?></p>
+			<p class="rip-settings-section__desc"><?php esc_html_e( 'Whether the address this site connects from is in the community database.', 'reportedip-hive' ); ?></p>
 			<div class="rip-stat-cards">
-				<?php if ( null !== $group ) : ?>
-				<div class="rip-stat-card rip-stat-card--quota">
-					<div class="rip-stat-card__head">
-						<div class="rip-stat-card__icon rip-stat-card__icon--info">
-							<?php echo self::kses_inline_svg( $group_icon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_inline_svg() applies wp_kses internally. ?>
-						</div>
-						<div class="rip-stat-card__content">
-							<div class="rip-stat-card__value"><?php echo esc_html( (string) $group['name'] ); ?></div>
-							<div class="rip-stat-card__label"><?php esc_html_e( 'Group', 'reportedip-hive' ); ?></div>
-						</div>
-					</div>
-					<div class="rip-stat-card__hint">
-						<?php
-						$members = (int) ( $group['members'] ?? 0 );
-						/* translators: 1: number of members, 2: ban window in hours */
-						$members_text = _n( '%1$s member, bans last %2$s hours.', '%1$s members, bans last %2$s hours.', $members, 'reportedip-hive' );
-						printf(
-							esc_html( $members_text ),
-							esc_html( number_format_i18n( $members ) ),
-							esc_html( number_format_i18n( (int) ( $group['ban_hours'] ?? 24 ) ) )
-						);
-						?>
-					</div>
-				</div>
-				<div class="rip-stat-card rip-stat-card--quota">
-					<div class="rip-stat-card__head">
-						<div class="rip-stat-card__icon rip-stat-card__icon--success">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-						</div>
-						<div class="rip-stat-card__content">
-							<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $group_whitelist ) ); ?></div>
-							<div class="rip-stat-card__label"><?php esc_html_e( 'Group whitelist entries', 'reportedip-hive' ); ?></div>
-						</div>
-					</div>
-					<div class="rip-stat-card__hint"><?php esc_html_e( 'Addresses and ranges the group never blocks or reports. Maintained in your reportedip.com account, mirrored into the whitelist of this site.', 'reportedip-hive' ); ?></div>
-				</div>
-				<div class="rip-stat-card rip-stat-card--quota">
-					<div class="rip-stat-card__head">
-						<div class="rip-stat-card__icon rip-stat-card__icon--danger">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-						</div>
-						<div class="rip-stat-card__content">
-							<div class="rip-stat-card__value">
-							<?php
-							echo esc_html(
-								number_format_i18n(
-									(int) $this->database->get_group_entries(
-										array(
-											'status' => 'group',
-											'count'  => true,
-										)
-									)
-								)
-							);
-							?>
-																</div>
-							<div class="rip-stat-card__label"><?php esc_html_e( 'Blocked by the group', 'reportedip-hive' ); ?></div>
-						</div>
-					</div>
-					<div class="rip-stat-card__hint">
-						<?php
-						printf(
-							/* translators: %s: number of entries in the group list */
-							esc_html__( 'Out of %s entries in the group list.', 'reportedip-hive' ),
-							esc_html( number_format_i18n( (int) $this->database->get_group_entries( array( 'count' => true ) ) ) )
-						);
-						?>
-					</div>
-				</div>
-				<?php endif; ?>
-
-				<?php if ( null !== $reputation ) : ?>
-				<div class="rip-stat-card rip-stat-card--quota">
-					<div class="rip-stat-card__head">
-						<div class="rip-stat-card__icon <?php echo $listed ? 'rip-stat-card__icon--danger' : 'rip-stat-card__icon--success'; ?>">
-							<?php echo self::kses_inline_svg( $reputation_icon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_inline_svg() applies wp_kses internally. ?>
-						</div>
-						<div class="rip-stat-card__content">
-							<div class="rip-stat-card__value"><?php echo $listed ? esc_html__( 'Listed', 'reportedip-hive' ) : esc_html__( 'Not listed', 'reportedip-hive' ); ?></div>
-							<div class="rip-stat-card__label">
-								<?php
-								/* translators: %s: IP address */
-								printf( esc_html__( 'Reputation of %s', 'reportedip-hive' ), esc_html( (string) $reputation['address'] ) );
-								?>
-							</div>
-						</div>
-					</div>
-					<?php if ( $listed ) : ?>
-					<div class="rip-stat-card__hint rip-stat-card__hint--bundle-negative">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-						<?php
-						/* translators: 1: number of reports, 2: confidence score */
-						$listed_text = _n( 'The address this site connects from is in the community database: %1$s report, confidence %2$s. Check it on reportedip.com under Tools.', 'The address this site connects from is in the community database: %1$s reports, confidence %2$s. Check it on reportedip.com under Tools.', (int) ( $reputation['reports'] ?? 0 ), 'reportedip-hive' );
-						printf(
-							esc_html( $listed_text ),
-							esc_html( number_format_i18n( (int) ( $reputation['reports'] ?? 0 ) ) ),
-							esc_html( (string) (int) ( $reputation['confidence'] ?? 0 ) )
-						);
-						?>
-						<a href="<?php echo esc_url( 'https://reportedip.com/tools/' ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Open Tools', 'reportedip-hive' ); ?></a>
-					</div>
-					<?php else : ?>
-					<div class="rip-stat-card__hint"><?php esc_html_e( 'No community member has reported this address.', 'reportedip-hive' ); ?></div>
-					<?php endif; ?>
-				</div>
-				<?php endif; ?>
+				<?php self::render_reputation_card( $reputation ); ?>
 			</div>
-			<?php if ( $with_link && null !== $group ) : ?>
-				<?php $status = ReportedIP_Hive_Group_Sync::status(); ?>
-			<p class="rip-help-text rip-mt-2">
+		</div>
+		<?php
+	}
+
+	/**
+	 * Stat card with the reputation of the site's own address.
+	 *
+	 * @param array<string,mixed> $reputation The stored `reportedip_hive_reputation` value (`address`, `listed`, `reports`, `confidence`).
+	 * @return void
+	 * @since 3.0.0
+	 */
+	public static function render_reputation_card( array $reputation ) {
+		$reputation_icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>';
+		$listed          = ! empty( $reputation['listed'] );
+		?>
+		<div class="rip-stat-card rip-stat-card--quota">
+			<div class="rip-stat-card__head">
+				<div class="rip-stat-card__icon <?php echo $listed ? 'rip-stat-card__icon--danger' : 'rip-stat-card__icon--success'; ?>">
+					<?php echo self::kses_inline_svg( $reputation_icon ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- kses_inline_svg() applies wp_kses internally. ?>
+				</div>
+				<div class="rip-stat-card__content">
+					<div class="rip-stat-card__value"><?php echo $listed ? esc_html__( 'Listed', 'reportedip-hive' ) : esc_html__( 'Not listed', 'reportedip-hive' ); ?></div>
+					<div class="rip-stat-card__label">
+						<?php
+						/* translators: %s: IP address */
+						printf( esc_html__( 'Reputation of %s', 'reportedip-hive' ), esc_html( (string) $reputation['address'] ) );
+						?>
+					</div>
+				</div>
+			</div>
+			<?php if ( $listed ) : ?>
+			<div class="rip-stat-card__hint rip-stat-card__hint--bundle-negative">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
 				<?php
-				if ( $status['last_run'] > 0 ) {
-					printf(
-						/* translators: 1: date and time of the last sync, 2: result sentence */
-						esc_html__( 'Last sync %1$s: %2$s', 'reportedip-hive' ),
-						esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $status['last_run'] ) ),
-						esc_html( self::group_result_text( $status ) )
-					);
-				}
+				/* translators: 1: number of reports, 2: confidence score */
+				$listed_text = _n( 'The address this site connects from is in the community database: %1$s report, confidence %2$s. Check it on reportedip.com under Tools.', 'The address this site connects from is in the community database: %1$s reports, confidence %2$s. Check it on reportedip.com under Tools.', (int) ( $reputation['reports'] ?? 0 ), 'reportedip-hive' );
+				printf(
+					esc_html( $listed_text ),
+					esc_html( number_format_i18n( (int) ( $reputation['reports'] ?? 0 ) ) ),
+					esc_html( (string) (int) ( $reputation['confidence'] ?? 0 ) )
+				);
 				?>
-				<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=ip_lists&sub=group' ) ); ?>"><?php esc_html_e( 'Open the group list', 'reportedip-hive' ); ?></a>
-			</p>
+				<a href="<?php echo esc_url( 'https://reportedip.com/tools/' ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Open Tools', 'reportedip-hive' ); ?></a>
+			</div>
+			<?php else : ?>
+			<div class="rip-stat-card__hint"><?php esc_html_e( 'No community member has reported this address.', 'reportedip-hive' ); ?></div>
 			<?php endif; ?>
 		</div>
 		<?php
@@ -1980,34 +1905,6 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Warn once when the service refused the group ban list for the plan.
-	 *
-	 * The sync keeps asking every fifteen minutes, so a plan change picks the
-	 * list up without any action here; the notice only explains why nothing
-	 * arrives in the meantime.
-	 *
-	 * @return void
-	 * @since 2.1.67
-	 */
-	public static function maybe_render_group_tier_notice() {
-		if ( 'group_tier' !== (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_group_error', '' ) ) {
-			return;
-		}
-		if ( get_user_meta( get_current_user_id(), 'reportedip_dismissed_group_tier', true ) ) {
-			return;
-		}
-		ReportedIP_Hive_Admin_Notice::render(
-			array(
-				'variant'        => 'info',
-				'title'          => __( 'Group bans need the Professional plan', 'reportedip-hive' ),
-				'body'           => esc_html__( 'This key belongs to a group on reportedip.com, but the plan behind it does not include group bans. The group list is skipped until the plan changes; every other function keeps running.', 'reportedip-hive' ),
-				'dismissible'    => true,
-				'data_notice_id' => 'group_tier',
-			)
-		);
-	}
-
-	/**
 	 * Render the over-limit domain notice when the last service snapshot says
 	 * the account uses more domains than the plan includes.
 	 *
@@ -2085,7 +1982,16 @@ class ReportedIP_Hive_Admin_Settings {
 
 		self::maybe_render_domain_limit_notice();
 		self::maybe_render_reputation_notice();
-		self::maybe_render_group_tier_notice();
+
+		/**
+		 * Print an in-page notice on the plugin pages, after the free
+		 * notices, through {@see ReportedIP_Hive_Admin_Notice::render()}.
+		 * `admin_notices` callbacks are removed on these screens, so this is
+		 * the funnel for an add-on banner.
+		 *
+		 * @since 3.0.0
+		 */
+		do_action( 'reportedip_hive_inline_notices' );
 
 		if ( ! ReportedIP_Hive_Option_Routing::current_user_can_manage() ) {
 			return;
@@ -3754,9 +3660,13 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php $this->render_score_section(); ?>
 
 				<?php
-				if ( self::has_group_context() ) {
-					$this->render_group_section( true );
-				}
+				/**
+				 * Print a section on the dashboard below the score, above
+				 * the next steps, as `div.rip-settings-section`.
+				 *
+				 * @since 3.0.0
+				 */
+				do_action( 'reportedip_hive_dashboard_after_score' );
 				?>
 
 				<?php ReportedIP_Hive_Dashboard_Next_Steps::render(); ?>
@@ -3928,12 +3838,11 @@ class ReportedIP_Hive_Admin_Settings {
 			'lookup'    => 'activity',
 			'blocked'   => 'ip_lists',
 			'whitelist' => 'ip_lists',
-			'group'     => 'ip_lists',
 			'api_queue' => 'advanced',
 		);
 		$subs    = array(
 			'activity' => array( 'logs', 'lookup' ),
-			'ip_lists' => array( 'blocked', 'whitelist', 'group' ),
+			'ip_lists' => array( 'blocked', 'whitelist' ),
 			'advanced' => array(),
 		);
 
@@ -3976,7 +3885,7 @@ class ReportedIP_Hive_Admin_Settings {
 	/**
 	 * Heading and one-paragraph explanation for each tab of the Activity page.
 	 *
-	 * @param string $key Sub-tab (`logs`, `lookup`, `blocked`, `whitelist`, `group` or one an add-on adds) or `queue`.
+	 * @param string $key Sub-tab (`logs`, `lookup`, `blocked`, `whitelist` or one an add-on adds) or `queue`.
 	 * @return array{0:string,1:string} Title and text.
 	 * @since  2.1.57
 	 */
@@ -3997,10 +3906,6 @@ class ReportedIP_Hive_Admin_Settings {
 			'whitelist' => array(
 				__( 'Whitelist', 'reportedip-hive' ),
 				__( 'Addresses Hive never blocks, whatever they do: your office, a monitoring service, a payment provider. Use a CIDR range for a connection whose address changes.', 'reportedip-hive' ),
-			),
-			'group'     => array(
-				__( 'Group', 'reportedip-hive' ),
-				__( 'The shared ban list of your group on reportedip.com, exactly as the service sent it. Every address one member reports is listed here with the member, the categories and the ban window, and the column On this site says what Hive made of it and why. The list and the group whitelist are maintained in your reportedip.com account.', 'reportedip-hive' ),
 			),
 			'queue'     => array(
 				__( 'Report Queue', 'reportedip-hive' ),
@@ -4123,13 +4028,6 @@ class ReportedIP_Hive_Admin_Settings {
 				<?php esc_html_e( 'Whitelist', 'reportedip-hive' ); ?>
 				<span class="rip-sub-tabs__count"><?php echo (int) $this->database->count_whitelisted_ips(); ?></span>
 			</a>
-			<?php if ( self::has_group_context() ) : ?>
-			<a href="?page=reportedip-hive-security&tab=ip_lists&sub=group" class="rip-sub-tabs__tab <?php echo $sub_tab === 'group' ? 'rip-sub-tabs__tab--active' : ''; ?>">
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-				<?php esc_html_e( 'Group', 'reportedip-hive' ); ?>
-				<span class="rip-sub-tabs__count"><?php echo (int) $this->database->get_group_entries( array( 'count' => true ) ); ?></span>
-			</a>
-			<?php endif; ?>
 			<?php
 			/** This action is documented in admin/class-admin-settings.php */
 			do_action( 'reportedip_hive_activity_sub_tabs', 'ip_lists', $sub_tab );
@@ -4137,14 +4035,9 @@ class ReportedIP_Hive_Admin_Settings {
 		</div>
 
 		<?php
-		if ( 'group' === $sub_tab && ! self::has_group_context() ) {
-			$sub_tab = 'blocked';
-		}
 		self::render_tab_intro( $sub_tab );
 		if ( $sub_tab === 'whitelist' ) {
 			$this->render_whitelist_tab();
-		} elseif ( $sub_tab === 'group' ) {
-			$this->render_group_tab();
 		} elseif ( 'blocked' === $sub_tab ) {
 			$this->render_blocked_tab();
 		} else {
@@ -4398,262 +4291,6 @@ class ReportedIP_Hive_Admin_Settings {
 			<?php $blocked_table->display(); ?>
 		</form>
 		<?php
-	}
-
-	/**
-	 * Whether there is anything group related to show: a known group, a plan
-	 * refusal, a recorded run or rows the sync left behind.
-	 *
-	 * @return bool
-	 * @since  2.1.67
-	 */
-	private static function has_group_context() {
-		$group = ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Group_Sync::OPT_GROUP, null );
-		if ( is_array( $group ) && ! empty( $group['name'] ) ) {
-			return true;
-		}
-		if ( '' !== (string) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Group_Sync::OPT_ERROR, '' ) ) {
-			return true;
-		}
-		return ReportedIP_Hive_Database::get_instance()->get_group_entries( array( 'count' => true ) ) > 0;
-	}
-
-	/**
-	 * One sentence for the result of a group sync run.
-	 *
-	 * @param array $status ReportedIP_Hive_Group_Sync::status().
-	 * @return string
-	 * @since  2.1.67
-	 */
-	private static function group_result_text( array $status ) {
-		switch ( (string) $status['last_result'] ) {
-			case 'applied':
-				return __( 'List received and applied.', 'reportedip-hive' );
-			case 'unchanged':
-				return __( 'No change since the last list.', 'reportedip-hive' );
-			case 'report_only':
-				return __( 'List received. Report-only mode is on, so nothing was blocked.', 'reportedip-hive' );
-			case 'cleared':
-				return __( 'This key is no longer in a group. Everything the group placed was removed.', 'reportedip-hive' );
-			case 'tier':
-				return __( 'Refused: the plan behind this key does not include groups. Everything the group placed was removed.', 'reportedip-hive' );
-			case 'released':
-				return __( 'This site no longer talks to reportedip.com (no key or Local Shield). Everything the group placed was removed.', 'reportedip-hive' );
-			case 'discarded':
-				return __( 'The answer was not a group list and was thrown away. Nothing changed.', 'reportedip-hive' );
-			case 'error':
-				return (int) $status['http_code'] > 0
-					/* translators: %d: HTTP status code */
-					? sprintf( __( 'reportedip.com answered with HTTP %d. Nothing changed, the next run tries again.', 'reportedip-hive' ), (int) $status['http_code'] )
-					: __( 'reportedip.com could not be reached. Nothing changed, the next run tries again.', 'reportedip-hive' );
-		}
-		return __( 'No run recorded yet.', 'reportedip-hive' );
-	}
-
-	/**
-	 * Status of the group sync: last run, result, next run, last change.
-	 *
-	 * @param bool $with_button Show the "Sync now" button.
-	 * @return void
-	 * @since  2.1.67
-	 */
-	private static function render_group_sync_status( $with_button ) {
-		$status  = ReportedIP_Hive_Group_Sync::status();
-		$next    = wp_next_scheduled( 'reportedip_hive_sync_group' );
-		$changes = is_array( $status['changes'] ) ? $status['changes'] : array();
-		$labels  = array(
-			'added'             => __( 'Blocked', 'reportedip-hive' ),
-			'extended'          => __( 'Extended', 'reportedip-hive' ),
-			'lifted'            => __( 'Lifted', 'reportedip-hive' ),
-			'whitelist_added'   => __( 'Whitelist entries added', 'reportedip-hive' ),
-			'whitelist_removed' => __( 'Whitelist entries removed', 'reportedip-hive' ),
-			'skipped_whitelist' => __( 'Skipped for the whitelist', 'reportedip-hive' ),
-			'skipped_own'       => __( 'Skipped as this server', 'reportedip-hive' ),
-			'skipped_manual'    => __( 'Left to a manual block', 'reportedip-hive' ),
-		);
-		$parts   = array();
-		foreach ( $labels as $key => $label ) {
-			if ( ! empty( $changes[ $key ] ) ) {
-				$parts[] = $label . ': ' . number_format_i18n( (int) $changes[ $key ] );
-			}
-		}
-		?>
-		<div class="rip-card rip-mb-4">
-			<div class="rip-card__header">
-				<h3 class="rip-card__title">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-					<?php esc_html_e( 'Group sync', 'reportedip-hive' ); ?>
-				</h3>
-			</div>
-			<div class="rip-card__body">
-				<table class="rip-table">
-					<tbody>
-						<tr>
-							<th scope="row"><?php esc_html_e( 'Last run', 'reportedip-hive' ); ?></th>
-							<td><?php echo $status['last_run'] > 0 ? esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $status['last_run'] ) ) : esc_html__( 'Never', 'reportedip-hive' ); ?></td>
-						</tr>
-						<tr>
-							<th scope="row"><?php esc_html_e( 'Result', 'reportedip-hive' ); ?></th>
-							<td><?php echo esc_html( self::group_result_text( $status ) ); ?></td>
-						</tr>
-						<tr>
-							<th scope="row"><?php esc_html_e( 'Entries in the list', 'reportedip-hive' ); ?></th>
-							<td><?php echo esc_html( number_format_i18n( (int) $status['entries'] ) ); ?></td>
-						</tr>
-						<tr>
-							<th scope="row"><?php esc_html_e( 'Last change', 'reportedip-hive' ); ?></th>
-							<td>
-								<?php
-								if ( $status['last_change'] > 0 ) {
-									echo esc_html( wp_date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), (int) $status['last_change'] ) );
-									if ( ! empty( $parts ) ) {
-										echo ': ' . esc_html( implode( ', ', $parts ) );
-									}
-								} else {
-									esc_html_e( 'None yet', 'reportedip-hive' );
-								}
-								?>
-							</td>
-						</tr>
-						<tr>
-							<th scope="row"><?php esc_html_e( 'Next run', 'reportedip-hive' ); ?></th>
-							<td><?php echo $next ? esc_html( wp_date( get_option( 'time_format' ), (int) $next ) ) : esc_html__( 'Not scheduled', 'reportedip-hive' ); ?></td>
-						</tr>
-					</tbody>
-				</table>
-				<?php if ( $with_button && ReportedIP_Hive_Option_Routing::current_user_can_manage() ) : ?>
-				<form method="post" action="<?php echo esc_url( self::get_admin_page_url( 'admin-post.php' ) ); ?>" class="rip-mt-2">
-					<input type="hidden" name="action" value="reportedip_hive_group_sync_now" />
-					<?php wp_nonce_field( 'reportedip_hive_group_sync_now' ); ?>
-					<button type="submit" class="rip-button rip-button--secondary">
-						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-						<?php esc_html_e( 'Sync now', 'reportedip-hive' ); ?>
-					</button>
-				</form>
-				<?php endif; ?>
-			</div>
-		</div>
-		<?php
-	}
-
-	/**
-	 * Group tab: sync status, the group list with the local status of every
-	 * entry, and the group whitelist.
-	 *
-	 * @return void
-	 * @since  2.1.67
-	 */
-	private function render_group_tab() {
-		$group = ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Group_Sync::OPT_GROUP, null );
-		$group = is_array( $group ) && ! empty( $group['name'] ) ? $group : null;
-
-		if ( 'group_tier' === (string) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_Group_Sync::OPT_ERROR, '' ) ) {
-			?>
-			<div class="rip-alert rip-alert--info rip-mb-4"><?php esc_html_e( 'This key belongs to a group on reportedip.com, but the plan behind it does not include group bans. The list is skipped until the plan changes.', 'reportedip-hive' ); ?></div>
-			<?php
-		}
-
-		$this->render_group_section( false );
-		self::render_group_sync_status( true );
-
-		$table = new ReportedIP_Hive_Group_Entries_Table();
-		$table->prepare_items();
-		?>
-		<div class="rip-card rip-mb-4">
-			<div class="rip-card__header">
-				<h3 class="rip-card__title">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-					<?php esc_html_e( 'Group ban list', 'reportedip-hive' ); ?>
-				</h3>
-			</div>
-			<div class="rip-card__body">
-				<p class="rip-help-text">
-					<?php
-					if ( null !== $group ) {
-						printf(
-							/* translators: 1: group name, 2: ban window in hours */
-							esc_html__( 'Addresses the members of %1$s reported in the last %2$s hours, plus the entries added in the account. Removing an entry or excluding an address happens in your reportedip.com account; a block lifted here by hand comes back with the next change of the list.', 'reportedip-hive' ),
-							esc_html( (string) $group['name'] ),
-							esc_html( number_format_i18n( (int) ( $group['ban_hours'] ?? 24 ) ) )
-						);
-					} else {
-						esc_html_e( 'The last list this site received.', 'reportedip-hive' );
-					}
-					?>
-					<a href="<?php echo esc_url( 'https://reportedip.com/dashboard/groups/' ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Manage the group', 'reportedip-hive' ); ?></a>
-				</p>
-			</div>
-		</div>
-
-		<?php $table->render_filters(); ?>
-		<form method="get">
-			<input type="hidden" name="page" value="reportedip-hive-security" />
-			<input type="hidden" name="tab" value="ip_lists" />
-			<input type="hidden" name="sub" value="group" />
-			<?php $table->display(); ?>
-		</form>
-
-		<?php
-		$whitelist = array();
-		foreach ( (array) ReportedIP_Hive_IP_Manager::get_instance()->get_whitelist( true ) as $row ) {
-			if ( ReportedIP_Hive_Group_Sync::BLOCK_TYPE === (string) ( $row->source ?? 'manual' ) ) {
-				$whitelist[] = $row;
-			}
-		}
-		?>
-		<div class="rip-card rip-mt-4">
-			<div class="rip-card__header">
-				<h3 class="rip-card__title">
-					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-					<?php esc_html_e( 'Group whitelist', 'reportedip-hive' ); ?>
-				</h3>
-			</div>
-			<div class="rip-card__body">
-				<p class="rip-help-text"><?php esc_html_e( 'Addresses and ranges no member blocks or reports. They sit in the whitelist of this site with the origin Group and are maintained in your reportedip.com account.', 'reportedip-hive' ); ?></p>
-				<?php if ( empty( $whitelist ) ) : ?>
-					<p class="description"><?php esc_html_e( 'The group whitelist is empty.', 'reportedip-hive' ); ?></p>
-				<?php else : ?>
-				<table class="rip-table">
-					<thead>
-						<tr>
-							<th><?php esc_html_e( 'Address or range', 'reportedip-hive' ); ?></th>
-							<th><?php esc_html_e( 'Note', 'reportedip-hive' ); ?></th>
-							<th><?php esc_html_e( 'Added on this site', 'reportedip-hive' ); ?></th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php foreach ( $whitelist as $row ) : ?>
-						<tr>
-							<td><?php echo ReportedIP_Hive_IP_Cell::render( (string) $row->ip_address ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- IP_Cell escapes internally. ?></td>
-							<td><?php echo esc_html( preg_replace( '/^group: /', '', (string) ( $row->reason ?? '' ) ) ); ?></td>
-							<td><?php echo esc_html( ReportedIP_Hive::format_local_datetime( (string) $row->created_at ) ); ?></td>
-						</tr>
-						<?php endforeach; ?>
-					</tbody>
-				</table>
-				<?php endif; ?>
-			</div>
-		</div>
-		<?php
-	}
-
-	/**
-	 * `admin-post.php?action=reportedip_hive_group_sync_now` handler: runs
-	 * the group sync once and returns to the Group tab.
-	 *
-	 * @return void
-	 * @since  2.1.67
-	 */
-	public function handle_group_sync_now() {
-		if ( ! ReportedIP_Hive_Option_Routing::current_user_can_manage() ) {
-			wp_die( esc_html__( 'Permission denied.', 'reportedip-hive' ), '', array( 'response' => 403 ) );
-		}
-		check_admin_referer( 'reportedip_hive_group_sync_now' );
-
-		ReportedIP_Hive_Group_Sync::get_instance()->sync( true );
-
-		wp_safe_redirect( self::back_url( 'admin.php?page=reportedip-hive-security&tab=ip_lists&sub=group' ) );
-		exit;
 	}
 
 	/**
@@ -6225,7 +5862,7 @@ class ReportedIP_Hive_Admin_Settings {
 				</div>
 
 					<?php $this->render_domains_section( $mode_manager ); ?>
-					<?php $this->render_group_section(); ?>
+					<?php $this->render_reputation_section(); ?>
 					<?php $this->render_api_usage_card(); ?>
 
 				<!-- Honeypot Program -->

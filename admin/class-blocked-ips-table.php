@@ -115,18 +115,24 @@ class ReportedIP_Hive_Blocked_IPs_Table extends WP_List_Table {
 				} elseif ( $block_type === 'reputation' ) {
 					$label = __( 'Community Reputation', 'reportedip-hive' );
 					$class = 'reputation';
-				} elseif ( $block_type === 'group' ) {
-					$label = __( 'Group Ban', 'reportedip-hive' );
-					$class = 'group';
 				} else {
 					$label = __( 'Auto-Blocked', 'reportedip-hive' );
 					$class = 'auto';
 				}
 				$badge = sprintf( '<span class="block-type-badge %s">%s</span>', esc_attr( $class ), esc_html( $label ) );
-				if ( 'group' === $class ) {
-					$badge = sprintf( '<a href="%s" title="%s">%s</a>', esc_url( admin_url( 'admin.php?page=reportedip-hive-security&tab=ip_lists&sub=group&s=' . rawurlencode( (string) $item->ip_address ) ) ), esc_attr__( 'Show this entry in the group list', 'reportedip-hive' ), $badge );
-				}
-				return $badge;
+
+				/**
+				 * Markup of the block type cell in the blocked list. Free
+				 * labels `manual`, `reputation` and everything else as an
+				 * automatic block; an add-on that writes a type of its own
+				 * labels it here. The result is printed as it is.
+				 *
+				 * @param string    $badge Badge markup, `span.block-type-badge`.
+				 * @param string    $type  Stored block type.
+				 * @param \stdClass $item  Blocked row.
+				 * @since 3.0.0
+				 */
+				return (string) apply_filters( 'reportedip_hive_block_type_badge', $badge, (string) $block_type, $item );
 
 			case 'blocked_until':
 				if ( empty( $item->blocked_until ) ) {
@@ -290,14 +296,38 @@ class ReportedIP_Hive_Blocked_IPs_Table extends WP_List_Table {
 			<label class="rip-filter-bar__label" for="rip-block-type"><?php esc_html_e( 'Block type', 'reportedip-hive' ); ?></label>
 			<select name="block_type" id="rip-block-type" class="rip-select">
 				<option value=""><?php esc_html_e( 'All Block Types', 'reportedip-hive' ); ?></option>
-				<option value="manual" <?php selected( $block_type, 'manual' ); ?>><?php esc_html_e( 'Manually Blocked', 'reportedip-hive' ); ?></option>
-				<option value="automatic" <?php selected( $block_type, 'automatic' ); ?>><?php esc_html_e( 'Auto-Blocked', 'reportedip-hive' ); ?></option>
-				<option value="reputation" <?php selected( $block_type, 'reputation' ); ?>><?php esc_html_e( 'Community Reputation', 'reportedip-hive' ); ?></option>
-				<option value="group" <?php selected( $block_type, 'group' ); ?>><?php esc_html_e( 'Group Ban', 'reportedip-hive' ); ?></option>
+				<?php foreach ( self::block_type_options() as $value => $label ) : ?>
+				<option value="<?php echo esc_attr( (string) $value ); ?>" <?php selected( $block_type, (string) $value ); ?>><?php echo esc_html( (string) $label ); ?></option>
+				<?php endforeach; ?>
 			</select>
 		</div>
 		<?php
 		ReportedIP_Hive_Filter_Bar::close( array( 's', 'block_type' ) );
+	}
+
+	/**
+	 * Block types offered by the filter, value to label.
+	 *
+	 * @return array<string,string>
+	 * @since  3.0.0
+	 */
+	public static function block_type_options() {
+		$options = array(
+			'manual'     => __( 'Manually Blocked', 'reportedip-hive' ),
+			'automatic'  => __( 'Auto-Blocked', 'reportedip-hive' ),
+			'reputation' => __( 'Community Reputation', 'reportedip-hive' ),
+		);
+
+		/**
+		 * Block types offered by the filter of the blocked list, value to
+		 * label, after the free ones. A result that is not an array leaves
+		 * the free list.
+		 *
+		 * @param array<string,string> $options Value to label.
+		 * @since 3.0.0
+		 */
+		$filtered = apply_filters( 'reportedip_hive_block_type_options', $options );
+		return is_array( $filtered ) ? $filtered : $options;
 	}
 
 	/**

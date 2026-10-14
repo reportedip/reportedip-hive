@@ -86,7 +86,7 @@ class ReportedIP_Hive_Whitelist_Table extends WP_List_Table {
 	 * @return string
 	 */
 	protected function column_cb( $item ) {
-		if ( 'group' === (string) ( $item->source ?? 'manual' ) ) {
+		if ( 'manual' !== (string) ( $item->source ?? 'manual' ) ) {
 			return '<input type="checkbox" disabled="disabled" />';
 		}
 		return sprintf(
@@ -119,15 +119,23 @@ class ReportedIP_Hive_Whitelist_Table extends WP_List_Table {
 				return esc_html( $item->reason ?? '' );
 
 			case 'source':
-				if ( 'group' === (string) ( $item->source ?? 'manual' ) ) {
-					return sprintf(
-						'<a href="%s" title="%s"><span class="block-type-badge group">%s</span></a>',
-						esc_url( admin_url( 'admin.php?page=reportedip-hive-security&tab=ip_lists&sub=group' ) ),
-						esc_attr__( 'Show the group whitelist', 'reportedip-hive' ),
-						esc_html__( 'Group', 'reportedip-hive' )
-					);
-				}
-				return '<span class="block-type-badge manual">' . esc_html__( 'Manual', 'reportedip-hive' ) . '</span>';
+				$source = (string) ( $item->source ?? 'manual' );
+				$html   = 'manual' === $source
+					? '<span class="block-type-badge manual">' . esc_html__( 'Manual', 'reportedip-hive' ) . '</span>'
+					: '<span class="block-type-badge">' . esc_html( $source ) . '</span>';
+
+				/**
+				 * Markup of the origin cell in the whitelist. Free labels
+				 * `manual` and prints any other stored origin as it is; an
+				 * add-on that writes rows of its own origin labels them
+				 * here. The result is printed as it is.
+				 *
+				 * @param string    $html   Origin markup.
+				 * @param string    $source Stored origin.
+				 * @param \stdClass $item   Whitelist row.
+				 * @since 3.0.0
+				 */
+				return (string) apply_filters( 'reportedip_hive_whitelist_origin', $html, $source, $item );
 
 			case 'created_at':
 				return esc_html( ReportedIP_Hive::format_local_datetime( $item->created_at ) );
@@ -139,7 +147,7 @@ class ReportedIP_Hive_Whitelist_Table extends WP_List_Table {
 				return esc_html( $item->expires_at );
 
 			case 'actions':
-				if ( 'group' === (string) ( $item->source ?? 'manual' ) ) {
+				if ( 'manual' !== (string) ( $item->source ?? 'manual' ) ) {
 					return '<span class="description">' . esc_html__( 'Managed in your reportedip.com account', 'reportedip-hive' ) . '</span>';
 				}
 				return sprintf(

@@ -49,6 +49,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'audit without the add-on'         => array( 'activity', 'audit', array( 'activity', 'logs' ) ),
 				'ip lists default to blocked'      => array( 'ip_lists', '', array( 'ip_lists', 'blocked' ) ),
 				'ip lists whitelist'               => array( 'ip_lists', 'whitelist', array( 'ip_lists', 'whitelist' ) ),
+				'group without the add-on'         => array( 'ip_lists', 'group', array( 'ip_lists', 'blocked' ) ),
+				'legacy tab=group without add-on'  => array( 'group', '', array( 'activity', 'logs' ) ),
 				'advanced has no sub'              => array( 'advanced', 'logs', array( 'advanced', '' ) ),
 				'legacy tab=logs'                  => array( 'logs', '', array( 'activity', 'logs' ) ),
 				'legacy tab=lookup'                => array( 'lookup', '', array( 'activity', 'lookup' ) ),
@@ -62,13 +64,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_every_tab_has_a_title_and_a_text(): void {
-			foreach ( array( 'logs', 'lookup', 'blocked', 'whitelist', 'group', 'queue' ) as $key ) {
+			foreach ( array( 'logs', 'lookup', 'blocked', 'whitelist', 'queue' ) as $key ) {
 				list( $title, $text ) = ReportedIP_Hive_Admin_Settings::tab_intro( $key );
 				$this->assertNotSame( '', $title, $key );
 				$this->assertGreaterThan( 80, strlen( $text ), $key );
 			}
 			$this->assertSame( array( '', '' ), ReportedIP_Hive_Admin_Settings::tab_intro( 'nonsense' ) );
 			$this->assertSame( array( '', '' ), ReportedIP_Hive_Admin_Settings::tab_intro( 'audit' ), 'No audit intro without the add-on.' );
+			$this->assertSame( array( '', '' ), ReportedIP_Hive_Admin_Settings::tab_intro( 'group' ), 'No group intro without the add-on.' );
 		}
 
 		/**
@@ -120,6 +123,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( "do_action( 'reportedip_hive_activity_sub_tabs', 'activity', \$sub_tab );", $source );
 			$this->assertStringContainsString( "do_action( 'reportedip_hive_activity_sub_tabs', 'ip_lists', \$sub_tab );", $source );
 			$this->assertStringNotContainsString( 'sub=audit', $source, 'The audit tab belongs to the add-on.' );
+			$this->assertStringNotContainsString( 'sub=group', $source, 'The group tab belongs to the add-on.' );
+			$this->assertStringContainsString( "do_action( 'reportedip_hive_dashboard_after_score' );", $source );
+			$this->assertStringContainsString( "do_action( 'reportedip_hive_inline_notices' );", $source );
+			$this->assertStringContainsString( "if ( has_action( 'reportedip_hive_reputation_section' ) ) {", $source, 'With a listener the add-on prints the section, never both.' );
+			$this->assertStringContainsString( "do_action( 'reportedip_hive_reputation_section', (bool) \$with_link );", $source );
 		}
 	}
 }
