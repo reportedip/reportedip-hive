@@ -1667,6 +1667,10 @@ body.rip-2fa-onboarding .rip-wizard__actions--secondary {
 	margin-top: var(--rip-space-2, 0.5rem);
 }
 
+.rip-webauthn-keys [hidden] {
+	display: none !important;
+}
+
 .rip-webauthn-keys__header {
 	display: flex;
 	align-items: center;
