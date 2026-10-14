@@ -60,7 +60,6 @@ define( 'REPORTEDIP_MAX_SETTINGS_UPLOAD_SIZE', 524288 );
  * External URLs (can be overridden via the 'reportedip_hive_external_url' filter).
  */
 define( 'REPORTEDIP_HIVE_SITE_URL', 'https://reportedip.com' );
-define( 'REPORTEDIP_HIVE_UPGRADE_URL', 'https://reportedip.com/dashboard/' );
 define( 'REPORTEDIP_HIVE_CONTACT_MAIL', '1@reportedip.com' );
 define( 'REPORTEDIP_HIVE_HONEYPOT_URL', 'https://reportedip.com/docs/integrations/honeypot-server/' );
 define( 'REPORTEDIP_HIVE_FAQ_URL', 'https://reportedip.com/docs/support/faq/' );
@@ -1668,7 +1667,7 @@ class ReportedIP_Hive {
 			return;
 		}
 
-		$show_on_screens = array( 'dashboard', 'toplevel_page_reportedip-hive', 'reportedip-hive_page_reportedip-hive-logs' );
+		$show_on_screens = array( 'toplevel_page_reportedip-hive', 'reportedip-hive_page_reportedip-hive-logs' );
 		$screen_id       = (string) $screen->id;
 		$is_plugin_page  = strpos( $screen_id, 'reportedip-hive' ) !== false;
 
@@ -1760,7 +1759,7 @@ class ReportedIP_Hive {
 						/* translators: %1$d: number of pending reports, %2$s: link to community page, %3$s: link to queue page */
 						esc_html__( '%1$d reports pending processing. Your API quota may not be sufficient. %2$s or %3$s.', 'reportedip-hive' ),
 						intval( $pending_count ),
-						'<a href="' . esc_url( $community_url ) . '">' . esc_html__( 'Upgrade API tier', 'reportedip-hive' ) . '</a>',
+						'<a href="' . esc_url( $community_url ) . '">' . esc_html__( 'See the quota of your account', 'reportedip-hive' ) . '</a>',
 						'<a href="' . esc_url( $queue_url ) . '">' . esc_html__( 'Manage queue', 'reportedip-hive' ) . '</a>'
 					)
 				);
@@ -1778,9 +1777,9 @@ class ReportedIP_Hive {
 					esc_html__( 'ReportedIP Hive:', 'reportedip-hive' ),
 					sprintf(
 						/* translators: %1$d: number of pending reports, %2$s: link to community page */
-						esc_html__( '%1$d reports pending processing. %2$s for higher limits.', 'reportedip-hive' ),
+						esc_html__( '%1$d reports pending processing. %2$s', 'reportedip-hive' ),
 						intval( $pending_count ),
-						'<a href="' . esc_url( $community_url ) . '">' . esc_html__( 'Upgrade API tier', 'reportedip-hive' ) . '</a>'
+						'<a href="' . esc_url( $community_url ) . '">' . esc_html__( 'See the quota of your account.', 'reportedip-hive' ) . '</a>'
 					)
 				);
 				ReportedIP_Hive_Admin_Notice::render(

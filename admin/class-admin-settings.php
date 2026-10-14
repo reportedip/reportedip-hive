@@ -323,15 +323,20 @@ class ReportedIP_Hive_Admin_Settings {
 			<?php endif; ?>
 			<?php
 			if ( ! empty( $opts['show_tier'] ) ) {
-				$tier_key  = ReportedIP_Hive_Mode_Manager::get_instance()->get_tier_info()['key'];
-				$tier_opts = array();
-				if ( in_array( $tier_key, array( 'free', 'contributor' ), true ) && current_user_can( 'manage_options' ) ) {
-					$tier_opts = array(
-						'href'  => self::pricing_url(),
-						'title' => __( 'Compare plans: PRO protection, managed 2FA delivery and priority rulesets', 'reportedip-hive' ),
-					);
-				}
-				self::render_tier_badge( null, $tier_opts );
+				$tier_key = ReportedIP_Hive_Mode_Manager::get_instance()->get_tier_info()['key'];
+
+				/**
+				 * Render flags of the plan badge in the page header, see
+				 * {@see render_tier_badge()} (`href`, `title`). The free
+				 * plugin sets none: the badge names the plan and links
+				 * nowhere.
+				 *
+				 * @param array  $opts     Render flags.
+				 * @param string $tier_key Tier key of the account.
+				 * @since 3.0.0
+				 */
+				$tier_opts = apply_filters( 'reportedip_hive_header_badge', array(), $tier_key );
+				self::render_tier_badge( null, is_array( $tier_opts ) ? $tier_opts : array() );
 			}
 			?>
 		</div>
@@ -1484,8 +1489,8 @@ class ReportedIP_Hive_Admin_Settings {
 			'<strong>%1$s</strong> %2$s',
 			esc_html__( 'ReportedIP Hive - Domain limit:', 'reportedip-hive' ),
 			sprintf(
-				/* translators: 1: domains in use, 2: plan domain limit, 3: link to the reportedip.com dashboard */
-				esc_html__( 'Your Community Access Key is used on %1$d domains, but your plan includes %2$d. Manage domains or upgrade in your %3$s.', 'reportedip-hive' ),
+				/* translators: 1: domains in use, 2: domain limit of the account, 3: link to the reportedip.com dashboard */
+				esc_html__( 'Your Community Access Key is used on %1$d domains, but your account includes %2$d. See your account in the %3$s.', 'reportedip-hive' ),
 				(int) $domains['used'],
 				max( 0, (int) $domains['limit'] ),
 				'<a href="' . esc_url( REPORTEDIP_HIVE_SITE_URL . '/dashboard/domains/' ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'reportedip.com dashboard', 'reportedip-hive' ) . '</a>'
@@ -1511,13 +1516,12 @@ class ReportedIP_Hive_Admin_Settings {
 	public static function render_inline_notices() {
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		if ( $mode_manager->is_community_layer_degraded() ) {
-			$upgrade_url = self::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
-			$body        = sprintf(
-				'<strong>%1$s</strong> %2$s <a href="%3$s">%4$s</a>',
+			$body = sprintf(
+				'<strong>%1$s</strong> %2$s <a href="%3$s" target="_blank" rel="noopener noreferrer">%4$s</a>',
 				esc_html__( 'Community threat-check rate-limited.', 'reportedip-hive' ),
 				esc_html__( 'The local firewall (sensors, blocks, logs, queue) remains fully active. Reputation lookups for new IPs and outgoing report submissions are paused until the hourly counter resets.', 'reportedip-hive' ),
-				esc_url( $upgrade_url ),
-				esc_html__( 'Upgrade tier for higher caps.', 'reportedip-hive' )
+				esc_url( REPORTEDIP_HIVE_SITE_URL . '/dashboard/' ),
+				esc_html__( 'The limits of your account are listed on reportedip.com.', 'reportedip-hive' )
 			);
 			ReportedIP_Hive_Admin_Notice::render(
 				array(
@@ -4882,120 +4886,11 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Tier definitions, single source of truth for the Community page.
-	 *
-	 * Mirrors the constants in reportedip-service/includes/class-constants.php.
-	 * Update only this table when the service side changes.
-	 *
-	 * @return array<string, array{label:string,reports_day:int,checks_day:int,features:array<int,string>,cta_type:string,in_pricing:bool,price?:string,mail_per_mo?:int,sms_per_mo?:int,domains?:int}>
-	 */
-	private function get_tier_definitions() {
-		return array(
-			'free'         => array(
-				'label'       => 'Free',
-				'reports_day' => 50,
-				'checks_day'  => 1000,
-				'features'    => array(
-					__( 'All 16 sensors and the firewall, nothing held back', 'reportedip-hive' ),
-					__( 'Complete 2FA suite including one security key', 'reportedip-hive' ),
-					__( 'Community threat checks for one domain', 'reportedip-hive' ),
-					__( 'Registration rules, access lockdown switches and the readiness register', 'reportedip-hive' ),
-				),
-				'cta_type'    => 'upgrade',
-				'in_pricing'  => true,
-			),
-			'contributor'  => array(
-				'label'       => 'Contributor',
-				'reports_day' => 200,
-				'checks_day'  => 5000,
-				'features'    => array(
-					__( 'Everything in Free, with five times the quota', 'reportedip-hive' ),
-					__( 'Full report permission and threat feed access', 'reportedip-hive' ),
-					__( 'Email support', 'reportedip-hive' ),
-				),
-				'cta_type'    => 'upgrade',
-				'in_pricing'  => true,
-			),
-			'professional' => array(
-				'label'       => 'Professional',
-				'price'       => '€14.90 / mo · billed yearly €149 · incl. VAT',
-				'reports_day' => 1000,
-				'checks_day'  => 25000,
-				'mail_per_mo' => 500,
-				'sms_per_mo'  => 25,
-				'domains'     => 3,
-				'features'    => array(
-					__( '2FA mail that reaches the inbox: 500 a month via our EU relay', 'reportedip-hive' ),
-					__( 'SMS 2FA without a Twilio account: 25 a month included', 'reportedip-hive' ),
-					__( 'Covers 3 sites on one licence, 4.97 EUR each per month', 'reportedip-hive' ),
-					__( 'Daily rule and blacklist sync, no delay', 'reportedip-hive' ),
-					__( '2FA usage reports & per-role policies', 'reportedip-hive' ),
-					__( 'Adaptive 2FA triggers per role and unlimited registration rules', 'reportedip-hive' ),
-					__( 'Bulk operations & analytics', 'reportedip-hive' ),
-					__( 'Email support', 'reportedip-hive' ),
-				),
-				'cta_type'    => 'upgrade',
-				'in_pricing'  => true,
-			),
-			'business'     => array(
-				'label'       => 'Business',
-				'price'       => '€39 / mo · billed yearly €389 · incl. VAT',
-				'reports_day' => 5000,
-				'checks_day'  => 100000,
-				'mail_per_mo' => 2500,
-				'sms_per_mo'  => 75,
-				'domains'     => 15,
-				'features'    => array(
-					__( '2,500 2FA mails / month', 'reportedip-hive' ),
-					__( '75 2FA SMS / month + prepaid bundles', 'reportedip-hive' ),
-					__( 'Covers 15 client sites on one licence, 2.60 EUR each per month', 'reportedip-hive' ),
-					__( 'Book 2 to 20 licences on one bill, quota and domains scale with a volume discount', 'reportedip-hive' ),
-					__( 'Your brand on the quickstart, the 2FA pages and every mail', 'reportedip-hive' ),
-					__( 'WooCommerce integration', 'reportedip-hive' ),
-					__( 'Full WP-CLI automation', 'reportedip-hive' ),
-					__( 'Restrict user login times', 'reportedip-hive' ),
-					__( 'Block user accounts and manage active sessions', 'reportedip-hive' ),
-					__( 'GDPR export tool', 'reportedip-hive' ),
-					__( 'Priority support', 'reportedip-hive' ),
-				),
-				'cta_type'    => 'upgrade',
-				'in_pricing'  => true,
-			),
-			'enterprise'   => array(
-				'label'       => 'Enterprise',
-				'price'       => 'From €663 / mo · on request',
-				'reports_day' => -1,
-				'checks_day'  => -1,
-				'mail_per_mo' => -1,
-				'sms_per_mo'  => -1,
-				'domains'     => -1,
-				'features'    => array(
-					__( 'Unlimited API calls and reports', 'reportedip-hive' ),
-					__( 'Custom SMS volume + dedicated sender', 'reportedip-hive' ),
-					__( 'Phone support with 4 h SLA', 'reportedip-hive' ),
-					__( 'Tailored DPA / AVV adjustments', 'reportedip-hive' ),
-					__( 'Dedicated onboarding', 'reportedip-hive' ),
-				),
-				'cta_type'    => 'contact',
-				'in_pricing'  => true,
-			),
-			'honeypot'     => array(
-				'label'       => 'Honeypot',
-				'reports_day' => -1,
-				'checks_day'  => -1,
-				'features'    => array(),
-				'cta_type'    => 'none',
-				'in_pricing'  => false,
-			),
-		);
-	}
-
-	/**
-	 * Normalize a service role to a tier slug plus metadata.
+	 * Normalize a service role to a tier slug and its name.
 	 *
 	 * @param string $user_role   Role from the verify-key response (e.g. "reportedip_free").
 	 * @param bool   $is_honeypot Whether the key is flagged as honeypot.
-	 * @return array Definition including an additional `slug` field.
+	 * @return array{slug:string,label:string}
 	 */
 	private function get_tier_info( $user_role, $is_honeypot = false ) {
 		static $role_map = array(
@@ -5019,11 +4914,19 @@ class ReportedIP_Hive_Admin_Settings {
 			$slug = $role_map[ $key ] ?? 'free';
 		}
 
-		$tiers        = $this->get_tier_definitions();
-		$tier         = $tiers[ $slug ];
-		$tier['slug'] = $slug;
+		$labels = array(
+			'free'         => 'Free',
+			'contributor'  => 'Contributor',
+			'professional' => 'Professional',
+			'business'     => 'Business',
+			'enterprise'   => 'Enterprise',
+			'honeypot'     => 'Honeypot',
+		);
 
-		return $tier;
+		return array(
+			'slug'  => $slug,
+			'label' => $labels[ $slug ],
+		);
 	}
 
 	/**
@@ -5132,18 +5035,6 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_refresh_quota'
 		);
 
-		$upgrade_url = add_query_arg(
-			array(
-				'utm_source'   => 'plugin',
-				'utm_medium'   => 'community-page',
-				'utm_campaign' => 'upgrade',
-			),
-			$this->get_external_url( 'upgrade', REPORTEDIP_HIVE_UPGRADE_URL )
-		);
-
-		$contact_mail = $this->get_external_url( 'contact_mail', REPORTEDIP_HIVE_CONTACT_MAIL );
-		$contact_url  = 'mailto:' . rawurlencode( $contact_mail ) . '?subject=' . rawurlencode( 'ReportedIP Enterprise-Anfrage' );
-
 		$honeypot_url = add_query_arg(
 			array(
 				'utm_source'   => 'plugin',
@@ -5172,7 +5063,6 @@ class ReportedIP_Hive_Admin_Settings {
 			'is_community_mode' => $is_community_mode,
 			'is_configured'     => $is_configured,
 			'tier'              => $tier,
-			'upgrade_url'       => $upgrade_url,
 			'honeypot_url'      => $honeypot_url,
 			'security_summary'  => $security_summary,
 		);
@@ -5425,147 +5315,28 @@ class ReportedIP_Hive_Admin_Settings {
 					</a>
 				</div>
 
-				<!-- Upgrade Options -->
-				<div class="rip-card rip-mb-6">
-					<div class="rip-card__header">
-						<h2 class="rip-card__title">
-							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-								<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-							</svg>
-							<?php esc_html_e( 'Tier overview', 'reportedip-hive' ); ?>
-						</h2>
-					</div>
-					<div class="rip-card__body">
-						<?php
-						$active_slug = $tier['slug'];
-						$plans       = array_filter(
-							$this->get_tier_definitions(),
-							static function ( $plan ) {
-								return ! empty( $plan['in_pricing'] );
-							}
-						);
-						$unlimited   = __( 'Unlimited', 'reportedip-hive' );
-						?>
-						<?php
-						$mode_manager_for_relay = ReportedIP_Hive_Mode_Manager::get_instance();
-						$mail_relay_status      = $mode_manager_for_relay->feature_status( 'mail_relay_via_api' );
-						$sms_relay_status       = $mode_manager_for_relay->feature_status( 'sms_relay_via_api' );
-						?>
-						<div class="rip-relay-highlights" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
-							<div class="rip-card rip-relay-highlight rip-relay-highlight--mail">
-								<h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-									<?php esc_html_e( '100% mail delivery via reportedip.com', 'reportedip-hive' ); ?>
-									<?php self::render_tier_marker( $mail_relay_status ); ?>
-								</h3>
-								<ul style="margin:8px 0 0 18px;padding:0;color:var(--rip-gray-700,#374151);">
-									<li><?php esc_html_e( 'Clean SPF / DKIM / DMARC reputation, no more spam folders', 'reportedip-hive' ); ?></li>
-									<li><?php esc_html_e( 'No SMTP setup on your server, no own credentials to rotate', 'reportedip-hive' ); ?></li>
-									<li><?php esc_html_e( 'Branded sender, optional reply-to override', 'reportedip-hive' ); ?></li>
-								</ul>
-								<p style="margin-top:10px;font-size:0.875rem;color:var(--rip-gray-500,#6B7280);">
-									<?php esc_html_e( 'Included with Professional (500/mo) and Business (2,500/mo).', 'reportedip-hive' ); ?>
-								</p>
-							</div>
-							<div class="rip-card rip-relay-highlight rip-relay-highlight--sms">
-								<h3 style="margin:0 0 8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
-									<?php esc_html_e( 'Managed SMS-2FA delivery (Professional and above)', 'reportedip-hive' ); ?>
-									<?php self::render_tier_marker( $sms_relay_status ); ?>
-								</h3>
-								<ul style="margin:8px 0 0 18px;padding:0;color:var(--rip-gray-700,#374151);">
-									<li><?php esc_html_e( 'No third-party SMS contract, no top-up management', 'reportedip-hive' ); ?></li>
-									<li><?php esc_html_e( 'Anti-fraud routing, high-risk destinations blocked, GDPR-friendly', 'reportedip-hive' ); ?></li>
-									<li><?php esc_html_e( 'Server-side anti-spam: per-recipient backoff (2/5/15/30/60 min)', 'reportedip-hive' ); ?></li>
-								</ul>
-								<p style="margin-top:10px;font-size:0.875rem;color:var(--rip-gray-500,#6B7280);">
-									<?php esc_html_e( 'Included with Professional (25/mo) and Business (75/mo + bundles).', 'reportedip-hive' ); ?>
-								</p>
-							</div>
-						</div>
-
-						<div class="rip-pricing-grid">
-							<?php foreach ( $plans as $slug => $plan ) : ?>
-								<?php
-								$is_active   = ( $active_slug === $slug );
-								$reports_txt = $plan['reports_day'] < 0 ? $unlimited : number_format_i18n( $plan['reports_day'] );
-								$checks_txt  = $plan['checks_day'] < 0 ? $unlimited : number_format_i18n( $plan['checks_day'] );
-								$mail_txt    = isset( $plan['mail_per_mo'] ) ? ( $plan['mail_per_mo'] < 0 ? $unlimited : ( $plan['mail_per_mo'] > 0 ? number_format_i18n( $plan['mail_per_mo'] ) . '/mo' : ', ' ) ) : ', ';
-								$sms_txt     = isset( $plan['sms_per_mo'] ) ? ( $plan['sms_per_mo'] < 0 ? $unlimited : ( $plan['sms_per_mo'] > 0 ? number_format_i18n( $plan['sms_per_mo'] ) . '/mo' : ', ' ) ) : ', ';
-								$domains_txt = isset( $plan['domains'] ) ? ( $plan['domains'] < 0 ? $unlimited : (string) $plan['domains'] ) : '1';
-								$price_txt   = isset( $plan['price'] ) ? (string) $plan['price'] : '';
-								?>
-								<div class="rip-pricing-card <?php echo $is_active ? 'rip-pricing-card--active' : ''; ?>">
-									<?php if ( $is_active ) : ?>
-										<span class="rip-pricing-card__badge"><?php esc_html_e( 'Current tier', 'reportedip-hive' ); ?></span>
-									<?php endif; ?>
-									<h3 class="rip-pricing-card__title"><?php echo esc_html( $plan['label'] ); ?></h3>
-									<?php if ( '' !== $price_txt ) : ?>
-										<p class="rip-pricing-card__price-tag" style="font-weight:600;color:var(--rip-primary,#4F46E5);margin:4px 0;">
-											<?php echo esc_html( $price_txt ); ?>
-										</p>
-									<?php endif; ?>
-									<p class="rip-pricing-card__price">
-										<?php echo esc_html( $reports_txt ); ?>
-										<small><?php esc_html_e( 'Reports/day', 'reportedip-hive' ); ?></small>
-									</p>
-									<p class="rip-pricing-card__subprice">
-										<?php
-										echo esc_html(
-											sprintf(
-												/* translators: %s: number of API checks */
-												__( '%s API checks/day', 'reportedip-hive' ),
-												$checks_txt
-											)
-										);
-										?>
-									</p>
-									<p class="rip-pricing-card__subprice" style="font-size:0.8125rem;color:var(--rip-gray-600,#4B5563);">
-										<?php
-										/* translators: %s: monthly mail relay allowance, e.g. "500 / month" or "unlimited". */
-										echo esc_html( sprintf( __( 'Mail relay: %s', 'reportedip-hive' ), $mail_txt ) );
-										?>
-										&nbsp;·&nbsp;
-										<?php
-										/* translators: %s: monthly SMS relay allowance, e.g. "25 / month" or "unlimited". */
-										echo esc_html( sprintf( __( 'SMS relay: %s', 'reportedip-hive' ), $sms_txt ) );
-										?>
-										&nbsp;·&nbsp;
-										<?php
-										/* translators: %s: number of domains the plan covers, e.g. "3" or "unlimited". */
-										echo esc_html( sprintf( __( 'Domains: %s', 'reportedip-hive' ), $domains_txt ) );
-										?>
-									</p>
-									<ul class="rip-pricing-card__features">
-										<?php foreach ( $plan['features'] as $feature ) : ?>
-											<li><?php echo esc_html( $feature ); ?></li>
-										<?php endforeach; ?>
-									</ul>
-									<?php if ( $is_active ) : ?>
-										<span class="rip-button rip-button--secondary rip-button--full-width rip-button--disabled">
-											<?php esc_html_e( 'Current plan', 'reportedip-hive' ); ?>
-										</span>
-									<?php elseif ( 'contact' === $plan['cta_type'] ) : ?>
-										<a href="<?php echo esc_url( $contact_url ); ?>" class="rip-button rip-button--primary rip-button--full-width">
-											<?php esc_html_e( 'Contact sales', 'reportedip-hive' ); ?>
-										</a>
-									<?php else : ?>
-										<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--primary rip-button--full-width">
-											<?php esc_html_e( 'Upgrade', 'reportedip-hive' ); ?>
-										</a>
-									<?php endif; ?>
-								</div>
-							<?php endforeach; ?>
-						</div>
-
-						<?php if ( $is_honeypot ) : ?>
-							<div class="rip-alert rip-alert--success rip-mt-4">
-								<strong><?php esc_html_e( 'Honeypot status detected', 'reportedip-hive' ); ?></strong>.
-								<?php esc_html_e( 'Your key has honeypot privileges: unlimited reports, unlimited API checks, higher weighting.', 'reportedip-hive' ); ?>
-							</div>
-						<?php endif; ?>
-					</div>
-				</div>
+					<?php
+					/**
+					 * Print a block on the Community tab below its status
+					 * blocks (status, domains, reputation, API usage, honeypot
+					 * programme), as `div.rip-card.rip-mb-6`.
+					 *
+					 * @param array $context {
+					 *     @type string $tier_slug        Tier slug of the account (`free` ... `enterprise`, `honeypot`).
+					 *     @type bool   $is_honeypot      Whether the key is a honeypot key.
+					 *     @type array  $security_summary `Database::get_security_summary( 30 )`.
+					 * }
+					 * @since 3.0.0
+					 */
+					do_action(
+						'reportedip_hive_community_tab_after_status',
+						array(
+							'tier_slug'        => (string) $tier['slug'],
+							'is_honeypot'      => $is_honeypot,
+							'security_summary' => $security_summary,
+						)
+					);
+					?>
 
 				<?php else : ?>
 
@@ -6021,8 +5792,6 @@ class ReportedIP_Hive_Admin_Settings {
 		$is_honeypot       = ! empty( $args['is_honeypot'] );
 		$is_community_mode = ! empty( $args['is_community_mode'] );
 		$is_configured     = ! empty( $args['is_configured'] );
-		$tier              = is_array( $args['tier'] ?? null ) ? $args['tier'] : array( 'slug' => 'free' );
-		$upgrade_url       = (string) ( $args['upgrade_url'] ?? '' );
 		$honeypot_url      = (string) ( $args['honeypot_url'] ?? '' );
 		$security_summary  = is_array( $args['security_summary'] ?? null ) ? $args['security_summary'] : array();
 
@@ -6040,9 +5809,9 @@ class ReportedIP_Hive_Admin_Settings {
 						: __( 'Connected, nothing shared yet', 'reportedip-hive' ) )
 					: __( 'Local mode, not sharing', 'reportedip-hive' ),
 				'action' => $reports_active ? null : array(
-					'url'   => $is_community_mode ? $upgrade_url : $settings_url,
-					'label' => $is_community_mode ? __( 'Upgrade to share more', 'reportedip-hive' ) : __( 'Switch to Community', 'reportedip-hive' ),
-					'blank' => $is_community_mode,
+					'url'   => $settings_url,
+					'label' => $is_community_mode ? __( 'Add API key', 'reportedip-hive' ) : __( 'Switch to Community', 'reportedip-hive' ),
+					'blank' => false,
 				),
 			),
 			array(
@@ -6154,24 +5923,6 @@ class ReportedIP_Hive_Admin_Settings {
 					<?php endif; ?>
 				</div>
 
-				<?php if ( $total_events > 0 && 0 === $total_api_reports && 'free' === $tier['slug'] ) : ?>
-					<div class="rip-alert rip-alert--info rip-mt-4">
-						<strong><?php esc_html_e( 'Recommendation:', 'reportedip-hive' ); ?></strong>
-						<?php
-						echo esc_html(
-							sprintf(
-								/* translators: %d: number of events */
-								__( 'You have detected %d security events but have not reported anything to the community yet. A Contributor upgrade lets you share up to 200 reports per day and strengthens threat intelligence for everyone.', 'reportedip-hive' ),
-								$total_events
-							)
-						);
-						?>
-						<br><br>
-						<a href="<?php echo esc_url( $upgrade_url ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--primary rip-button--sm">
-							<?php esc_html_e( 'Upgrade now', 'reportedip-hive' ); ?>
-						</a>
-					</div>
-				<?php endif; ?>
 			</div>
 		</div>
 		<?php
