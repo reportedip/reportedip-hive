@@ -359,7 +359,7 @@ class ReportedIP_Hive_Admin_Firewall {
 			esc_attr( $state[1] ),
 			esc_html( $state[0] )
 		);
-		echo '<p class="rip-help-text">' . esc_html__( 'Stops attacks before WordPress even starts, so a blocked request costs the server almost nothing. Free on every plan and optional: the firewall inside WordPress protects the site either way.', 'reportedip-hive' ) . '</p>';
+		echo '<p class="rip-help-text">' . esc_html__( 'Stops attacks before WordPress even starts, so a blocked request costs the server almost nothing. Optional: the firewall inside WordPress protects the site either way.', 'reportedip-hive' ) . '</p>';
 
 		if ( ! $enabled ) {
 			echo '<p>' . esc_html(
@@ -609,9 +609,9 @@ class ReportedIP_Hive_Admin_Firewall {
 
 	/**
 	 * Render the Rule Sync status surface: per-ruleset version, rule count and
-	 * source, the last sync time and the operation-mode-aware state. The
-	 * Free-vs-Contributor comparison appears only while Priority Sync is not
-	 * on the plan; an active plan gets a compact confirmation instead.
+	 * source, the last sync time and the operation-mode-aware state. Priority
+	 * Sync comes with the account (a free Contributor account is enough);
+	 * the page says so in one sentence, without a comparison or a lock.
 	 *
 	 * @since 2.1.2
 	 * @return void
@@ -626,9 +626,13 @@ class ReportedIP_Hive_Admin_Firewall {
 		$enabled      = (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_rule_sync_enabled', true );
 		$has_priority = ! empty( $priority['available'] );
 
-		if ( ! $has_priority ) {
-			$this->render_rule_sync_tiers( false );
-		}
+		/**
+		 * Print a block at the head of the Rule Sync tab, above the switch.
+		 *
+		 * @param array<string,mixed> $priority `feature_status( 'rule_sync_priority' )`.
+		 * @since 3.0.0
+		 */
+		do_action( 'reportedip_hive_rule_sync_tab_before', $priority );
 
 		echo '<div class="rip-card" id="rip-rule-sync-switch"><div class="rip-card__header"><h2>' . esc_html__( 'Rule synchronisation', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
 		self::render_select_row(
@@ -644,12 +648,10 @@ class ReportedIP_Hive_Admin_Firewall {
 		self::render_card_save_button();
 		echo '</div></div>';
 
-		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Active rulesets', 'reportedip-hive' ) . '</h2>';
-		ReportedIP_Hive_Admin_Settings::render_tier_marker( $priority );
-		echo '</div><div class="rip-card__body">';
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Active rulesets', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
 
 		if ( $has_priority ) {
-			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Priority Sync is active on your plan, the rulesets below refresh automatically from the reportedip.com Rule API, signed and verified on every download.', 'reportedip-hive' ) . '</div>';
+			echo '<div class="rip-alert rip-alert--success">' . esc_html__( 'Priority Sync is active for your account, the rulesets below refresh automatically from the reportedip.com Rule API, signed and verified on every download.', 'reportedip-hive' ) . '</div>';
 		} elseif ( $mode_manager->is_local_mode() ) {
 			echo '<div class="rip-alert rip-alert--info">' . esc_html__( 'Local Shield mode: the bundled baseline rulesets are active. Connect the Community Network to receive the richer, frequently-updated rulesets.', 'reportedip-hive' ) . '</div>';
 		}
@@ -686,65 +688,11 @@ class ReportedIP_Hive_Admin_Firewall {
 		echo '<p class="rip-help-text">' . esc_html__( 'Sync:', 'reportedip-hive' ) . ' ' . ( $enabled ? esc_html__( 'enabled', 'reportedip-hive' ) : esc_html__( 'disabled', 'reportedip-hive' ) ) . ' &middot; ' . esc_html__( 'Last sync:', 'reportedip-hive' ) . ' ' . ( $last_run ? esc_html( wp_date( 'Y-m-d H:i:s', $last_run ) ) : esc_html__( 'never (baseline only)', 'reportedip-hive' ) ) . '</p>';
 
 		if ( ! $has_priority ) {
-			echo '<p class="rip-help-text">' . esc_html__( 'The bundled baseline rulesets stay active and free on every plan. Priority Sync, deeper coverage and regular updates, starts with the Contributor plan: weekly with Paranoia Level 2, daily with Level 3 from Professional.', 'reportedip-hive' ) . ' ';
-			ReportedIP_Hive_Admin_Settings::render_tier_lock( $priority, array( 'label' => __( 'Included from Contributor', 'reportedip-hive' ) ) );
-			echo '</p>';
+			echo '<p class="rip-help-text">' . esc_html__( 'The bundled baseline rulesets stay active on every installation. Priority Sync is delivered through your reportedip.com account: deeper coverage and regular updates, starting with a free Contributor account.', 'reportedip-hive' ) . '</p>';
 		} else {
 			echo '<button type="button" class="rip-button rip-button--primary" id="rip-rule-sync-now" data-rip-action="reportedip_hive_rule_sync_now">' . esc_html__( 'Sync now', 'reportedip-hive' ) . '</button>';
 		}
 
 		echo '</div></div>';
-	}
-
-	/**
-	 * Render the two-column Free-vs-Professional coverage comparison for the
-	 * Rule Sync tab so the plan boundary is explicit: the WAF engine and the
-	 * baseline rulesets ship with every plan, Priority Sync starts at Contributor.
-	 * Rendered only while Priority Sync is not on the plan.
-	 *
-	 * @param bool $has_priority Whether the current tier has Priority Sync.
-	 * @return void
-	 * @since  2.1.2
-	 */
-	private function render_rule_sync_tiers( $has_priority ) {
-		$free_features = array(
-			__( 'WAF engine, always on, every plan', 'reportedip-hive' ),
-			__( 'Baseline rulesets (OWASP Top 10, Paranoia Level 1)', 'reportedip-hive' ),
-			__( 'Bundled with the plugin, no connection required', 'reportedip-hive' ),
-		);
-		$pro_features  = array(
-			__( 'Deeper coverage (Paranoia Level 2, Level 3 from Professional)', 'reportedip-hive' ),
-			__( 'Server-delivered, Ed25519-signed rule updates', 'reportedip-hive' ),
-			__( 'Weekly refresh on Contributor, daily from Professional', 'reportedip-hive' ),
-		);
-
-		echo '<div class="rip-grid rip-grid-cols-2">';
-
-		echo '<div class="rip-card"><div class="rip-card__header rip-card__header--icon"><h3 class="rip-card__title">' . esc_html__( 'Included, every plan', 'reportedip-hive' ) . '</h3>';
-		ReportedIP_Hive_Admin_Settings::render_tier_badge( 'free' );
-		echo '</div><div class="rip-card__body"><ul class="rip-pricing-card__features">';
-		foreach ( $free_features as $feature ) {
-			echo '<li>' . esc_html( $feature ) . '</li>';
-		}
-		echo '</ul></div></div>';
-
-		echo '<div class="rip-card"><div class="rip-card__header rip-card__header--icon"><h3 class="rip-card__title">' . esc_html__( 'Priority Sync', 'reportedip-hive' ) . '</h3>';
-		ReportedIP_Hive_Admin_Settings::render_tier_badge( 'contributor' );
-		echo '</div><div class="rip-card__body"><ul class="rip-pricing-card__features">';
-		foreach ( $pro_features as $feature ) {
-			echo '<li>' . esc_html( $feature ) . '</li>';
-		}
-		echo '</ul><p class="rip-help-text">';
-		if ( $has_priority ) {
-			echo '<span class="rip-badge rip-badge--success">' . esc_html__( 'Active on your plan', 'reportedip-hive' ) . '</span>';
-		} else {
-			ReportedIP_Hive_Admin_Settings::render_tier_lock(
-				ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'rule_sync_priority' ),
-				array( 'label' => __( 'Included from Contributor', 'reportedip-hive' ) )
-			);
-		}
-		echo '</p></div></div>';
-
-		echo '</div>';
 	}
 }
