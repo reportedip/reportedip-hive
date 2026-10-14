@@ -17,6 +17,7 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-defaults.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-settings-registry.php';
 	require_once dirname( __DIR__, 2 ) . '/admin/class-protection-page.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-catalog.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-form-adapters.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-mode-manager.php';
 	require_once dirname( __DIR__, 2 ) . '/admin/class-admin-settings.php';
@@ -271,103 +272,79 @@ namespace ReportedIP\Hive\Tests\Unit {
 			};
 		}
 
-		public function test_a_plan_gated_field_is_locked_unless_flagged_partial_or_switched_on(): void {
+		public function test_without_a_listener_every_field_is_open_and_a_listener_decides_the_rest(): void {
 			$manager = $this->locked_manager();
 
-			$tor_off = ReportedIP_Hive_Protection_Page::field_status( array( 'kind' => 'bool', 'tier' => 'tor_blocking' ), 'reportedip_hive_block_tor', '0', $manager );
-			$this->assertFalse( $tor_off['available'] );
-			$this->assertArrayNotHasKey( 'partial', $tor_off, 'a switch that is off stays locked' );
+			$free = ReportedIP_Hive_Protection_Page::field_status( array( 'kind' => 'bool', 'tier' => 'tor_blocking' ), 'reportedip_hive_block_tor', '0', $manager );
+			$this->assertSame( array( 'available' => true ), $free, 'the free plugin draws no plan lock of its own' );
 
-			$tor_on = ReportedIP_Hive_Protection_Page::field_status( array( 'kind' => 'bool', 'tier' => 'tor_blocking' ), 'reportedip_hive_block_tor', '1', $manager );
-			$this->assertTrue( $tor_on['partial'], 'a switch that is on can still be switched off' );
-
-			$gate  = static function ( $value ) {
-				return count( array_filter( explode( "\n", (string) $value ) ) ) > 10;
+			$seen     = array();
+			$listener = static function ( $status, $key, $entry, $value ) use ( &$seen ) {
+				$seen = array( $status, $key, $entry['kind'], $value );
+				return array(
+					'available'  => false,
+					'reason'     => 'probe',
+					'plan_label' => 'Probe',
+					'plan_url'   => 'https://example.org/#probe',
+				);
 			};
-			$short = ReportedIP_Hive_Protection_Page::field_status(
-				array( 'kind' => 'textarea', 'tier' => 'x', 'tier_gate' => $gate, 'partial' => true ),
-				'k',
-				"a\nb",
-				$manager
-			);
-			$this->assertTrue( $short['partial'], 'a partial list inside the free range stays editable' );
+			add_filter( 'reportedip_hive_protection_field_status', $listener, 10, 5 );
+			try {
+				$locked = ReportedIP_Hive_Protection_Page::field_status( array( 'kind' => 'bool' ), 'reportedip_hive_probe', '1', $manager );
+				$this->assertSame( array( array( 'available' => true ), 'reportedip_hive_probe', 'bool', '1' ), $seen );
+				$this->assertFalse( $locked['available'] );
+				$this->assertSame( 'Probe', $locked['plan_label'] );
+			} finally {
+				unset( $GLOBALS['wp_filters']['reportedip_hive_protection_field_status'] );
+			}
 
-			$long = ReportedIP_Hive_Protection_Page::field_status(
-				array( 'kind' => 'textarea', 'tier' => 'x', 'tier_gate' => $gate, 'partial' => true ),
-				'k',
-				implode( "\n", range( 1, 11 ) ),
-				$manager
+			add_filter(
+				'reportedip_hive_protection_field_status',
+				static function () {
+					return 'not an array';
+				}
 			);
-			$this->assertArrayNotHasKey( 'partial', $long, 'a list already over the line is locked' );
-
-			$policy = ReportedIP_Hive_Protection_Page::field_status(
-				array( 'kind' => 'json_list', 'tier' => '2fa_policies', 'tier_gate' => static function () { return false; } ),
-				'reportedip_hive_2fa_policy_new_ip',
-				array(),
-				$manager
-			);
-			$this->assertArrayNotHasKey( 'partial', $policy, 'a gate without the partial flag locks the field' );
-
-			$free = ReportedIP_Hive_Protection_Page::field_status( array( 'kind' => 'int' ), 'reportedip_hive_block_duration', '24', $manager );
-			$this->assertTrue( $free['available'] );
+			try {
+				$this->assertSame( array( 'available' => true ), ReportedIP_Hive_Protection_Page::field_status( array( 'kind' => 'int' ), 'k', '1', $manager ) );
+			} finally {
+				unset( $GLOBALS['wp_filters']['reportedip_hive_protection_field_status'] );
+			}
 		}
 
-		public function test_the_plan_marker_names_the_plan_in_both_directions(): void {
-			$this->assertSame(
-				'',
-				ReportedIP_Hive_Protection_Page::tier_marker_state( array( 'kind' => 'int' ), array( 'available' => true ) ),
-				'a field without a plan entry carries no marker'
-			);
+		public function test_catalog_rows_sit_in_their_section_without_an_input(): void {
+			list( $current, $statuses, $choices ) = $this->section_fixture();
 
-			$this->assertSame(
-				'included',
-				ReportedIP_Hive_Protection_Page::tier_marker_state(
-					array( 'kind' => 'bool', 'tier' => 'tor_blocking' ),
-					array( 'available' => true, 'min_tier' => 'professional' )
-				),
-				'a plan feature the customer has says which plan it belongs to'
-			);
+			$blocking = ReportedIP_Hive_Protection_Page::section_markup( 'blocking', $current, $statuses, false, array(), array(), $choices );
+			$this->assertStringContainsString( 'data-feature="tor_blocking"', $blocking );
+			$this->assertStringContainsString( 'Available in the ReportedIP Hive Pro add-on (Professional plan).', $blocking );
+			$this->assertStringContainsString( 'Needs the Community Network.', $blocking, 'a community-only feature says so' );
+			$this->assertStringContainsString( 'href="https://reportedip.com/products/wordpress-plugin/#hive-response"', $blocking );
+			$this->assertStringNotContainsString( 'pricing', $blocking );
+			$this->assertStringNotContainsString( 'name="reportedip_hive_block_tor', $blocking, 'a catalog row has no input' );
 
-			$this->assertSame(
-				'locked',
-				ReportedIP_Hive_Protection_Page::tier_marker_state(
-					array( 'kind' => 'bool', 'tier' => 'tor_blocking' ),
-					array( 'available' => false, 'reason' => 'tier', 'min_tier' => 'professional' )
-				)
-			);
+			$attack = ReportedIP_Hive_Protection_Page::section_markup( 'hardening_mode', $current, $statuses, false, array(), array(), $choices );
+			$this->assertStringContainsString( 'id="hardening_mode"', $attack, 'the anchor exists without the add-on' );
+			$this->assertStringContainsString( 'Attack Response', $attack );
+			$this->assertStringContainsString( 'data-feature="hardening_mode"', $attack );
+			$this->assertStringNotContainsString( 'rip-protection__status', $attack, 'no empty status pill' );
+			$this->assertStringNotContainsString( '<input', $attack );
 
-			$this->assertSame(
-				'locked',
-				ReportedIP_Hive_Protection_Page::tier_marker_state(
-					array( 'kind' => 'textarea', 'tier' => 'x', 'partial' => true ),
-					array( 'available' => false, 'reason' => 'tier', 'min_tier' => 'professional', 'partial' => true )
-				),
-				'a partial field is editable but still names the plan its higher range needs'
-			);
+			add_filter( 'reportedip_hive_catalog_row_hidden', static function () {
+				return true;
+			} );
+			try {
+				$hidden = ReportedIP_Hive_Protection_Page::section_markup( 'blocking', $current, $statuses, false, array(), array(), $choices );
+				$this->assertStringNotContainsString( 'rip-protection__field--catalog', $hidden, 'the add-on hides the rows it replaces' );
+			} finally {
+				unset( $GLOBALS['wp_filters']['reportedip_hive_catalog_row_hidden'] );
+			}
+		}
 
-			$this->assertSame(
-				'included',
-				ReportedIP_Hive_Protection_Page::tier_marker_state(
-					array( 'kind' => 'bool', 'ui_lock' => 'frontend_2fa' ),
-					array( 'available' => true, 'min_tier' => 'professional' )
-				)
-			);
-			$this->assertSame(
-				'locked',
-				ReportedIP_Hive_Protection_Page::tier_marker_state(
-					array( 'kind' => 'bool', 'ui_lock' => 'frontend_2fa' ),
-					array( 'available' => false, 'reason' => 'tier', 'min_tier' => 'professional' )
-				)
-			);
-
-			$this->assertSame(
-				'',
-				ReportedIP_Hive_Protection_Page::tier_marker_state(
-					array( 'kind' => 'bool', 'tier' => 'form_adapters' ),
-					array( 'available' => false, 'reason' => 'runtime', 'note' => 'Contact Form 7 is not active on this site.' )
-				),
-				'a lock that comes from the server, not from the plan, carries a note instead'
-			);
+		public function test_every_catalog_row_has_a_place_on_the_page(): void {
+			$sections = array_merge( ...array_column( ReportedIP_Hive_Protection_Page::tabs(), 'sections' ) );
+			foreach ( \ReportedIP_Hive_Catalog::features() as $feature => $row ) {
+				$this->assertContains( $row['section'], $sections, $feature );
+			}
 		}
 
 		public function test_writable_values_drops_hidden_and_locked_keys_and_forces_forced_switches(): void {
@@ -566,10 +543,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringNotContainsString( 'rip-tier', $html );
 		}
 
-		public function test_a_tab_without_sections_is_left_out(): void {
+		public function test_the_advanced_tab_shows_the_add_on_sections_and_an_empty_tab_is_left_out(): void {
 			$tabs = ReportedIP_Hive_Protection_Page::tabs();
-			$this->assertArrayNotHasKey( 'advanced', $tabs, 'Without an add-on section the Advanced tab has nothing to show.' );
-			$this->assertSame( 'basics', ReportedIP_Hive_Protection_Page::active_tab( 'advanced' ) );
+			$this->assertSame( array( 'hardening_mode', 'twofa_policies' ), $tabs['advanced']['sections'], 'without the add-on the Advanced tab holds the catalog sections' );
+			$this->assertFalse( ReportedIP_Hive_Protection_Page::tab_has_fields( 'advanced' ), 'nothing to save there' );
+			$this->assertTrue( ReportedIP_Hive_Protection_Page::tab_has_fields( 'basics' ) );
 
 			add_filter(
 				'reportedip_hive_settings_sections',
@@ -583,10 +561,24 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 			\ReportedIP_Hive_Settings_Registry::flush_spec_cache();
 			try {
-				$this->assertSame( array( 'addon_probe' ), ReportedIP_Hive_Protection_Page::tabs()['advanced']['sections'] ?? null );
+				$this->assertSame( array( 'hardening_mode', 'twofa_policies', 'addon_probe' ), ReportedIP_Hive_Protection_Page::tabs()['advanced']['sections'] ?? null );
 			} finally {
 				unset( $GLOBALS['wp_filters']['reportedip_hive_settings_sections'] );
 				\ReportedIP_Hive_Settings_Registry::flush_spec_cache();
+			}
+
+			add_filter(
+				'reportedip_hive_protection_tabs',
+				static function ( array $tabs ) {
+					$tabs['advanced']['sections'] = array();
+					return $tabs;
+				}
+			);
+			try {
+				$this->assertArrayNotHasKey( 'advanced', ReportedIP_Hive_Protection_Page::tabs(), 'a tab without sections is left out' );
+				$this->assertSame( 'basics', ReportedIP_Hive_Protection_Page::active_tab( 'advanced' ) );
+			} finally {
+				unset( $GLOBALS['wp_filters']['reportedip_hive_protection_tabs'] );
 			}
 		}
 
@@ -603,9 +595,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 				}
 			}
 			$this->assertEqualsCanonicalizing(
-				array_keys( \ReportedIP_Hive_Settings_Registry::sections() ),
+				array_merge( array_keys( \ReportedIP_Hive_Settings_Registry::sections() ), array_keys( \ReportedIP_Hive_Catalog::sections() ) ),
 				array_keys( $seen ),
-				'the tabs hold exactly the registry sections'
+				'the tabs hold exactly the registry sections and the add-on sections of the catalog'
 			);
 		}
 

@@ -56,11 +56,11 @@ test.describe('protection page', () => {
 		forgetExpert();
 	});
 
-	test('four tabs with a status pill each, the first one open', async ({ page }) => {
+	test('five tabs, four with a status pill, the first one open', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
 		const tabs = page.locator('.rip-protection__tabs .rip-nav-tabs__tab');
-		await expect(tabs).toHaveCount(4);
+		await expect(tabs).toHaveCount(5);
 		await expect(tabs.first()).toHaveClass(/rip-nav-tabs__tab--active/);
 		await expect(page.locator('.rip-protection__panel[data-tab="basics"]')).toBeVisible();
 		await expect(page.locator('.rip-protection__panel[data-tab="forms"]')).toBeHidden();
@@ -187,6 +187,26 @@ test.describe('protection page', () => {
 			wpArgs('option', 'update', 'reportedip_hive_2fa_enforce_roles', '[]', '--format=json');
 			wpArgs('option', 'update', 'reportedip_hive_2fa_enabled_global', twoFactorWasOn || '0');
 		}
+	});
+
+	test('the add-on features sit in their sections as catalog rows, without an input or a price', async ({ page }) => {
+		await loginAsAdmin(page);
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		const rows = page.locator('.rip-protection__field--catalog');
+		await expect(rows).toHaveCount(14);
+		const tor = page.locator('#blocking .rip-protection__field--catalog[data-feature="tor_blocking"]');
+		await expect(tor).toContainText('Available in the ReportedIP Hive Pro add-on (Professional plan).');
+		await expect(tor.locator('a')).toHaveAttribute('href', 'https://reportedip.com/products/wordpress-plugin/#hive-response');
+		await expect(tor.locator('input')).toHaveCount(0);
+		await expect(page.locator('.rip-protection')).not.toContainText(/€|upgrade|unlock/i);
+		await expect(page.locator('.rip-protection a[href*="pricing"]')).toHaveCount(0);
+
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection#hardening_mode');
+		const advanced = page.locator('.rip-protection__panel[data-tab="advanced"]');
+		await expect(advanced).toBeVisible();
+		await expect(advanced.locator('#hardening_mode .rip-protection__field--catalog[data-feature="hardening_mode"]')).toBeVisible();
+		await expect(advanced.locator('#twofa_policies .rip-protection__field--catalog[data-feature="2fa_policies"]')).toBeVisible();
+		await expect(advanced.locator('button[type="submit"]'), 'a tab of catalog rows has nothing to save').toHaveCount(0);
 	});
 
 	test('a section link opens its tab', async ({ page }) => {

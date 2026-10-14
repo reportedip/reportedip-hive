@@ -149,9 +149,12 @@ class ReportedIP_Hive_Protection_Page {
 	 * nothing outside this class ever needs to know which tab holds which
 	 * section: every link into the page still points at a section id.
 	 *
-	 * A registry section no tab names (one an add-on adds through
-	 * `reportedip_hive_settings_sections`) lands on the Advanced tab. A tab
-	 * without sections (Advanced while no add-on adds one) is left out.
+	 * The sections of {@see ReportedIP_Hive_Catalog::sections()} (the ones
+	 * the add-on fills completely) sit on the tab the catalog names, so the
+	 * Advanced tab shows their catalog rows without the add-on and the real
+	 * fields with it. A registry section no tab names (one an add-on adds
+	 * through `reportedip_hive_settings_sections`) lands on the Advanced
+	 * tab. A tab without sections is left out.
 	 *
 	 * @return array<string, array{label:string,icon:string,sections:string[],advice:string}>
 	 * @since  2.1.69
@@ -190,12 +193,28 @@ class ReportedIP_Hive_Protection_Page {
 			),
 		);
 
+		foreach ( ReportedIP_Hive_Catalog::sections() as $section => $meta ) {
+			if ( isset( $tabs[ $meta['tab'] ] ) ) {
+				$tabs[ $meta['tab'] ]['sections'][] = (string) $section;
+			}
+		}
 		$claimed = array_merge( ...array_column( $tabs, 'sections' ) );
 		foreach ( array_keys( ReportedIP_Hive_Settings_Registry::sections() ) as $section ) {
 			if ( ! in_array( $section, $claimed, true ) ) {
 				$tabs['advanced']['sections'][] = $section;
 			}
 		}
+
+		/**
+		 * The tabs of the Protection page, slug => label, icon, sections and
+		 * advice. A result that is not an array is ignored.
+		 *
+		 * @param array<string, array{label:string,icon:string,sections:string[],advice:string}> $tabs Tabs in display order.
+		 * @since 3.0.0
+		 */
+		$filtered = apply_filters( 'reportedip_hive_protection_tabs', $tabs );
+		$tabs     = is_array( $filtered ) ? $filtered : $tabs;
+
 		return array_filter(
 			$tabs,
 			static function ( $tab ) {
@@ -414,12 +433,12 @@ class ReportedIP_Hive_Protection_Page {
 		$disabled = $locked ? ' disabled' : '';
 		$kind     = (string) $entry['kind'];
 		$row      = in_array( $kind, array( 'bool', 'int', 'enum' ), true );
-		$plan_row = 'bool' === $kind && $locked && ! empty( $status['plan_url'] );
+		$plan_row = 'bool' === $kind && $locked && ! empty( $status['plan_url'] ) && ! empty( $status['plan_label'] );
 		$control  = '';
 		$classes  = 'rip-protection__field' . ( $row ? ' rip-protection__field--row' : '' ) . ( $locked ? ' rip-protection__field--locked' : '' );
 
 		if ( $plan_row ) {
-			$control = self::plan_row_markup( (string) ( $status['plan_label'] ?? $status['min_tier'] ), (string) $status['plan_url'] );
+			$control = self::plan_row_markup( (string) $status['plan_label'], (string) $status['plan_url'] );
 			$kind    = 'plan';
 		}
 
@@ -504,14 +523,19 @@ class ReportedIP_Hive_Protection_Page {
 		}
 
 		$marker = '';
-		$state  = $plan_row ? '' : self::tier_marker_state( $entry, $status );
-		if ( '' !== $state ) {
+		if ( ! $plan_row ) {
 			ob_start();
-			if ( 'locked' === $state ) {
-				ReportedIP_Hive_Admin_Settings::render_tier_marker( $status );
-			} else {
-				ReportedIP_Hive_Admin_Settings::render_tier_included( $status );
-			}
+			/**
+			 * Print a marker next to the label of one Protection-page field,
+			 * for a reason the free plugin does not know (the add-on names
+			 * the plan a field belongs to).
+			 *
+			 * @param array<string,mixed> $status Status from `field_status()`.
+			 * @param string              $key    Option key.
+			 * @param array<string,mixed> $entry  Spec entry.
+			 * @since 3.0.0
+			 */
+			do_action( 'reportedip_hive_protection_field_marker', $status, (string) $key, $entry );
 			$marker = (string) ob_get_clean();
 		}
 		$note = trim( (string) ( $status['note'] ?? '' ) );
@@ -533,6 +557,65 @@ class ReportedIP_Hive_Protection_Page {
 			'' !== $desc ? '<p class="rip-help-text">' . esc_html( $desc ) . '</p>' : '',
 			$depends
 		);
+	}
+
+	/**
+	 * A catalog row: a feature of the add-on, shown in the section it
+	 * belongs to, with its plan, its description and a link to the product
+	 * page. No input, nothing to switch.
+	 *
+	 * @param string              $feature Catalog key.
+	 * @param array<string,mixed> $row     Catalog row.
+	 * @return string
+	 * @since  3.0.0
+	 */
+	public static function catalog_row_markup( $feature, array $row ) {
+		$label = (string) $row['label'];
+		$info  = ReportedIP_Hive_Mode_Manager::get_instance()->get_tier_info( (string) $row['tier'] );
+		/* translators: %s: plan name, for example Professional */
+		$desc = (string) $row['description'] . ' ' . sprintf( __( 'Available in the ReportedIP Hive Pro add-on (%s plan).', 'reportedip-hive' ), (string) $info['label'] );
+		if ( ! empty( $row['community_only'] ) ) {
+			$desc .= ' ' . __( 'Needs the Community Network.', 'reportedip-hive' );
+		}
+		$badge = sprintf( '<span class="rip-tier-badge rip-tier-badge--sm %1$s">%2$s</span>', esc_attr( (string) $info['badge_class'] ), esc_html( (string) $info['short_label'] ) );
+
+		return sprintf(
+			'<div class="rip-protection__field rip-protection__field--row rip-protection__field--catalog" data-search="%1$s" data-feature="%2$s"><div class="rip-protection__field-head"><span class="rip-label">%3$s</span></div><div class="rip-protection__control"><span class="rip-protection__plan">%4$s<a class="rip-button rip-button--secondary rip-button--sm" href="%5$s" target="_blank" rel="noopener">%6$s</a></span></div><p class="rip-help-text">%7$s</p></div>',
+			esc_attr( strtolower( $label . ' ' . $desc ) ),
+			esc_attr( (string) $feature ),
+			esc_html( $label ),
+			$badge,
+			esc_url( (string) $row['docs_url'] ),
+			esc_html__( 'Learn more', 'reportedip-hive' ),
+			esc_html( $desc )
+		);
+	}
+
+	/**
+	 * The catalog rows of one section, without the ones an add-on hides
+	 * because it renders the real fields.
+	 *
+	 * @param string $section Section id.
+	 * @return array<string, array<string, mixed>> Catalog key => row.
+	 * @since  3.0.0
+	 */
+	public static function catalog_rows( $section ) {
+		$rows = array();
+		foreach ( ReportedIP_Hive_Catalog::by_section()[ (string) $section ] ?? array() as $feature => $row ) {
+			/**
+			 * Hide one catalog row, for instance because the add-on renders
+			 * the real fields of the feature.
+			 *
+			 * @param bool   $hidden  Default false.
+			 * @param string $feature Catalog key.
+			 * @since 3.0.0
+			 */
+			if ( apply_filters( 'reportedip_hive_catalog_row_hidden', false, (string) $feature ) ) {
+				continue;
+			}
+			$rows[ (string) $feature ] = $row;
+		}
+		return $rows;
 	}
 
 	/**
@@ -634,17 +717,14 @@ class ReportedIP_Hive_Protection_Page {
 	/**
 	 * Lock status of one field for the current value.
 	 *
-	 * Three outcomes: available, partial (editable, plan marker shown, the
-	 * registry sanitizer refuses a value that crosses the plan line) and
-	 * locked (disabled, value dropped on save). A plan gate makes a field
-	 * partial only when the registry flags it `partial` and the stored value
-	 * is still inside the free range, or when a switch is currently on, so a
-	 * feature a plan no longer includes can still be switched off. A `ui_lock`
-	 * entry locks the field the same way without gating the sanitizer: the
-	 * value is inert while the feature is unavailable, so remote channels
-	 * may still write it and fleet hashes stay in sync. Runtime
-	 * locks (no crypto, no WooCommerce, the Hide Login constant, wp-admin
-	 * forced closed while Hide Login is on) carry a note instead of a plan.
+	 * Three outcomes: available, partial (editable, the value is checked on
+	 * save) and locked (disabled, value dropped on save). The free plugin
+	 * only knows runtime locks (no crypto, no WooCommerce, the Hide Login
+	 * constant, wp-admin forced closed while Hide Login is on, a form plugin
+	 * that is not active); they carry a note. Every other reason comes from
+	 * `reportedip_hive_protection_field_status`, which sees the runtime
+	 * status and may replace it. A status with `plan_label` and `plan_url`
+	 * turns a locked switch into a plan row.
 	 *
 	 * @param array<string,mixed>          $entry        Registry entry.
 	 * @param string                       $key          Registry key.
@@ -653,66 +733,39 @@ class ReportedIP_Hive_Protection_Page {
 	 * @return array<string,mixed>
 	 */
 	public static function field_status( array $entry, $key, $value, $mode_manager ) {
-		$feature = (string) ( $entry['tier'] ?? ( $entry['ui_lock'] ?? '' ) );
-		$status  = '' === $feature ? array( 'available' => true ) : $mode_manager->feature_status( $feature );
-		$runtime = self::runtime_lock( (string) $key, ! empty( $status['available'] ) );
-		if ( null !== $runtime ) {
-			return $runtime;
-		}
-		if ( ! empty( $status['available'] ) ) {
-			return $status;
-		}
-		if ( 'bool' === (string) ( $entry['kind'] ?? '' ) && ! empty( $value ) ) {
-			$status['partial'] = true;
-			return $status;
-		}
-		if ( ! empty( $entry['partial'] ) && ! empty( $entry['tier_gate'] ) && is_callable( $entry['tier_gate'] ) && ! call_user_func( $entry['tier_gate'], $value ) ) {
-			$status['partial'] = true;
-		}
-		return $status;
-	}
+		$runtime = self::runtime_lock( (string) $key );
+		$status  = null !== $runtime ? $runtime : array( 'available' => true );
 
-	/**
-	 * Which plan marker a field carries.
-	 *
-	 * Every field with a plan entry says which plan it belongs to, in both
-	 * directions: `locked` names the plan that is still missing, `included`
-	 * names the plan the customer already pays for, so a Business operator
-	 * can see what the Business features are instead of a page that looks
-	 * the same as the free one. A field without a plan entry, and a field
-	 * held back by the server rather than by a plan, carries neither. Neither
-	 * does a status without a plan name, because both markers say which plan
-	 * the field belongs to and there is nothing to name.
-	 *
-	 * @param array<string,mixed> $entry  Registry entry.
-	 * @param array<string,mixed> $status Status from {@see field_status()}.
-	 * @return string `locked`, `included` or an empty string.
-	 * @since  2.1.59
-	 */
-	public static function tier_marker_state( array $entry, array $status ) {
-		if ( empty( $entry['tier'] ) && empty( $entry['ui_lock'] ) ) {
-			return '';
-		}
-		if ( empty( $status['min_tier'] ) || 'runtime' === (string) ( $status['reason'] ?? '' ) ) {
-			return '';
-		}
-
-		return empty( $status['available'] ) ? 'locked' : 'included';
+		/**
+		 * Lock or annotate one Protection-page field for a reason the free
+		 * plugin does not know. Keys the page reads: `available`, `partial`
+		 * (editable while locked), `forced` (a switch written as on),
+		 * `reason`, `note` (appended to the description), `plan_label` and
+		 * `plan_url` (a locked switch becomes a plan row). A result that is
+		 * not an array keeps the status.
+		 *
+		 * @param array<string,mixed>          $status       Runtime lock, or `available` true.
+		 * @param string                       $key          Option key.
+		 * @param array<string,mixed>          $entry        Spec entry.
+		 * @param mixed                        $value        Stored value.
+		 * @param ReportedIP_Hive_Mode_Manager $mode_manager Mode manager.
+		 * @since 3.0.0
+		 */
+		$filtered = apply_filters( 'reportedip_hive_protection_field_status', $status, (string) $key, $entry, $value, $mode_manager );
+		return is_array( $filtered ) ? $filtered : $status;
 	}
 
 	/**
 	 * Locks that do not come from the plan.
 	 *
-	 * @param string $key     Registry key.
-	 * @param bool   $covered Whether the plan covers the field's feature.
+	 * @param string $key Registry key.
 	 * @return array<string,mixed>|null Status array, or null when no runtime lock applies.
 	 */
-	private static function runtime_lock( $key, $covered = true ) {
+	private static function runtime_lock( $key ) {
 		$adapter = self::adapter_behind( $key );
 
 		if ( array() !== $adapter ) {
 			return self::adapter_lock(
-				$covered,
 				$adapter['detect'],
 				sprintf(
 					/* translators: %s: name of a form plugin, for example Gravity Forms. */
@@ -781,17 +834,15 @@ class ReportedIP_Hive_Protection_Page {
 	/**
 	 * Lock a form-adapter switch whose plugin is not installed.
 	 *
-	 * Only while the plan covers the adapter. Without the plan the plan marker
-	 * is the honest answer, and replacing it with a note about a missing plugin
-	 * would hide what actually stands between the operator and the switch.
+	 * The add-on replaces this status with its plan lock when the plan does
+	 * not cover the adapter, see `reportedip_hive_protection_field_status`.
 	 *
-	 * @param bool   $covered   Whether the plan covers the feature.
 	 * @param string $signature Class the target plugin defines.
 	 * @param string $note      Reason shown under the field.
 	 * @return array<string,mixed>|null
 	 */
-	private static function adapter_lock( $covered, $signature, $note ) {
-		if ( ! $covered || class_exists( $signature ) ) {
+	private static function adapter_lock( $signature, $note ) {
+		if ( class_exists( $signature ) ) {
 			return null;
 		}
 
@@ -868,11 +919,6 @@ class ReportedIP_Hive_Protection_Page {
 	/**
 	 * Lock status of every registry key for the current values.
 	 *
-	 * A plan lock additionally carries `plan_label` (the plan's display
-	 * name) and `plan_url` (the pricing page with the feature key as the
-	 * fragment), so {@see field_markup()} can draw the plan row without
-	 * reaching for the mode manager itself.
-	 *
 	 * @param array<string,mixed>          $current      Current values.
 	 * @param ReportedIP_Hive_Mode_Manager $mode_manager Mode manager.
 	 * @return array<string,array<string,mixed>>
@@ -881,13 +927,7 @@ class ReportedIP_Hive_Protection_Page {
 	public static function field_statuses( array $current, $mode_manager ) {
 		$statuses = array();
 		foreach ( ReportedIP_Hive_Settings_Registry::spec() as $key => $entry ) {
-			$status = self::field_status( $entry, $key, $current[ $key ] ?? '', $mode_manager );
-			if ( empty( $status['available'] ) && 'tier' === (string) ( $status['reason'] ?? '' ) && ! empty( $status['min_tier'] ) ) {
-				$feature              = (string) ( $entry['tier'] ?? ( $entry['ui_lock'] ?? '' ) );
-				$status['plan_label'] = (string) $mode_manager->get_tier_info( (string) $status['min_tier'] )['label'];
-				$status['plan_url']   = ReportedIP_Hive_Admin_Settings::pricing_url() . ( '' !== $feature ? '#' . rawurlencode( $feature ) : '' );
-			}
-			$statuses[ $key ] = $status;
+			$statuses[ $key ] = self::field_status( $entry, $key, $current[ $key ] ?? '', $mode_manager );
 		}
 		return $statuses;
 	}
@@ -1079,8 +1119,6 @@ class ReportedIP_Hive_Protection_Page {
 				return self::neutral_state( self::enum_label( (string) ( $current['reportedip_hive_rest_access_mode'] ?? 'open' ) ) );
 			case 'account_password':
 				return self::switch_state( ! empty( $current['reportedip_hive_password_policy_enabled'] ) );
-			case 'hardening_mode':
-				return self::switch_state( ! empty( $current['reportedip_hive_hardening_realtime_detection'] ) );
 		}
 
 		/**
@@ -1317,7 +1355,7 @@ class ReportedIP_Hive_Protection_Page {
 	 * @since  2.1.69
 	 */
 	public static function section_markup( $section, array $current, array $statuses, $expert, array $detected, array $errors, array $choices = array() ) {
-		$meta  = ReportedIP_Hive_Settings_Registry::sections()[ $section ] ?? array();
+		$meta  = ReportedIP_Hive_Settings_Registry::sections()[ $section ] ?? ( ReportedIP_Hive_Catalog::sections()[ $section ] ?? array() );
 		$spec  = ReportedIP_Hive_Settings_Registry::spec();
 		$state = self::section_state( $section, $current );
 		$main  = self::visible_keys( $section, false, $detected );
@@ -1346,12 +1384,11 @@ class ReportedIP_Hive_Protection_Page {
 		};
 
 		$html = sprintf(
-			'<div class="rip-protection__section" id="%1$s"><div class="rip-protection__section-head"><span class="rip-protection__title">%2$s</span>%3$s<span class="rip-badge rip-badge--%4$s rip-protection__status">%5$s</span></div>',
+			'<div class="rip-protection__section" id="%1$s"><div class="rip-protection__section-head"><span class="rip-protection__title">%2$s</span>%3$s%4$s</div>',
 			esc_attr( $section ),
 			esc_html( (string) ( $meta['label'] ?? $section ) ),
 			$expert ? '<span class="rip-protection__desc">' . esc_html( (string) ( $meta['description'] ?? '' ) ) . '</span>' : '',
-			esc_attr( $state['tone'] ),
-			esc_html( $state['text'] )
+			'' === $state['text'] ? '' : '<span class="rip-badge rip-badge--' . esc_attr( $state['tone'] ) . ' rip-protection__status">' . esc_html( $state['text'] ) . '</span>'
 		);
 		if ( 'detection' === $section ) {
 			ob_start();
@@ -1367,7 +1404,27 @@ class ReportedIP_Hive_Protection_Page {
 				$rows( $rest )
 			);
 		}
+		foreach ( self::catalog_rows( $section ) as $feature => $row ) {
+			$html .= self::catalog_row_markup( $feature, $row );
+		}
 		return $html . '</div>';
+	}
+
+	/**
+	 * Whether a tab holds at least one registry key, so its form has
+	 * something to save or reset. A tab of catalog rows alone has not.
+	 *
+	 * @param string $tab Tab slug.
+	 * @return bool
+	 * @since  3.0.0
+	 */
+	public static function tab_has_fields( $tab ) {
+		foreach ( self::tabs()[ $tab ]['sections'] ?? array() as $section ) {
+			if ( array() !== self::visible_keys( $section, true, array() ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -1472,10 +1529,12 @@ class ReportedIP_Hive_Protection_Page {
 						<?php foreach ( $tab['sections'] as $section ) : ?>
 							<?php echo self::section_markup( $section, $current, $statuses, $expert, $detected, $errors ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside ?>
 						<?php endforeach; ?>
+						<?php if ( self::tab_has_fields( $slug ) ) : ?>
 						<div class="rip-card__footer rip-protection__footer">
 							<button type="submit" name="rip_reset" value="1" class="rip-button rip-button--ghost rip-protection__reset" data-confirm="<?php esc_attr_e( 'Set every setting of this tab back to the recommendation for your plan?', 'reportedip-hive' ); ?>"><?php esc_html_e( 'Restore defaults', 'reportedip-hive' ); ?></button>
 							<button type="submit" class="rip-button rip-button--primary"><?php esc_html_e( 'Save changes', 'reportedip-hive' ); ?></button>
 						</div>
+						<?php endif; ?>
 					</div>
 				</form>
 			<?php endforeach; ?>
