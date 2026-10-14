@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-10-14T04:01:32+00:00\n"
+"POT-Creation-Date: 2026-10-14T05:00:37+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -5114,11 +5114,11 @@ msgstr ""
 msgid "What it means"
 msgstr ""
 
-#: admin/class-tools-page.php:554
+#: admin/class-tools-page.php:557
 msgid "Running the three passes..."
 msgstr ""
 
-#: admin/class-tools-page.php:555
+#: admin/class-tools-page.php:558
 msgid "The self-test could not be completed."
 msgstr ""
 
@@ -5416,7 +5416,7 @@ msgid "Generate new recovery codes"
 msgstr ""
 
 #: admin/class-two-factor-admin.php:643
-#: includes/class-settings-registry.php:1138
+#: includes/class-settings-registry.php:1078
 msgid "Trusted devices"
 msgstr ""
 
@@ -5874,7 +5874,7 @@ msgid "User roles"
 msgstr ""
 
 #: includes/class-ajax-handler.php:217
-#: includes/class-settings-registry.php:1649
+#: includes/class-settings-registry.php:1589
 msgid "This option is not part of the settings registry."
 msgstr ""
 
@@ -7463,19 +7463,19 @@ msgstr ""
 msgid "%s (threshold reached)"
 msgstr ""
 
-#: includes/class-form-proof.php:627
+#: includes/class-form-proof.php:691
 msgid "Leave this field empty"
 msgstr ""
 
-#: includes/class-form-proof.php:1070
+#: includes/class-form-proof.php:1160
 msgid "This form needs JavaScript to be submitted. Switch it on and try again."
 msgstr ""
 
-#: includes/class-form-proof.php:1073
+#: includes/class-form-proof.php:1163
 msgid "Your submission was not accepted. Please reload the page and try again."
 msgstr ""
 
-#: includes/class-form-proof.php:1180
+#: includes/class-form-proof.php:1270
 msgid "This form needs JavaScript to be submitted. Switch it on and try again. If you cannot, ask another administrator to reset your password, or use WP-CLI on the server."
 msgstr ""
 
@@ -9196,819 +9196,771 @@ msgstr ""
 msgid "Put the same check on every Contact Form 7 form: the entry has to come from a browser that rendered the page. Visitors notice nothing, and there is no image to decipher."
 msgstr ""
 
-#: includes/class-settings-registry.php:736
-msgid "Protect Formidable Forms"
-msgstr ""
-
-#: includes/class-settings-registry.php:737
-msgid "The same check on Formidable Forms and Formidable Forms PRO, including multi-step forms. Visitors notice nothing."
-msgstr ""
-
-#: includes/class-settings-registry.php:746
-msgid "Protect Elementor forms"
-msgstr ""
-
-#: includes/class-settings-registry.php:747
-msgid "The same check on Elementor Pro forms, which are sent in the background. Visitors notice nothing."
-msgstr ""
-
-#: includes/class-settings-registry.php:756
-msgid "Protect Ultimate Member forms"
-msgstr ""
-
-#: includes/class-settings-registry.php:757
-msgid "The same check on the Ultimate Member sign-in, sign-up and password forms. Sign-ups also run through the registration rules, so a throwaway address or a reserved name is refused before the account exists."
-msgstr ""
-
-#: includes/class-settings-registry.php:766
-msgid "Protect Gravity Forms forms"
-msgstr ""
-
-#: includes/class-settings-registry.php:767
-msgid "The same check on Gravity Forms, including forms sent in the background and forms with several pages. Visitors notice nothing."
-msgstr ""
-
-#: includes/class-settings-registry.php:776
-msgid "Protect WPForms forms"
-msgstr ""
-
-#: includes/class-settings-registry.php:777
-msgid "The same check on WPForms and WPForms Lite, including forms sent in the background. A refused submission is shown to the sender above the form. Visitors notice nothing."
-msgstr ""
-
-#: includes/class-settings-registry.php:786
-msgid "Protect Forminator forms"
-msgstr ""
-
-#: includes/class-settings-registry.php:787
-msgid "The same check on Forminator forms, whether the form sits in the page or is loaded afterwards. A refused submission is shown to the sender at the form, never dropped into a spam folder. Visitors notice nothing."
-msgstr ""
-
-#: includes/class-settings-registry.php:794
+#: includes/class-settings-registry.php:734
 msgid "Community threat check on forms"
 msgstr ""
 
-#: includes/class-settings-registry.php:795
+#: includes/class-settings-registry.php:735
 msgid "Ask the community network about the visitor address when a comment, sign-up or password reset is submitted, using the same protection level the sign-in page enforces. Needs Community Network mode."
 msgstr ""
 
-#: includes/class-settings-registry.php:802
+#: includes/class-settings-registry.php:742
 msgid "Disposable email domains on forms and comments"
 msgstr ""
 
-#: includes/class-settings-registry.php:803
+#: includes/class-settings-registry.php:743
 msgid "What happens when a comment or a protected contact form carries an address from a throwaway mail provider. A refused sender is asked at the form for a permanent address."
 msgstr ""
 
-#: includes/class-settings-registry.php:810
+#: includes/class-settings-registry.php:750
 msgid "Action on a comment scored as spam"
 msgstr ""
 
-#: includes/class-settings-registry.php:811
+#: includes/class-settings-registry.php:751
 msgid "Whether a comment that trips several spam signals is filed as spam, rejected outright, or left to WordPress."
 msgstr ""
 
-#: includes/class-settings-registry.php:817
+#: includes/class-settings-registry.php:757
 msgid "Decoy path blocking"
 msgstr ""
 
-#: includes/class-settings-registry.php:818
+#: includes/class-settings-registry.php:758
 msgid "Serve bait paths that only a scanner would ask for, and report whoever takes the bait to the community."
 msgstr ""
 
-#: includes/class-settings-registry.php:827
+#: includes/class-settings-registry.php:767
 msgid "Hide login enabled"
 msgstr ""
 
-#: includes/class-settings-registry.php:828
+#: includes/class-settings-registry.php:768
 msgid "Move the sign-in page away from wp-login.php, so the address that every bot tries first leads nowhere."
 msgstr ""
 
-#: includes/class-settings-registry.php:837
+#: includes/class-settings-registry.php:777
 msgid "Login slug"
 msgstr ""
 
-#: includes/class-settings-registry.php:838
+#: includes/class-settings-registry.php:778
 msgid "The path your sign-in page lives at. Note it somewhere before saving, because the old address stops working immediately."
 msgstr ""
 
-#: includes/class-settings-registry.php:845
+#: includes/class-settings-registry.php:785
 msgid "Response on the default login URL"
 msgstr ""
 
-#: includes/class-settings-registry.php:846
+#: includes/class-settings-registry.php:786
 msgid "What a visitor to the old sign-in address sees. A plain 404 gives away less than a block page."
 msgstr ""
 
-#: includes/class-settings-registry.php:852
+#: includes/class-settings-registry.php:792
 msgid "Monitor login probe attempts"
 msgstr ""
 
-#: includes/class-settings-registry.php:853
+#: includes/class-settings-registry.php:793
 msgid "Count who keeps knocking at the old sign-in address. Nobody does that by accident."
 msgstr ""
 
-#: includes/class-settings-registry.php:861
+#: includes/class-settings-registry.php:801
 msgid "Login probe threshold"
 msgstr ""
 
-#: includes/class-settings-registry.php:862
+#: includes/class-settings-registry.php:802
 msgid "How many probes at the old address one visitor may make inside the window below."
 msgstr ""
 
-#: includes/class-settings-registry.php:870
+#: includes/class-settings-registry.php:810
 msgid "Login probe window (minutes)"
 msgstr ""
 
-#: includes/class-settings-registry.php:871
+#: includes/class-settings-registry.php:811
 msgid "The window probes are counted in."
 msgstr ""
 
-#: includes/class-settings-registry.php:877
+#: includes/class-settings-registry.php:817
 msgid "Append the login token to generated URLs"
 msgstr ""
 
-#: includes/class-settings-registry.php:878
+#: includes/class-settings-registry.php:818
 msgid "Append the login token to links WordPress generates. Convenient for password-reset mails, but it also puts the hidden path into anything that logs a URL."
 msgstr ""
 
-#: includes/class-settings-registry.php:886
+#: includes/class-settings-registry.php:826
 msgid "REST API access"
 msgstr ""
 
-#: includes/class-settings-registry.php:887
+#: includes/class-settings-registry.php:827
 msgid "Who may use the REST API. Many plugins and the block editor depend on it, so try a restriction before you rely on it."
 msgstr ""
 
-#: includes/class-settings-registry.php:893
+#: includes/class-settings-registry.php:833
 msgid "REST namespaces always allowed"
 msgstr ""
 
-#: includes/class-settings-registry.php:894
+#: includes/class-settings-registry.php:834
 msgid "Namespaces that stay reachable whatever the mode above says, one per line. This is where a cookie banner or a shop plugin goes."
 msgstr ""
 
-#: includes/class-settings-registry.php:904
+#: includes/class-settings-registry.php:844
 msgid "Roles allowed to use the REST API"
 msgstr ""
 
-#: includes/class-settings-registry.php:905
+#: includes/class-settings-registry.php:845
 msgid "The roles that may use the REST API while access is restricted to roles."
 msgstr ""
 
-#: includes/class-settings-registry.php:911
+#: includes/class-settings-registry.php:851
 msgid "Disable XML-RPC"
 msgstr ""
 
-#: includes/class-settings-registry.php:912
+#: includes/class-settings-registry.php:852
 msgid "Switch off xmlrpc.php and pingbacks completely. Most sites never use it; the Jetpack app and some publishing tools do. If you need XML-RPC, leave this off and use the multicall switch below instead."
 msgstr ""
 
-#: includes/class-settings-registry.php:918
+#: includes/class-settings-registry.php:858
 msgid "Disable RSS and Atom feeds"
 msgstr ""
 
-#: includes/class-settings-registry.php:919
+#: includes/class-settings-registry.php:859
 msgid "Return a 404 for RSS and Atom feeds. Turn this on only if nothing subscribes to your site."
 msgstr ""
 
-#: includes/class-settings-registry.php:925
+#: includes/class-settings-registry.php:865
 msgid "Close wp-admin for visitors"
 msgstr ""
 
-#: includes/class-settings-registry.php:926
+#: includes/class-settings-registry.php:866
 msgid "Send signed-out visitors away from wp-admin instead of showing them the sign-in form."
 msgstr ""
 
-#: includes/class-settings-registry.php:932
+#: includes/class-settings-registry.php:872
 msgid "Block PHP execution in uploads"
 msgstr ""
 
-#: includes/class-settings-registry.php:933
+#: includes/class-settings-registry.php:873
 msgid "Refuse to run PHP inside the uploads folder, so a file that got in through an upload form cannot be executed. Written into the uploads .htaccess on Apache; other servers get a snippet to paste."
 msgstr ""
 
-#: includes/class-settings-registry.php:939
+#: includes/class-settings-registry.php:879
 msgid "Hide software fingerprints"
 msgstr ""
 
-#: includes/class-settings-registry.php:940
+#: includes/class-settings-registry.php:880
 msgid "Remove the version numbers WordPress prints into your pages. It does not fix anything, it just stops handing a scanner the list of what to try."
 msgstr ""
 
-#: includes/class-settings-registry.php:946
+#: includes/class-settings-registry.php:886
 msgid "Send security headers"
 msgstr ""
 
-#: includes/class-settings-registry.php:947
+#: includes/class-settings-registry.php:887
 msgid "Send hardening response headers on every front-end request. A header your server already sets is left alone."
 msgstr ""
 
-#: includes/class-settings-registry.php:953
+#: includes/class-settings-registry.php:893
 msgid "X-Content-Type-Options"
 msgstr ""
 
-#: includes/class-settings-registry.php:954
+#: includes/class-settings-registry.php:894
 msgid "Stop the browser from guessing a file type against what you declared, which is how an uploaded image gets treated as a script."
 msgstr ""
 
-#: includes/class-settings-registry.php:962
+#: includes/class-settings-registry.php:902
 msgid "X-Frame-Options"
 msgstr ""
 
-#: includes/class-settings-registry.php:963
+#: includes/class-settings-registry.php:903
 msgid "Who may put your pages inside a frame. Same-origin is right for almost every site; deny breaks legitimate embeds."
 msgstr ""
 
-#: includes/class-settings-registry.php:970
+#: includes/class-settings-registry.php:910
 msgid "Referrer-Policy"
 msgstr ""
 
-#: includes/class-settings-registry.php:971
+#: includes/class-settings-registry.php:911
 msgid "How much of the current address is passed on when a visitor follows a link away from your site."
 msgstr ""
 
-#: includes/class-settings-registry.php:978
+#: includes/class-settings-registry.php:918
 msgid "HTTP Strict Transport Security"
 msgstr ""
 
-#: includes/class-settings-registry.php:979
+#: includes/class-settings-registry.php:919
 msgid "Tell the browser to reach this site over HTTPS only, from now on. Never turn this on before HTTPS works everywhere, because it cannot be taken back quickly."
 msgstr ""
 
-#: includes/class-settings-registry.php:988
+#: includes/class-settings-registry.php:928
 msgid "HSTS max-age (seconds)"
 msgstr ""
 
-#: includes/class-settings-registry.php:989
+#: includes/class-settings-registry.php:929
 msgid "How long the browser remembers the HTTPS-only instruction. Start short while you are testing."
 msgstr ""
 
-#: includes/class-settings-registry.php:996
+#: includes/class-settings-registry.php:936
 msgid "HSTS includeSubDomains"
 msgstr ""
 
-#: includes/class-settings-registry.php:997
+#: includes/class-settings-registry.php:937
 msgid "Apply the HTTPS-only instruction to every subdomain as well. Check that all of them really have a certificate first."
 msgstr ""
 
-#: includes/class-settings-registry.php:1004
+#: includes/class-settings-registry.php:944
 msgid "HSTS preload"
 msgstr ""
 
-#: includes/class-settings-registry.php:1005
+#: includes/class-settings-registry.php:945
 msgid "Ask to be added to the browsers' built-in HTTPS-only list. Getting off that list takes months, so only set it when the setup is final."
 msgstr ""
 
-#: includes/class-settings-registry.php:1013
+#: includes/class-settings-registry.php:953
 msgid "Permissions-Policy"
 msgstr ""
 
-#: includes/class-settings-registry.php:1014
+#: includes/class-settings-registry.php:954
 msgid "Which browser features your pages are allowed to use. The default switches off camera, microphone, location and payment, which almost no site needs."
 msgstr ""
 
-#: includes/class-settings-registry.php:1023
+#: includes/class-settings-registry.php:963
 msgid "Content-Security-Policy mode"
 msgstr ""
 
-#: includes/class-settings-registry.php:1024
+#: includes/class-settings-registry.php:964
 msgid "Whether the content policy is enforced or only reported. Always run it in report-only first; an enforced policy that is too strict makes a page look broken."
 msgstr ""
 
-#: includes/class-settings-registry.php:1031
+#: includes/class-settings-registry.php:971
 msgid "Content-Security-Policy"
 msgstr ""
 
-#: includes/class-settings-registry.php:1032
+#: includes/class-settings-registry.php:972
 msgid "The policy itself. It decides which scripts, styles and frames may load, and it is the one header that will break your theme if it is wrong."
 msgstr ""
 
-#: includes/class-settings-registry.php:1039
+#: includes/class-settings-registry.php:979
 msgid "CSP report URI"
 msgstr ""
 
-#: includes/class-settings-registry.php:1040
+#: includes/class-settings-registry.php:980
 msgid "Where the browser sends policy violations while you are tuning the policy."
 msgstr ""
 
-#: includes/class-settings-registry.php:1049
+#: includes/class-settings-registry.php:989
 msgid "Cross-Origin-Opener-Policy"
 msgstr ""
 
-#: includes/class-settings-registry.php:1050
+#: includes/class-settings-registry.php:990
 msgid "Separate your pages from windows they opened, so a foreign page cannot reach back into yours."
 msgstr ""
 
-#: includes/class-settings-registry.php:1059
+#: includes/class-settings-registry.php:999
 msgid "Cross-Origin-Resource-Policy"
 msgstr ""
 
-#: includes/class-settings-registry.php:1060
+#: includes/class-settings-registry.php:1000
 msgid "Who may embed your resources such as images and scripts."
 msgstr ""
 
-#: includes/class-settings-registry.php:1069
+#: includes/class-settings-registry.php:1009
 msgid "Cross-Origin-Embedder-Policy"
 msgstr ""
 
-#: includes/class-settings-registry.php:1070
+#: includes/class-settings-registry.php:1010
 msgid "Require every embedded resource to opt in. Needed for some browser features, and it breaks third-party embeds that have not opted in."
 msgstr ""
 
-#: includes/class-settings-registry.php:1078
+#: includes/class-settings-registry.php:1018
 msgid "Two-factor authentication enabled"
 msgstr ""
 
-#: includes/class-settings-registry.php:1079
+#: includes/class-settings-registry.php:1019
 msgid "Master switch for the second factor. Off, nobody is asked for one, whatever the roles below say."
 msgstr ""
 
-#: includes/class-settings-registry.php:1088
+#: includes/class-settings-registry.php:1028
 msgid "Allowed 2FA methods"
 msgstr ""
 
-#: includes/class-settings-registry.php:1089
+#: includes/class-settings-registry.php:1029
 msgid "The methods users may set up. Leave at least one that works without a phone, or a lost device locks the account out."
 msgstr ""
 
-#: includes/class-settings-registry.php:1095
+#: includes/class-settings-registry.php:1035
 msgid "Subject of the e-mail code"
 msgstr ""
 
-#: includes/class-settings-registry.php:1096
+#: includes/class-settings-registry.php:1036
 msgid "Subject line of the mail that carries the sign-in code. Leave empty for the default; {site_name} is replaced with the site title."
 msgstr ""
 
-#: includes/class-settings-registry.php:1105
+#: includes/class-settings-registry.php:1045
 msgid "Roles required to use 2FA"
 msgstr ""
 
-#: includes/class-settings-registry.php:1106
+#: includes/class-settings-registry.php:1046
 msgid "Roles that must use a second factor. Everyone else may, and is asked to."
 msgstr ""
 
-#: includes/class-settings-registry.php:1114
+#: includes/class-settings-registry.php:1054
 msgid "2FA grace period (days)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1115
+#: includes/class-settings-registry.php:1055
 msgid "How long a required user may keep signing in before setting the second factor up."
 msgstr ""
 
-#: includes/class-settings-registry.php:1123
+#: includes/class-settings-registry.php:1063
 msgid "Maximum onboarding skips"
 msgstr ""
 
-#: includes/class-settings-registry.php:1124
+#: includes/class-settings-registry.php:1064
 msgid "How often a required user may postpone the setup during the grace period."
 msgstr ""
 
-#: includes/class-settings-registry.php:1131
+#: includes/class-settings-registry.php:1071
 msgid "Action when grace period is exhausted"
 msgstr ""
 
-#: includes/class-settings-registry.php:1132
+#: includes/class-settings-registry.php:1072
 msgid "What happens to a required user who never set the second factor up."
 msgstr ""
 
-#: includes/class-settings-registry.php:1139
+#: includes/class-settings-registry.php:1079
 msgid "Let users mark a device so they are not asked for the code on every sign-in."
 msgstr ""
 
-#: includes/class-settings-registry.php:1145
+#: includes/class-settings-registry.php:1085
 msgid "Enforce 2FA for super admins"
 msgstr ""
 
-#: includes/class-settings-registry.php:1146
+#: includes/class-settings-registry.php:1086
 msgid "Also require the second factor from network super admins. They are the most valuable account on a multisite, and the easiest to forget."
 msgstr ""
 
-#: includes/class-settings-registry.php:1152
+#: includes/class-settings-registry.php:1092
 msgid "Extend the trusted-device window on \"remember me\""
 msgstr ""
 
-#: includes/class-settings-registry.php:1153
+#: includes/class-settings-registry.php:1093
 msgid "Give the trusted-device cookie a longer life when the user ticked \"remember me\". More convenient, and a stolen laptop stays signed in longer."
 msgstr ""
 
-#: includes/class-settings-registry.php:1160
+#: includes/class-settings-registry.php:1100
 msgid "IP addresses exempt from the second factor"
 msgstr ""
 
-#: includes/class-settings-registry.php:1161
+#: includes/class-settings-registry.php:1101
 msgid "Addresses or ranges that skip the second factor, one per line. This is a way past your own 2FA policy, so keep it to networks you control."
 msgstr ""
 
-#: includes/class-settings-registry.php:1167
+#: includes/class-settings-registry.php:1107
 msgid "Brand the login challenge"
 msgstr ""
 
-#: includes/class-settings-registry.php:1168
+#: includes/class-settings-registry.php:1108
 msgid "Show your site name and logo on the challenge page instead of the plain WordPress one."
 msgstr ""
 
-#: includes/class-settings-registry.php:1174
+#: includes/class-settings-registry.php:1114
 msgid "Mail the user when a new device signs in"
 msgstr ""
 
-#: includes/class-settings-registry.php:1175
+#: includes/class-settings-registry.php:1115
 msgid "Mail the user when their account is used from a device it has not seen before."
 msgstr ""
 
-#: includes/class-settings-registry.php:1181
+#: includes/class-settings-registry.php:1121
 msgid "Remind users without a second factor"
 msgstr ""
 
-#: includes/class-settings-registry.php:1182
+#: includes/class-settings-registry.php:1122
 msgid "Show a banner after sign-in to users who have not set up a second factor yet. Roles listed below are locked out once they ignore it too often."
 msgstr ""
 
-#: includes/class-settings-registry.php:1190
+#: includes/class-settings-registry.php:1130
 msgid "Sign-ins before the reminder locks out"
 msgstr ""
 
-#: includes/class-settings-registry.php:1191
+#: includes/class-settings-registry.php:1131
 msgid "How many sign-ins without a second factor a user in one of the roles below gets before the reminder turns into a hard stop."
 msgstr ""
 
-#: includes/class-settings-registry.php:1199
+#: includes/class-settings-registry.php:1139
 msgid "Roles the reminder locks out"
 msgstr ""
 
-#: includes/class-settings-registry.php:1200
+#: includes/class-settings-registry.php:1140
 msgid "Roles that cannot keep signing in without a second factor once the count above is reached. An empty list falls back to administrators, editors and shop managers."
 msgstr ""
 
-#: includes/class-settings-registry.php:1206
+#: includes/class-settings-registry.php:1146
 msgid "XML-RPC accepts application passwords only"
 msgstr ""
 
-#: includes/class-settings-registry.php:1207
+#: includes/class-settings-registry.php:1147
 msgid "Refuse account passwords over XML-RPC and accept application passwords only, so XML-RPC stops being a way around the second factor."
 msgstr ""
 
-#: includes/class-settings-registry.php:1213
+#: includes/class-settings-registry.php:1153
 msgid "Block a password reset when e-mail is the only second factor"
 msgstr ""
 
-#: includes/class-settings-registry.php:1214
+#: includes/class-settings-registry.php:1154
 msgid "Refuse a password reset for users whose only second factor is e-mail. Otherwise a stolen mailbox is enough for both steps."
 msgstr ""
 
-#: includes/class-settings-registry.php:1222
+#: includes/class-settings-registry.php:1162
 msgid "Trusted device lifetime (days)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1223
+#: includes/class-settings-registry.php:1163
 msgid "How long a trusted device stays trusted before the code is asked for again."
 msgstr ""
 
-#: includes/class-settings-registry.php:1229
+#: includes/class-settings-registry.php:1169
 msgid "Require 2FA on password reset"
 msgstr ""
 
-#: includes/class-settings-registry.php:1230
+#: includes/class-settings-registry.php:1170
 msgid "Ask for the second factor during a password reset, so a hijacked mailbox is not enough on its own."
 msgstr ""
 
-#: includes/class-settings-registry.php:1236
+#: includes/class-settings-registry.php:1176
 msgid "Password policy"
 msgstr ""
 
-#: includes/class-settings-registry.php:1237
+#: includes/class-settings-registry.php:1177
 msgid "Check new passwords against the rules below before accepting them."
 msgstr ""
 
-#: includes/class-settings-registry.php:1245
+#: includes/class-settings-registry.php:1185
 msgid "Minimum password length"
 msgstr ""
 
-#: includes/class-settings-registry.php:1246
+#: includes/class-settings-registry.php:1186
 msgid "The shortest password that is accepted. Length helps more than any other single rule."
 msgstr ""
 
-#: includes/class-settings-registry.php:1254
+#: includes/class-settings-registry.php:1194
 msgid "Required character classes"
 msgstr ""
 
-#: includes/class-settings-registry.php:1255
+#: includes/class-settings-registry.php:1195
 msgid "How many of upper case, lower case, digits and symbols a password must mix."
 msgstr ""
 
-#: includes/class-settings-registry.php:1261
+#: includes/class-settings-registry.php:1201
 msgid "Apply the password policy to every role"
 msgstr ""
 
-#: includes/class-settings-registry.php:1262
+#: includes/class-settings-registry.php:1202
 msgid "Apply the rules to every role rather than to the ones that can change the site."
 msgstr ""
 
-#: includes/class-settings-registry.php:1268
+#: includes/class-settings-registry.php:1208
 msgid "Check passwords against known breaches"
 msgstr ""
 
-#: includes/class-settings-registry.php:1269
+#: includes/class-settings-registry.php:1209
 msgid "Reject passwords that appear in known breach lists. Only the first five characters of a hash leave the site, never the password."
 msgstr ""
 
-#: includes/class-settings-registry.php:1277
+#: includes/class-settings-registry.php:1217
 msgid "Log level"
 msgstr ""
 
-#: includes/class-settings-registry.php:1278
+#: includes/class-settings-registry.php:1218
 msgid "How much detail lands in the security log."
 msgstr ""
 
-#: includes/class-settings-registry.php:1285
+#: includes/class-settings-registry.php:1225
 msgid "Minimal logging"
 msgstr ""
 
-#: includes/class-settings-registry.php:1286
+#: includes/class-settings-registry.php:1226
 msgid "Record only what is needed to make a decision, and leave out everything that would identify a person."
 msgstr ""
 
-#: includes/class-settings-registry.php:1292
+#: includes/class-settings-registry.php:1232
 msgid "Log user agents"
 msgstr ""
 
-#: includes/class-settings-registry.php:1293
+#: includes/class-settings-registry.php:1233
 msgid "Record the browser identification with each security event and audit trail entry. Useful for telling a bot from a customer, and it is personal data."
 msgstr ""
 
-#: includes/class-settings-registry.php:1302
+#: includes/class-settings-registry.php:1242
 msgid "Data retention (days)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1303
+#: includes/class-settings-registry.php:1243
 msgid "How long security events are kept before they are deleted."
 msgstr ""
 
-#: includes/class-settings-registry.php:1311
+#: includes/class-settings-registry.php:1251
 msgid "Auto-anonymize after (days)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1312
+#: includes/class-settings-registry.php:1252
 msgid "How long before addresses in old events are shortened. Keeps the statistics while dropping the identifying part."
 msgstr ""
 
-#: includes/class-settings-registry.php:1319
+#: includes/class-settings-registry.php:1259
 msgid "Audit trail"
 msgstr ""
 
-#: includes/class-settings-registry.php:1320
+#: includes/class-settings-registry.php:1260
 msgid "Keep a separate, append-only record of who changed what: settings, plugins, pages, menus, files and accounts, each with the acting user."
 msgstr ""
 
-#: includes/class-settings-registry.php:1329
+#: includes/class-settings-registry.php:1269
 msgid "Audit trail triggers"
 msgstr ""
 
-#: includes/class-settings-registry.php:1330
+#: includes/class-settings-registry.php:1270
 msgid "Which kinds of changes the audit trail records. Sign-ins are off by default because they are the loudest rows; the other groups are what a support case needs."
 msgstr ""
 
-#: includes/class-settings-registry.php:1339
+#: includes/class-settings-registry.php:1279
 msgid "Audit retention (days)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1340
+#: includes/class-settings-registry.php:1280
 msgid "How long audit entries are kept. Compliance requirements usually set this, not convenience."
 msgstr ""
 
-#: includes/class-settings-registry.php:1346
+#: includes/class-settings-registry.php:1286
 msgid "Anonymize IPs in the audit trail"
 msgstr ""
 
-#: includes/class-settings-registry.php:1347
+#: includes/class-settings-registry.php:1287
 msgid "Store only the network part of the address in the audit trail, so the record survives a data-protection review."
 msgstr ""
 
-#: includes/class-settings-registry.php:1354
+#: includes/class-settings-registry.php:1294
 msgid "Mail an alert on a sign-in from a new address"
 msgstr ""
 
-#: includes/class-settings-registry.php:1355
+#: includes/class-settings-registry.php:1295
 msgid "Mail the notification recipients when an account signs in from an address it has never used. Rate-limited per account so a dynamic connection does not flood the inbox."
 msgstr ""
 
-#: includes/class-settings-registry.php:1361
+#: includes/class-settings-registry.php:1301
 msgid "Record request details with each event"
 msgstr ""
 
-#: includes/class-settings-registry.php:1362
+#: includes/class-settings-registry.php:1302
 msgid "Record the request context with each event. Helps when reconstructing an incident, and makes the log bigger."
 msgstr ""
 
-#: includes/class-settings-registry.php:1368
+#: includes/class-settings-registry.php:1308
 msgid "Record the referring domain"
 msgstr ""
 
-#: includes/class-settings-registry.php:1369
+#: includes/class-settings-registry.php:1309
 msgid "Record which site a visitor came from."
 msgstr ""
 
-#: includes/class-settings-registry.php:1375
+#: includes/class-settings-registry.php:1315
 msgid "Cache community lookups"
 msgstr ""
 
-#: includes/class-settings-registry.php:1376
+#: includes/class-settings-registry.php:1316
 msgid "Remember community answers instead of asking again for the same address. This is what keeps the check off your response time."
 msgstr ""
 
-#: includes/class-settings-registry.php:1384
+#: includes/class-settings-registry.php:1324
 msgid "Cache lifetime (hours)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1385
+#: includes/class-settings-registry.php:1325
 msgid "How long a community answer is reused."
 msgstr ""
 
-#: includes/class-settings-registry.php:1393
+#: includes/class-settings-registry.php:1333
 msgid "Clean-result cache lifetime (hours)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1394
+#: includes/class-settings-registry.php:1334
 msgid "How long a clean result is reused. Shorter than the above, because an address can turn bad quickly."
 msgstr ""
 
-#: includes/class-settings-registry.php:1402
+#: includes/class-settings-registry.php:1342
 msgid "Community lookups per hour (0 = no local limit)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1403
+#: includes/class-settings-registry.php:1343
 msgid "A local ceiling on community lookups per hour. Zero means only your plan quota applies."
 msgstr ""
 
-#: includes/class-settings-registry.php:1411
+#: includes/class-settings-registry.php:1351
 msgid "Report cooldown per address (hours)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1412
+#: includes/class-settings-registry.php:1352
 msgid "How long to wait before reporting the same address again, so one persistent attacker does not eat the daily report budget."
 msgstr ""
 
-#: includes/class-settings-registry.php:1420
+#: includes/class-settings-registry.php:1360
 msgid "Discard queued reports after (days)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1421
+#: includes/class-settings-registry.php:1361
 msgid "How long a report may sit in the queue before it is dropped as stale."
 msgstr ""
 
-#: includes/class-settings-registry.php:1429
+#: includes/class-settings-registry.php:1369
 msgid "Queue warning threshold"
 msgstr ""
 
-#: includes/class-settings-registry.php:1430
+#: includes/class-settings-registry.php:1370
 msgid "The queue length at which the status page starts warning."
 msgstr ""
 
-#: includes/class-settings-registry.php:1438
+#: includes/class-settings-registry.php:1378
 msgid "Queue critical threshold"
 msgstr ""
 
-#: includes/class-settings-registry.php:1439
+#: includes/class-settings-registry.php:1379
 msgid "The queue length at which the status page calls it critical."
 msgstr ""
 
-#: includes/class-settings-registry.php:1447
+#: includes/class-settings-registry.php:1387
 msgid "Recover stuck queue rows after (minutes)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1448
+#: includes/class-settings-registry.php:1388
 msgid "How long a report may stay in processing before it is assumed the worker crashed and the row is picked up again."
 msgstr ""
 
-#: includes/class-settings-registry.php:1455
+#: includes/class-settings-registry.php:1395
 msgid "Show the protection badge in the site footer"
 msgstr ""
 
-#: includes/class-settings-registry.php:1456
+#: includes/class-settings-registry.php:1396
 msgid "Show a small protection badge in your site footer."
 msgstr ""
 
-#: includes/class-settings-registry.php:1464
+#: includes/class-settings-registry.php:1404
 msgid "Footer badge style"
 msgstr ""
 
-#: includes/class-settings-registry.php:1465
+#: includes/class-settings-registry.php:1405
 msgid "Which badge is shown."
 msgstr ""
 
-#: includes/class-settings-registry.php:1472
+#: includes/class-settings-registry.php:1412
 msgid "Footer badge placement"
 msgstr ""
 
-#: includes/class-settings-registry.php:1473
+#: includes/class-settings-registry.php:1413
 msgid "Where the badge sits in the footer."
 msgstr ""
 
-#: includes/class-settings-registry.php:1479
+#: includes/class-settings-registry.php:1419
 msgid "Send notification preferences to the community server"
 msgstr ""
 
-#: includes/class-settings-registry.php:1480
+#: includes/class-settings-registry.php:1420
 msgid "Let the community server know your notification preferences, so it can reach you about your account."
 msgstr ""
 
-#: includes/class-settings-registry.php:1488
+#: includes/class-settings-registry.php:1428
 msgid "Per-event notification cap (minutes)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1489
+#: includes/class-settings-registry.php:1429
 msgid "How long to wait before mailing about the same kind of event again."
 msgstr ""
 
-#: includes/class-settings-registry.php:1497
+#: includes/class-settings-registry.php:1437
 msgid "Admin notifications"
 msgstr ""
 
-#: includes/class-settings-registry.php:1498
+#: includes/class-settings-registry.php:1438
 msgid "Mail the recipients below when something needs a person to look at it."
 msgstr ""
 
-#: includes/class-settings-registry.php:1505
+#: includes/class-settings-registry.php:1445
 msgid "Notification recipients"
 msgstr ""
 
-#: includes/class-settings-registry.php:1506
+#: includes/class-settings-registry.php:1446
 msgid "Who receives those mails. Several addresses can be separated by commas."
 msgstr ""
 
-#: includes/class-settings-registry.php:1512
+#: includes/class-settings-registry.php:1452
 msgid "Sender name"
 msgstr ""
 
-#: includes/class-settings-registry.php:1513
+#: includes/class-settings-registry.php:1453
 msgid "The sender name on mails this plugin sends."
 msgstr ""
 
-#: includes/class-settings-registry.php:1519
+#: includes/class-settings-registry.php:1459
 msgid "Sender address"
 msgstr ""
 
-#: includes/class-settings-registry.php:1520
+#: includes/class-settings-registry.php:1460
 msgid "The sender address. Use one at your own domain, otherwise the mails land in spam."
 msgstr ""
 
-#: includes/class-settings-registry.php:1528
+#: includes/class-settings-registry.php:1468
 msgid "Notification cooldown (minutes)"
 msgstr ""
 
-#: includes/class-settings-registry.php:1529
+#: includes/class-settings-registry.php:1469
 msgid "How long the same address and event type stays quiet after a mail went out."
 msgstr ""
 
-#: includes/class-settings-registry.php:1535
+#: includes/class-settings-registry.php:1475
 msgid "Show upgrade hints in the admin"
 msgstr ""
 
-#: includes/class-settings-registry.php:1536
+#: includes/class-settings-registry.php:1476
 msgid "Off hides every plan promotion in wp-admin: dashboard cards, inline hints and the WooCommerce banner. Security notices are not affected."
 msgstr ""
 
-#: includes/class-settings-registry.php:1542
+#: includes/class-settings-registry.php:1482
 msgid "Mail when the relay quota reaches 80 % or 100 %"
 msgstr ""
 
-#: includes/class-settings-registry.php:1543
+#: includes/class-settings-registry.php:1483
 msgid "One mail per channel and stage per month, sent to the alert recipients."
 msgstr ""
 
-#: includes/class-settings-registry.php:1549
+#: includes/class-settings-registry.php:1489
 msgid "Mail when the plan changes"
 msgstr ""
 
-#: includes/class-settings-registry.php:1550
+#: includes/class-settings-registry.php:1490
 msgid "One factual mail per upgrade or downgrade with what becomes available or pauses."
 msgstr ""
 
 #. translators: %s: comma-separated list of allowed values
-#: includes/class-settings-registry.php:1699
+#: includes/class-settings-registry.php:1639
 #, php-format
 msgid "Value must be one of: %s"
 msgstr ""
 
-#: includes/class-settings-registry.php:1733
+#: includes/class-settings-registry.php:1673
 msgid "Unknown value kind."
 msgstr ""
 
-#: includes/class-settings-registry.php:1755
+#: includes/class-settings-registry.php:1695
 msgid "Hide Login cannot be enabled without a login slug, set a slug first."
 msgstr ""
 
 #. translators: %s: minimum plan name required for the feature
-#: includes/class-settings-registry.php:2011
+#: includes/class-settings-registry.php:1951
 #, php-format
 msgid "This setting requires the %s plan."
 msgstr ""
 
-#: includes/class-settings-registry.php:2014
+#: includes/class-settings-registry.php:1954
 msgid "This setting requires a higher plan."
 msgstr ""
 
-#: includes/class-settings-registry.php:2083
+#: includes/class-settings-registry.php:2023
 msgid "Value must be a JSON array of strings."
 msgstr ""
 
