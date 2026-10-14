@@ -1,11 +1,10 @@
 /**
- * Form protection self-test: works out one task and drives the three passes.
+ * Form protection self-test: drives the three passes.
  *
- * The page hands over a single task, so there is no stock to keep, no form to
- * watch and no submit event to catch. One answer is worked out, the first pass
- * spends it, the second pass sends the very same answer again to show that a
- * copy is worth nothing, and the third pass fills the anchor the way a script
- * that fills every input would.
+ * There is no form to watch and no submit event to catch. The first pass sends
+ * the marker a browser writes, the second sends the very same value again,
+ * and the third fills the anchor the way a script that fills every input
+ * would.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -16,8 +15,6 @@
 
 ( function () {
 	'use strict';
-
-	var LIMIT = 1 << 24;
 
 	var config = window.reportedipHiveSelfTest;
 
@@ -38,64 +35,6 @@
 	function say( text ) {
 		status.textContent = text;
 		status.classList.remove( 'rip-hidden' );
-	}
-
-	function leadingZeroBits( bytes ) {
-		var bits = 0;
-
-		for ( var i = 0; i < bytes.length; i++ ) {
-			var part = bytes[ i ];
-
-			if ( part === 0 ) {
-				bits += 8;
-				continue;
-			}
-
-			while ( part < 128 ) {
-				bits++;
-				part <<= 1;
-			}
-
-			break;
-		}
-
-		return bits;
-	}
-
-	/**
-	 * Work out one answer for the task the page carries.
-	 *
-	 * The counter starts somewhere random for the same reason it does on the
-	 * public forms: every visitor sees the same starting value, so counting up
-	 * from zero would have everyone find the same answer.
-	 *
-	 * @since 2.1.58
-	 */
-	async function solve() {
-		if ( ! config.bits ) {
-			return config.token + '.0';
-		}
-
-		var encoder = new TextEncoder();
-		var slot = new Uint32Array( 1 );
-
-		window.crypto.getRandomValues( slot );
-
-		var nonce = slot[ 0 ];
-		var spent = 0;
-
-		while ( spent < LIMIT ) {
-			var hex = ( nonce++ ).toString( 16 );
-			var digest = await window.crypto.subtle.digest( 'SHA-256', encoder.encode( config.seed + hex ) );
-
-			spent++;
-
-			if ( leadingZeroBits( new Uint8Array( digest ) ) >= config.bits ) {
-				return config.token + '.' + hex;
-			}
-		}
-
-		return '';
 	}
 
 	function post( run, proof ) {
@@ -153,30 +92,6 @@
 		summary.textContent = '';
 		table.classList.add( 'rip-hidden' );
 
-		var proof = '1';
-
-		if ( config.token ) {
-			if ( config.bits && ( ! window.crypto || ! window.crypto.subtle || 'undefined' === typeof TextEncoder ) ) {
-				say( config.strings.insecure );
-				button.disabled = false;
-				return;
-			}
-
-			say( config.strings.solving );
-
-			try {
-				proof = await solve();
-			} catch ( error ) {
-				proof = '';
-			}
-
-			if ( ! proof ) {
-				say( config.strings.unsolved );
-				button.disabled = false;
-				return;
-			}
-		}
-
 		say( config.strings.running );
 		table.classList.remove( 'rip-hidden' );
 
@@ -184,7 +99,7 @@
 			var answer = null;
 
 			try {
-				answer = await post( config.runs[ i ], proof );
+				answer = await post( config.runs[ i ], '1' );
 			} catch ( error ) {
 				answer = null;
 			}
