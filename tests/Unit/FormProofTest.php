@@ -18,7 +18,8 @@
 
 namespace {
 	if ( ! function_exists( 'wp_register_script' ) ) {
-		function wp_register_script( ...$args ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.Found
+		function wp_register_script( ...$args ) {
+			$GLOBALS['rip_test_registered_scripts'][ $args[0] ] = $args;
 			return true;
 		}
 	}
@@ -452,6 +453,35 @@ namespace ReportedIP\Hive\Tests\Unit {
 			} finally {
 				$GLOBALS['wp_filters'] = array();
 			}
+		}
+
+		public function test_the_script_registers_with_the_filtered_source_and_version(): void {
+			$GLOBALS['wp_filters']                  = array();
+			$GLOBALS['rip_test_registered_scripts'] = array();
+			add_filter(
+				'reportedip_hive_form_proof_script_src',
+				static function () {
+					return 'https://example.test/add-on/form-proof.js';
+				}
+			);
+			add_filter(
+				'reportedip_hive_form_proof_script_version',
+				static function ( $version, $handle, $src ) {
+					return $handle . '|' . $src;
+				},
+				10,
+				3
+			);
+
+			try {
+				\ReportedIP_Hive_Form_Proof::get_instance()->register_script();
+			} finally {
+				$GLOBALS['wp_filters'] = array();
+			}
+
+			$args = $GLOBALS['rip_test_registered_scripts']['reportedip-hive-form-proof'] ?? array();
+			$this->assertSame( 'https://example.test/add-on/form-proof.js', $args[1] ?? null );
+			$this->assertSame( 'reportedip-hive-form-proof|https://example.test/add-on/form-proof.js', $args[3] ?? null );
 		}
 
 		public function test_adapter_options_take_registered_switches(): void {

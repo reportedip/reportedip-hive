@@ -573,11 +573,25 @@ class ReportedIP_Hive_Form_Proof {
 		 */
 		$src = (string) apply_filters( 'reportedip_hive_form_proof_script_src', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/form-proof.js' );
 
+		/**
+		 * Version the script is enqueued with, the cache key of the browser.
+		 *
+		 * An add-on that swaps the script in through the source filter hands
+		 * its own version here, so an update of the add-on alone reaches
+		 * every browser.
+		 *
+		 * @param string $version Default the free plugin version.
+		 * @param string $handle  Script handle.
+		 * @param string $src     Script URL after the source filter.
+		 * @since 3.0.0
+		 */
+		$version = (string) apply_filters( 'reportedip_hive_form_proof_script_version', REPORTEDIP_HIVE_VERSION, 'reportedip-hive-form-proof', $src );
+
 		wp_register_script(
 			'reportedip-hive-form-proof',
 			$src,
 			array(),
-			REPORTEDIP_HIVE_VERSION,
+			$version,
 			true
 		);
 

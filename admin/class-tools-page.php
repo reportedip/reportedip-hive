@@ -537,11 +537,14 @@ class ReportedIP_Hive_Tools_Page {
 		 */
 		$src = (string) apply_filters( 'reportedip_hive_form_proof_selftest_script_src', REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/form-proof-selftest.js' );
 
+		/** This filter is documented in includes/class-form-proof.php */
+		$version = (string) apply_filters( 'reportedip_hive_form_proof_script_version', REPORTEDIP_HIVE_VERSION, 'reportedip-hive-form-proof-selftest', $src );
+
 		wp_register_script(
 			'reportedip-hive-form-proof-selftest',
 			$src,
 			array(),
-			REPORTEDIP_HIVE_VERSION,
+			$version,
 			true
 		);
 
