@@ -44,6 +44,13 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	const QUERY_VAR = 'reportedip_hive_2fa_frontend';
 
 	/**
+	 * Challenge context of the themed slug, see
+	 * {@see ReportedIP_Hive_Two_Factor::handle_2fa_challenge()}. Also the
+	 * context of `reportedip_hive_2fa_verified` for a storefront sign-in.
+	 */
+	const CONTEXT = 'theme_frame';
+
+	/**
 	 * Site-option master toggle for the frontend module.
 	 */
 	const OPT_ENABLED = 'reportedip_hive_2fa_frontend_enabled';
@@ -129,6 +136,11 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'maybe_enqueue_blocks_redirect' ) );
 		add_filter( 'pre_get_document_title', array( __CLASS__, 'filter_document_title' ) );
 		add_filter( 'wp_robots', array( __CLASS__, 'filter_robots' ) );
+		add_filter( 'reportedip_hive_2fa_challenge_payload', array( __CLASS__, 'challenge_payload' ) );
+		add_filter( 'reportedip_hive_2fa_challenge_url', array( __CLASS__, 'filter_challenge_url' ), 10, 2 );
+		add_filter( 'reportedip_hive_2fa_redirect_url', array( __CLASS__, 'filter_redirect_url' ), 10, 4 );
+		add_action( 'reportedip_hive_2fa_render_challenge_' . self::CONTEXT, array( __CLASS__, 'render_challenge_view' ), 10, 2 );
+		add_action( 'reportedip_hive_2fa_render_expired_' . self::CONTEXT, array( __CLASS__, 'render_expired_view' ), 10, 2 );
 	}
 
 	/**
@@ -430,17 +442,15 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	}
 
 	/**
-	 * Render the themed challenge page. The actual HTML lives in a
-	 * template under `templates/frontend-2fa-challenge.php` and is
-	 * delivered in Phase 4. Until that template is in place the
-	 * method falls through to the legacy `wp-login.php?action=...`
-	 * URL so we never serve an empty page.
+	 * Run the challenge on the themed slug. The engine verifies the code
+	 * and hands the page back through
+	 * {@see self::render_challenge_view()} and {@see self::render_expired_view()}.
 	 *
 	 * @return void
 	 */
 	public static function render_challenge() {
 		if ( class_exists( 'ReportedIP_Hive_Two_Factor' ) ) {
-			ReportedIP_Hive_Two_Factor::get_instance()->handle_2fa_challenge( 'theme_frame' );
+			ReportedIP_Hive_Two_Factor::get_instance()->handle_2fa_challenge( self::CONTEXT );
 			return;
 		}
 		wp_safe_redirect( wp_login_url() );
@@ -528,6 +538,360 @@ class ReportedIP_Hive_Two_Factor_Frontend {
 	 */
 	private static function tier_was_paid( $tier ) {
 		return in_array( $tier, array( 'professional', 'business', 'enterprise' ), true );
+	}
+
+	/**
+	 * Detect whether the current login attempt came from a WooCommerce
+	 * frontend form (My Account / classic checkout) or from the WC Store
+	 * REST API used by the checkout block.
+	 *
+	 * @return string One of `wc`, `wc-block`, or empty string when the
+	 *                 login originated from `wp-login.php` or some other
+	 *                 non-WooCommerce surface.
+	 * @since  1.7.0
+	 */
+	public static function detect_login_origin() {
+		if ( ! function_exists( 'WC' ) && ! class_exists( 'WooCommerce' ) ) {
+			return '';
+		}
+
+		$rest_route = '';
+		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+			$raw = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
+			if ( false !== strpos( $raw, '/wc/store/' ) ) {
+				return 'wc-block';
+			}
+			$rest_route = isset( $GLOBALS['wp']->query_vars['rest_route'] ) ? (string) $GLOBALS['wp']->query_vars['rest_route'] : '';
+			if ( $rest_route && 0 === strpos( $rest_route, '/wc/store' ) ) {
+				return 'wc-block';
+			}
+		}
+
+		if ( ! empty( $_POST['woocommerce-login-nonce'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Sniffing only, never authenticating with this value.
+			return 'wc';
+		}
+
+		if ( did_action( 'woocommerce_login_form_start' ) ) {
+			return 'wc';
+		}
+		if ( did_action( 'woocommerce_checkout_login_form' ) ) {
+			return 'wc';
+		}
+
+		$referer = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
+		if ( $referer && function_exists( 'wc_get_page_permalink' ) ) {
+			$account_url  = (string) wc_get_page_permalink( 'myaccount' );
+			$checkout_url = (string) wc_get_page_permalink( 'checkout' );
+			if ( $account_url && 0 === strpos( $referer, $account_url ) ) {
+				return 'wc';
+			}
+			if ( $checkout_url && 0 === strpos( $referer, $checkout_url ) ) {
+				return 'wc';
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Capture the current WooCommerce session customer-id so the cart can
+	 * survive the 2FA redirect roundtrip. Returns an empty string when WC is
+	 * not loaded, when the customer has no session yet, or when WC bootstraps
+	 * later than the authenticate filter (REST app-passwords path).
+	 *
+	 * @return string
+	 * @since  1.7.0
+	 */
+	public static function collect_wc_session_hash() {
+		if ( ! function_exists( 'WC' ) ) {
+			return '';
+		}
+		$wc = WC();
+		if ( ! is_object( $wc ) || empty( $wc->session ) || ! is_object( $wc->session ) ) {
+			return '';
+		}
+		if ( ! method_exists( $wc->session, 'get_customer_id' ) ) {
+			return '';
+		}
+		$cid = (string) $wc->session->get_customer_id();
+		return $cid;
+	}
+
+	/**
+	 * Listener on `reportedip_hive_2fa_challenge_payload`: store where the
+	 * sign-in came from, so the challenge URL and the redirect after the
+	 * second factor can lead back into the shop.
+	 *
+	 * @param array<string,mixed> $extra Extra fields so far.
+	 * @return array<string,mixed>
+	 * @since  3.0.0
+	 */
+	public static function challenge_payload( $extra ) {
+		$extra                    = (array) $extra;
+		$extra['origin']          = self::detect_login_origin();
+		$extra['origin_url']      = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
+		$extra['wc_session_hash'] = self::collect_wc_session_hash();
+		return $extra;
+	}
+
+	/**
+	 * Listener on `reportedip_hive_2fa_challenge_url`: a WooCommerce sign-in
+	 * goes to the themed slug while the module is available; everything
+	 * else keeps the wp-login.php interstitial.
+	 *
+	 * @param string $url    Challenge URL so far.
+	 * @param string $origin Origin token from {@see self::challenge_payload()}.
+	 * @return string
+	 * @since  3.0.0
+	 */
+	public static function filter_challenge_url( $url, $origin ) {
+		if ( '' === (string) $origin || ! self::is_available() ) {
+			return (string) $url;
+		}
+		return self::challenge_url();
+	}
+
+	/**
+	 * Listener on `reportedip_hive_2fa_redirect_url`: the targets of the
+	 * themed challenge. Other contexts pass through unchanged.
+	 *
+	 * @param string              $url        Target so far (the wp-login target).
+	 * @param string              $event      `verified`, `locked` or `signed_in`.
+	 * @param string              $context    Challenge context.
+	 * @param array<string,mixed> $nonce_data Stored challenge payload.
+	 * @return string
+	 * @since  3.0.0
+	 */
+	public static function filter_redirect_url( $url, $event, $context, $nonce_data ) {
+		if ( self::CONTEXT !== $context ) {
+			return (string) $url;
+		}
+		switch ( $event ) {
+			case 'locked':
+				return add_query_arg( 'reportedip_2fa_locked', '1', self::challenge_url() );
+			case 'signed_in':
+				return self::account_url();
+			case 'verified':
+				return self::post_verify_url( (array) $nonce_data, (string) $url );
+		}
+		return (string) $url;
+	}
+
+	/**
+	 * Target after a passed themed challenge. A stored `redirect_to` wins;
+	 * otherwise customers who signed in from `/checkout/` or `/my-account/`
+	 * land back there, not on the WP dashboard which they cannot reach.
+	 *
+	 * @param array<string,mixed> $nonce_data Stored challenge payload.
+	 * @param string              $url        Target so far (the stored `redirect_to` when set).
+	 * @return string Absolute URL.
+	 * @since  1.7.0
+	 */
+	public static function post_verify_url( array $nonce_data, $url ) {
+		$redirect_to = isset( $nonce_data['redirect_to'] ) ? (string) $nonce_data['redirect_to'] : '';
+		if ( '' !== $redirect_to ) {
+			return (string) $url;
+		}
+		$origin     = isset( $nonce_data['origin'] ) ? (string) $nonce_data['origin'] : '';
+		$origin_url = isset( $nonce_data['origin_url'] ) ? (string) $nonce_data['origin_url'] : '';
+
+		if ( function_exists( 'wc_get_page_permalink' ) ) {
+			$home = home_url();
+			if ( '' !== $origin_url && 0 === strpos( $origin_url, $home ) ) {
+				$path = wp_parse_url( $origin_url, PHP_URL_PATH );
+				if ( is_string( $path ) && false !== strpos( $path, '/checkout/' ) && function_exists( 'wc_get_checkout_url' ) ) {
+					return (string) wc_get_checkout_url();
+				}
+				if ( is_string( $path ) && false !== strpos( $path, '/my-account/' ) ) {
+					return (string) wc_get_page_permalink( 'myaccount' );
+				}
+			}
+			if ( 'wc' === $origin || 'wc-block' === $origin ) {
+				return (string) wc_get_page_permalink( 'myaccount' );
+			}
+		}
+		if ( '' !== $origin_url ) {
+			return $origin_url;
+		}
+		return home_url( '/' );
+	}
+
+	/**
+	 * The storefront sign-in page: My Account, or the home page without
+	 * WooCommerce.
+	 *
+	 * @return string
+	 * @since  3.0.0
+	 */
+	private static function account_url() {
+		return function_exists( 'wc_get_page_permalink' )
+			? (string) wc_get_page_permalink( 'myaccount' )
+			: home_url( '/' );
+	}
+
+	/**
+	 * Listener on `reportedip_hive_2fa_render_challenge_theme_frame`: render
+	 * the challenge inside the active theme frame instead of the wp-login.php
+	 * interstitial, so WooCommerce customers stay on the storefront
+	 * throughout the second factor and never get bounced into the WordPress
+	 * backend chrome.
+	 *
+	 * The HTML lives in `templates/frontend-2fa-challenge.php`.
+	 *
+	 * @param int                 $user_id       The challenged user (the template reads it from the view).
+	 * @param array<string,mixed> $template_data Same payload that the
+	 *                                            wp-login renderer receives.
+	 * @return void
+	 * @since 1.7.0
+	 */
+	public static function render_challenge_view( $user_id, $template_data ) {
+		unset( $user_id );
+		$challenge_url = self::challenge_url();
+
+		wp_enqueue_style(
+			'reportedip-hive-design-system',
+			REPORTEDIP_HIVE_PLUGIN_URL . 'assets/css/design-system.css',
+			array(),
+			REPORTEDIP_HIVE_VERSION
+		);
+		wp_enqueue_style(
+			'reportedip-hive-two-factor',
+			REPORTEDIP_HIVE_PLUGIN_URL . 'assets/css/two-factor.css',
+			array( 'reportedip-hive-design-system' ),
+			REPORTEDIP_HIVE_VERSION
+		);
+		wp_enqueue_style(
+			'reportedip-hive-two-factor-frontend',
+			REPORTEDIP_HIVE_PLUGIN_URL . 'assets/css/two-factor-frontend.css',
+			array( 'reportedip-hive-two-factor' ),
+			REPORTEDIP_HIVE_VERSION
+		);
+
+		wp_enqueue_script(
+			'reportedip-hive-two-factor-login',
+			REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/two-factor-login.js',
+			array(),
+			REPORTEDIP_HIVE_VERSION,
+			true
+		);
+		wp_localize_script(
+			'reportedip-hive-two-factor-login',
+			'reportedip2fa',
+			array(
+				'resendUrl' => add_query_arg( 'resend_email', '1', $challenge_url ),
+				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
+				'strings'   => array(
+					'newCodeSent'          => __( 'New code sent.', 'reportedip-hive' ),
+					'sendingFailed'        => __( 'Sending failed.', 'reportedip-hive' ),
+					'sessionExpired'       => __( 'Your session has expired. Please sign in again.', 'reportedip-hive' ),
+					'passkeyRequesting'    => __( 'Passkey request in progress...', 'reportedip-hive' ),
+					'enterCodeFirst'       => __( 'Please enter the verification code first. If you touched your security key, switch to the passkey tab and use its button instead.', 'reportedip-hive' ),
+					'enterCodeFirstPlain'  => __( 'Please enter the verification code first.', 'reportedip-hive' ),
+					'passkeyWaiting'       => __( 'Waiting for your security key. Insert and touch it now, or approve the passkey prompt.', 'reportedip-hive' ),
+					'passkeyTimeout'       => __( 'The request timed out or was cancelled. Insert your key and touch it (on a phone, hold the key flat against the back for NFC), then try again.', 'reportedip-hive' ),
+					'passkeySecurityError' => __( 'The domain of this page does not match the key registration.', 'reportedip-hive' ),
+					'passkeyOptionsFailed' => __( 'Failed to fetch passkey options.', 'reportedip-hive' ),
+					'passkeyVerifyFailed'  => __( 'Verification failed.', 'reportedip-hive' ),
+					'passkeyCancelled'     => __( 'Passkey login cancelled.', 'reportedip-hive' ),
+				),
+			)
+		);
+
+		$template = REPORTEDIP_HIVE_PLUGIN_DIR . 'templates/frontend-2fa-challenge.php';
+		if ( ! file_exists( $template ) ) {
+			wp_safe_redirect( wp_login_url() . '?action=' . ReportedIP_Hive_Two_Factor::ACTION_CHALLENGE );
+			return;
+		}
+
+		$rip_2fa = (array) $template_data;
+		self::open_theme_frame();
+		include $template;
+		self::close_theme_frame();
+	}
+
+	/**
+	 * Open a minimal HTML frame that loads the active theme's stylesheet
+	 * and emits `wp_head()` so design tokens, fonts and analytics keep
+	 * working, without calling `get_header()`.
+	 *
+	 * Using `get_header()` triggers a deprecation notice on Block Themes
+	 * (twentytwentyfive, twentytwentyfour, ...) because they ship template
+	 * parts under `templates/` instead of a classic `header.php`. Block
+	 * themes also render their full chrome through `block_template_part`
+	 * which is not appropriate for a self-contained interstitial like
+	 * the 2FA challenge. The custom frame keeps the visual identity of
+	 * the storefront (body class, theme styles) without dragging in the
+	 * navigation, breadcrumbs and footer widgets the customer does not
+	 * need at this step.
+	 *
+	 * @return void
+	 * @since 1.7.0
+	 */
+	public static function open_theme_frame() {
+		$body_classes = array( 'rip-frontend-2fa-page' );
+		if ( function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() ) {
+			$body_classes[] = 'wp-block-theme';
+		}
+		?>
+<!doctype html>
+<html <?php language_attributes(); ?>>
+<head>
+<meta charset="<?php bloginfo( 'charset' ); ?>">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title><?php echo esc_html( wp_get_document_title() ); ?></title>
+		<?php wp_head(); ?>
+</head>
+<body <?php body_class( $body_classes ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
+		<?php wp_body_open(); ?>
+<div class="rip-frontend-2fa-frame">
+		<?php
+	}
+
+	/**
+	 * Close the minimal theme-frame opened by {@see self::open_theme_frame()}.
+	 *
+	 * @return void
+	 * @since 1.7.0
+	 */
+	public static function close_theme_frame() {
+		?>
+</div>
+		<?php wp_footer(); ?>
+</body>
+</html>
+		<?php
+	}
+
+	/**
+	 * Listener on `reportedip_hive_2fa_render_expired_theme_frame`: the
+	 * "session expired" page inside the theme frame, with a way back to the
+	 * storefront sign-in.
+	 *
+	 * @param string $message Explanation for the visitor.
+	 * @param string $reason  `expired` or `unknown_user`.
+	 * @return void
+	 * @since 1.7.0
+	 */
+	public static function render_expired_view( $message, $reason ) {
+		unset( $reason );
+		$retry_url = self::account_url();
+
+		self::open_theme_frame();
+		?>
+		<main class="rip-frontend-2fa rip-frontend-2fa--session-expired" id="rip-frontend-2fa">
+			<div class="rip-frontend-2fa__panel">
+				<h1 class="rip-frontend-2fa__title"><?php esc_html_e( 'Two-Factor session expired', 'reportedip-hive' ); ?></h1>
+				<p class="rip-frontend-2fa__lede"><?php echo esc_html( (string) $message ); ?></p>
+				<p>
+					<a class="rip-button rip-button--primary" href="<?php echo esc_url( $retry_url ); ?>" rel="noopener">
+						<?php esc_html_e( 'Back to sign in', 'reportedip-hive' ); ?>
+					</a>
+				</p>
+			</div>
+		</main>
+		<?php
+		self::close_theme_frame();
 	}
 
 	/**

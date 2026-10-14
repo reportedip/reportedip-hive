@@ -29,8 +29,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * fires the hooks itself once the second factor has been verified:
  *
  *   - `do_action( 'reportedip_hive_2fa_verified', $user_id, $method, $context )`
- *     with the verified method and the challenge context (`wp_login` or
- *     `theme_frame`; `rest` from the REST verify route).
+ *     with the verified method and the challenge context (`wp_login`, the
+ *     context of a surface an add-on renders, `theme_frame` for the
+ *     storefront; `rest` from the REST verify route).
  *   - `do_action( 'wp_login', $user_login, $user )` exactly as `wp_signon()`
  *     does, so audit trail, geo anomaly, new-device mail and the 2FA reminder
  *     see a challenged login like any other.
@@ -248,9 +249,8 @@ class ReportedIP_Hive_Two_Factor {
 	);
 
 	/**
-	 * Singleton-light handle so the Frontend renderer
-	 * ({@see ReportedIP_Hive_Two_Factor_Frontend::render_challenge()}) can
-	 * dispatch the challenge through the same instance that owns the
+	 * Singleton-light handle so an add-on that serves the challenge on its
+	 * own surface can dispatch it through the same instance that owns the
 	 * authentication hooks, without re-registering them.
 	 *
 	 * @var ReportedIP_Hive_Two_Factor|null
@@ -1243,24 +1243,31 @@ class ReportedIP_Hive_Two_Factor {
 		$token      = bin2hex( random_bytes( 32 ) );
 		$token_hash = hash( 'sha256', $token );
 
-		$origin     = self::detect_login_origin();
-		$wc_session = self::collect_wc_session_hash();
-		$referer    = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
 		$nonce_data = array(
-			'user_id'         => $user->ID,
-			'ip'              => ReportedIP_Hive::get_client_ip(),
-			'created_at'      => time(),
-			'redirect_to'     => isset( $_REQUEST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_REQUEST['redirect_to'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			'remember'        => ! empty( $_REQUEST['rememberme'] ), // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			'origin'          => $origin,
-			'origin_url'      => $referer,
-			'wc_session_hash' => $wc_session,
+			'user_id'     => $user->ID,
+			'ip'          => ReportedIP_Hive::get_client_ip(),
+			'created_at'  => time(),
+			'redirect_to' => isset( $_REQUEST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_REQUEST['redirect_to'] ) ) : '', // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			'remember'    => ! empty( $_REQUEST['rememberme'] ), // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		);
+
+		/**
+		 * Extra fields stored with a started challenge, read back by the
+		 * listeners of `reportedip_hive_2fa_redirect_url`. The key `origin`
+		 * names the surface the sign-in came from and is handed to
+		 * `reportedip_hive_2fa_challenge_url`. The core fields above always
+		 * win over an extra field of the same name.
+		 *
+		 * @param array<string,mixed> $extra Extra fields, empty by default.
+		 * @param \WP_User           $user  The challenged user.
+		 * @since 3.0.0
+		 */
+		$nonce_data = array_merge( (array) apply_filters( 'reportedip_hive_2fa_challenge_payload', array(), $user ), $nonce_data );
 		set_transient( self::NONCE_PREFIX . $token_hash, $nonce_data, self::NONCE_TTL );
 
 		self::set_secure_cookie( self::NONCE_COOKIE, $token, time() + self::NONCE_TTL );
 
-		$challenge_url = self::resolve_challenge_url( $origin );
+		$challenge_url = self::resolve_challenge_url( (string) ( $nonce_data['origin'] ?? '' ) );
 
 		$is_api_context = ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST )
 			|| ( defined( 'REST_REQUEST' ) && REST_REQUEST )
@@ -1281,105 +1288,62 @@ class ReportedIP_Hive_Two_Factor {
 	}
 
 	/**
-	 * Detect whether the current login attempt came from a WooCommerce
-	 * frontend form (My Account / classic checkout) or from the WC Store
-	 * REST API used by the checkout block.
+	 * Absolute URL of the 2FA challenge page: the wp-login.php interstitial
+	 * unless a listener routes the sign-in to another surface.
 	 *
-	 * @return string One of `wc`, `wc-block`, or empty string when the
-	 *                 login originated from `wp-login.php` or some other
-	 *                 non-WooCommerce surface.
-	 * @since  1.7.0
-	 */
-	public static function detect_login_origin() {
-		if ( ! function_exists( 'WC' ) && ! class_exists( 'WooCommerce' ) ) {
-			return '';
-		}
-
-		$rest_route = '';
-		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
-			$raw = isset( $_SERVER['REQUEST_URI'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) ) : '';
-			if ( false !== strpos( $raw, '/wc/store/' ) ) {
-				return 'wc-block';
-			}
-			$rest_route = isset( $GLOBALS['wp']->query_vars['rest_route'] ) ? (string) $GLOBALS['wp']->query_vars['rest_route'] : '';
-			if ( $rest_route && 0 === strpos( $rest_route, '/wc/store' ) ) {
-				return 'wc-block';
-			}
-		}
-
-		if ( ! empty( $_POST['woocommerce-login-nonce'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Sniffing only, never authenticating with this value.
-			return 'wc';
-		}
-
-		if ( did_action( 'woocommerce_login_form_start' ) ) {
-			return 'wc';
-		}
-		if ( did_action( 'woocommerce_checkout_login_form' ) ) {
-			return 'wc';
-		}
-
-		$referer = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url_raw( wp_unslash( $_SERVER['HTTP_REFERER'] ) ) : '';
-		if ( $referer && function_exists( 'wc_get_page_permalink' ) ) {
-			$account_url  = (string) wc_get_page_permalink( 'myaccount' );
-			$checkout_url = (string) wc_get_page_permalink( 'checkout' );
-			if ( $account_url && 0 === strpos( $referer, $account_url ) ) {
-				return 'wc';
-			}
-			if ( $checkout_url && 0 === strpos( $referer, $checkout_url ) ) {
-				return 'wc';
-			}
-		}
-
-		return '';
-	}
-
-	/**
-	 * Capture the current WooCommerce session customer-id so the cart can
-	 * survive the 2FA redirect roundtrip. Returns an empty string when WC is
-	 * not loaded, when the customer has no session yet, or when WC bootstraps
-	 * later than the authenticate filter (REST app-passwords path).
-	 *
-	 * @return string
-	 * @since  1.7.0
-	 */
-	public static function collect_wc_session_hash() {
-		if ( ! function_exists( 'WC' ) ) {
-			return '';
-		}
-		$wc = WC();
-		if ( ! is_object( $wc ) || empty( $wc->session ) || ! is_object( $wc->session ) ) {
-			return '';
-		}
-		if ( ! method_exists( $wc->session, 'get_customer_id' ) ) {
-			return '';
-		}
-		$cid = (string) $wc->session->get_customer_id();
-		return $cid;
-	}
-
-	/**
-	 * Pick the absolute URL of the 2FA challenge page based on the login
-	 * origin. WooCommerce frontend logins go to the dedicated themed slug
-	 * when {@see ReportedIP_Hive_Two_Factor_Frontend::is_available()} returns
-	 * true; everything else keeps using the classic wp-login.php interstitial.
-	 *
-	 * @param string $origin Origin token from {@see self::detect_login_origin()}.
+	 * @param string $origin Origin token from the challenge payload, '' for wp-login.
 	 * @return string
 	 * @since  1.7.0
 	 */
 	public static function resolve_challenge_url( $origin ) {
 		$default = wp_login_url() . '?action=' . self::ACTION_CHALLENGE;
 
-		if ( '' === (string) $origin ) {
-			return $default;
-		}
-		if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' ) ) {
-			return $default;
-		}
-		if ( ! ReportedIP_Hive_Two_Factor_Frontend::is_available() ) {
-			return $default;
-		}
-		return ReportedIP_Hive_Two_Factor_Frontend::challenge_url();
+		/**
+		 * Route a challenge to another surface than wp-login.php.
+		 *
+		 * @param string $url    Challenge URL.
+		 * @param string $origin Origin token from the challenge payload, '' for wp-login.
+		 * @since 3.0.0
+		 */
+		return (string) apply_filters( 'reportedip_hive_2fa_challenge_url', $default, (string) $origin );
+	}
+
+	/**
+	 * Where the challenge sends the browser next. The URL passed in is the
+	 * wp-login target; a listener that renders the challenge on its own
+	 * surface returns the target of that surface.
+	 *
+	 * @param string              $event      `verified` (second factor passed), `locked` (session invalidated after too many wrong codes) or `signed_in` (the challenge URL was opened by a signed-in visitor).
+	 * @param string              $url        The wp-login target.
+	 * @param string              $context    Challenge context.
+	 * @param array<string,mixed> $nonce_data Stored challenge payload, empty for `signed_in`.
+	 * @return string
+	 * @since  3.0.0
+	 */
+	private static function challenge_redirect( $event, $url, $context, array $nonce_data ) {
+		/**
+		 * Target of a redirect the challenge issues.
+		 *
+		 * @param string              $url        The wp-login target.
+		 * @param string              $event      `verified`, `locked` or `signed_in`.
+		 * @param string              $context    Challenge context, `wp_login` or the context of an add-on surface.
+		 * @param array<string,mixed> $nonce_data Stored challenge payload, empty for `signed_in`.
+		 * @since 3.0.0
+		 */
+		return (string) apply_filters( 'reportedip_hive_2fa_redirect_url', (string) $url, (string) $event, (string) $context, $nonce_data );
+	}
+
+	/**
+	 * Normalise the challenge context: `wp_login` for the login_form action
+	 * (which passes no argument), otherwise the key an add-on passed in.
+	 *
+	 * @param mixed $context Raw context.
+	 * @return string
+	 * @since  3.0.0
+	 */
+	private static function challenge_context( $context ) {
+		$context = is_string( $context ) ? sanitize_key( $context ) : '';
+		return '' === $context ? 'wp_login' : $context;
 	}
 
 	/**
@@ -1419,10 +1383,18 @@ class ReportedIP_Hive_Two_Factor {
 	 * Handle the 2FA challenge page (GET: display form, POST: validate code).
 	 *
 	 * Fires on wp-login.php?action=reportedip_2fa via the
-	 * login_form_reportedip_2fa action hook.
+	 * login_form_reportedip_2fa action hook. An add-on that serves the
+	 * challenge on its own surface calls it with its context; the page is
+	 * then rendered by the listeners of
+	 * `reportedip_hive_2fa_render_challenge_{context}` and
+	 * `reportedip_hive_2fa_render_expired_{context}`, and wp-login renders
+	 * when nobody listens.
+	 *
+	 * @param string $context `wp_login` or the context of an add-on surface.
+	 * @return void
 	 */
 	public function handle_2fa_challenge( $context = 'wp_login' ) {
-		$context    = ( 'theme_frame' === $context ) ? 'theme_frame' : 'wp_login';
+		$context    = self::challenge_context( $context );
 		$nonce_data = $this->validate_login_nonce();
 		if ( false === $nonce_data ) {
 			$this->maybe_replay_consumed_nonce();
@@ -1537,10 +1509,7 @@ class ReportedIP_Hive_Two_Factor {
 								)
 							);
 
-							$lock_url = ( 'theme_frame' === $context && class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' ) )
-								? add_query_arg( 'reportedip_2fa_locked', '1', ReportedIP_Hive_Two_Factor_Frontend::challenge_url() )
-								: wp_login_url() . '?reportedip_2fa_locked=1';
-							wp_safe_redirect( $lock_url );
+							wp_safe_redirect( self::challenge_redirect( 'locked', wp_login_url() . '?reportedip_2fa_locked=1', $context, $nonce_data ) );
 							exit;
 						}
 					}
@@ -1584,8 +1553,16 @@ class ReportedIP_Hive_Two_Factor {
 				: false,
 		);
 
-		if ( 'theme_frame' === $context ) {
-			$this->render_frontend_challenge_page( $template_data );
+		if ( 'wp_login' !== $context && has_action( 'reportedip_hive_2fa_render_challenge_' . $context ) ) {
+			/**
+			 * Render the challenge of a non wp-login surface. Without a
+			 * listener, wp-login renders it.
+			 *
+			 * @param int                 $user_id The challenged user.
+			 * @param array<string,mixed> $view    Template variables: user, method, error, form_nonce, allowed_methods, trust_enabled, resend_wait, recovery_count, email_code_sent.
+			 * @since 3.0.0
+			 */
+			do_action( 'reportedip_hive_2fa_render_challenge_' . $context, (int) $user_id, $template_data );
 		} else {
 			$this->render_challenge_page( $template_data );
 		}
@@ -1668,45 +1645,20 @@ class ReportedIP_Hive_Two_Factor {
 	}
 
 	/**
-	 * Pick the URL to send the user to after a successful 2FA verify,
-	 * giving the WooCommerce-frontend flow priority over the legacy
-	 * `redirect_to`/`admin_url()` fallback chain. Customers who logged
-	 * in from `/checkout/` or `/my-account/` should land back inside
-	 * those endpoints, not on the WP dashboard which they cannot reach.
+	 * Pick the URL to send the user to after a successful 2FA verify: the
+	 * stored `redirect_to`, else the dashboard, unless a listener of
+	 * `reportedip_hive_2fa_redirect_url` routes the surface it rendered.
 	 *
 	 * @param array<string,mixed> $nonce_data Persisted challenge payload.
-	 * @param string              $context    `wp_login` or `theme_frame`.
+	 * @param string              $context    Challenge context.
 	 * @return string Absolute URL.
 	 * @since  1.7.0
 	 */
 	public static function resolve_post_verify_redirect( $nonce_data, $context = 'wp_login' ) {
+		$nonce_data  = (array) $nonce_data;
 		$redirect_to = isset( $nonce_data['redirect_to'] ) ? (string) $nonce_data['redirect_to'] : '';
-		$origin      = isset( $nonce_data['origin'] ) ? (string) $nonce_data['origin'] : '';
-		$origin_url  = isset( $nonce_data['origin_url'] ) ? (string) $nonce_data['origin_url'] : '';
 
-		if ( '' === $redirect_to && 'theme_frame' === $context ) {
-			if ( function_exists( 'wc_get_page_permalink' ) ) {
-				$home = home_url();
-				if ( '' !== $origin_url && 0 === strpos( $origin_url, $home ) ) {
-					$path = wp_parse_url( $origin_url, PHP_URL_PATH );
-					if ( is_string( $path ) && false !== strpos( $path, '/checkout/' ) && function_exists( 'wc_get_checkout_url' ) ) {
-						return (string) wc_get_checkout_url();
-					}
-					if ( is_string( $path ) && false !== strpos( $path, '/my-account/' ) ) {
-						return (string) wc_get_page_permalink( 'myaccount' );
-					}
-				}
-				if ( 'wc' === $origin || 'wc-block' === $origin ) {
-					return (string) wc_get_page_permalink( 'myaccount' );
-				}
-			}
-			if ( '' !== $origin_url ) {
-				return $origin_url;
-			}
-			return home_url( '/' );
-		}
-
-		return '' !== $redirect_to ? $redirect_to : admin_url();
+		return self::challenge_redirect( 'verified', '' !== $redirect_to ? $redirect_to : admin_url(), (string) $context, $nonce_data );
 	}
 
 	/**
@@ -1874,7 +1826,7 @@ class ReportedIP_Hive_Two_Factor {
 	 *
 	 * Exits on hit; returns normally for anonymous visitors.
 	 *
-	 * @param string $context `wp_login` or `theme_frame`.
+	 * @param string $context Challenge context.
 	 * @return void
 	 * @since  2.1.24
 	 */
@@ -1883,15 +1835,7 @@ class ReportedIP_Hive_Two_Factor {
 			return;
 		}
 
-		if ( 'theme_frame' === $context ) {
-			$target = function_exists( 'wc_get_page_permalink' )
-				? (string) wc_get_page_permalink( 'myaccount' )
-				: home_url( '/' );
-		} else {
-			$target = admin_url();
-		}
-
-		wp_safe_redirect( $target );
+		wp_safe_redirect( self::challenge_redirect( 'signed_in', admin_url(), $context, array() ) );
 		exit;
 	}
 
@@ -1933,7 +1877,8 @@ class ReportedIP_Hive_Two_Factor {
 	 * third-party hardening plugins that override `login_errors` cannot strip
 	 * the explanation.
 	 *
-	 * @param string $reason One of 'expired', 'unknown_user'.
+	 * @param string $reason  One of 'expired', 'unknown_user'.
+	 * @param string $context Challenge context.
 	 * @return void
 	 * @since  1.6.5
 	 */
@@ -1959,26 +1904,16 @@ class ReportedIP_Hive_Two_Factor {
 			REPORTEDIP_HIVE_VERSION
 		);
 
-		if ( 'theme_frame' === $context ) {
-			$retry_url = ( function_exists( 'wc_get_page_permalink' ) )
-				? (string) wc_get_page_permalink( 'myaccount' )
-				: home_url( '/' );
-
-			self::open_theme_frame();
-			?>
-			<main class="rip-frontend-2fa rip-frontend-2fa--session-expired" id="rip-frontend-2fa">
-				<div class="rip-frontend-2fa__panel">
-					<h1 class="rip-frontend-2fa__title"><?php esc_html_e( 'Two-Factor session expired', 'reportedip-hive' ); ?></h1>
-					<p class="rip-frontend-2fa__lede"><?php echo esc_html( $message ); ?></p>
-					<p>
-						<a class="rip-button rip-button--primary" href="<?php echo esc_url( $retry_url ); ?>" rel="noopener">
-							<?php esc_html_e( 'Back to sign in', 'reportedip-hive' ); ?>
-						</a>
-					</p>
-				</div>
-			</main>
-			<?php
-			self::close_theme_frame();
+		if ( 'wp_login' !== $context && has_action( 'reportedip_hive_2fa_render_expired_' . $context ) ) {
+			/**
+			 * Render the "session expired" page of a non wp-login surface.
+			 * Without a listener, wp-login renders it.
+			 *
+			 * @param string $message Explanation for the visitor.
+			 * @param string $reason  `expired` or `unknown_user`.
+			 * @since 3.0.0
+			 */
+			do_action( 'reportedip_hive_2fa_render_expired_' . $context, $message, (string) $reason );
 			return;
 		}
 
@@ -1995,141 +1930,6 @@ class ReportedIP_Hive_Two_Factor {
 		</p>
 		<?php
 		login_footer();
-	}
-
-	/**
-	 * Render the 2FA challenge inside the active theme frame instead of
-	 * the wp-login.php interstitial. Used by
-	 * {@see ReportedIP_Hive_Two_Factor_Frontend::render_challenge()} so
-	 * WooCommerce customers stay on the storefront throughout the second
-	 * factor and never get bounced into the WordPress backend chrome.
-	 *
-	 * The HTML lives in `templates/frontend-2fa-challenge.php` so themes
-	 * and customers can override it through the standard template loader.
-	 *
-	 * @param array<string,mixed> $template_data Same payload that the
-	 *                                            wp-login renderer receives.
-	 * @return void
-	 * @since 1.7.0
-	 */
-	private function render_frontend_challenge_page( $template_data ) {
-		$challenge_url = class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' )
-			? ReportedIP_Hive_Two_Factor_Frontend::challenge_url()
-			: ( wp_login_url() . '?action=' . self::ACTION_CHALLENGE );
-
-		wp_enqueue_style(
-			'reportedip-hive-design-system',
-			REPORTEDIP_HIVE_PLUGIN_URL . 'assets/css/design-system.css',
-			array(),
-			REPORTEDIP_HIVE_VERSION
-		);
-		wp_enqueue_style(
-			'reportedip-hive-two-factor',
-			REPORTEDIP_HIVE_PLUGIN_URL . 'assets/css/two-factor.css',
-			array( 'reportedip-hive-design-system' ),
-			REPORTEDIP_HIVE_VERSION
-		);
-		wp_enqueue_style(
-			'reportedip-hive-two-factor-frontend',
-			REPORTEDIP_HIVE_PLUGIN_URL . 'assets/css/two-factor-frontend.css',
-			array( 'reportedip-hive-two-factor' ),
-			REPORTEDIP_HIVE_VERSION
-		);
-
-		wp_enqueue_script(
-			'reportedip-hive-two-factor-login',
-			REPORTEDIP_HIVE_PLUGIN_URL . 'assets/js/two-factor-login.js',
-			array(),
-			REPORTEDIP_HIVE_VERSION,
-			true
-		);
-		wp_localize_script(
-			'reportedip-hive-two-factor-login',
-			'reportedip2fa',
-			array(
-				'resendUrl' => add_query_arg( 'resend_email', '1', $challenge_url ),
-				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
-				'strings'   => array(
-					'newCodeSent'          => __( 'New code sent.', 'reportedip-hive' ),
-					'sendingFailed'        => __( 'Sending failed.', 'reportedip-hive' ),
-					'sessionExpired'       => __( 'Your session has expired. Please sign in again.', 'reportedip-hive' ),
-					'passkeyRequesting'    => __( 'Passkey request in progress...', 'reportedip-hive' ),
-					'enterCodeFirst'       => __( 'Please enter the verification code first. If you touched your security key, switch to the passkey tab and use its button instead.', 'reportedip-hive' ),
-					'enterCodeFirstPlain'  => __( 'Please enter the verification code first.', 'reportedip-hive' ),
-					'passkeyWaiting'       => __( 'Waiting for your security key. Insert and touch it now, or approve the passkey prompt.', 'reportedip-hive' ),
-					'passkeyTimeout'       => __( 'The request timed out or was cancelled. Insert your key and touch it (on a phone, hold the key flat against the back for NFC), then try again.', 'reportedip-hive' ),
-					'passkeySecurityError' => __( 'The domain of this page does not match the key registration.', 'reportedip-hive' ),
-					'passkeyOptionsFailed' => __( 'Failed to fetch passkey options.', 'reportedip-hive' ),
-					'passkeyVerifyFailed'  => __( 'Verification failed.', 'reportedip-hive' ),
-					'passkeyCancelled'     => __( 'Passkey login cancelled.', 'reportedip-hive' ),
-				),
-			)
-		);
-
-		$template = REPORTEDIP_HIVE_PLUGIN_DIR . 'templates/frontend-2fa-challenge.php';
-		if ( ! file_exists( $template ) ) {
-			wp_safe_redirect( wp_login_url() . '?action=' . self::ACTION_CHALLENGE );
-			return;
-		}
-
-		$rip_2fa = $template_data;
-		self::open_theme_frame();
-		include $template;
-		self::close_theme_frame();
-	}
-
-	/**
-	 * Open a minimal HTML frame that loads the active theme's stylesheet
-	 * and emits `wp_head()` so design tokens, fonts and analytics keep
-	 * working, without calling `get_header()`.
-	 *
-	 * Using `get_header()` triggers a deprecation notice on Block Themes
-	 * (twentytwentyfive, twentytwentyfour, ...) because they ship template
-	 * parts under `templates/` instead of a classic `header.php`. Block
-	 * themes also render their full chrome through `block_template_part`
-	 * which is not appropriate for a self-contained interstitial like
-	 * the 2FA challenge. The custom frame keeps the visual identity of
-	 * the storefront (body class, theme styles) without dragging in the
-	 * navigation, breadcrumbs and footer widgets the customer does not
-	 * need at this step.
-	 *
-	 * @return void
-	 * @since 1.7.0
-	 */
-	public static function open_theme_frame() {
-		$body_classes = array( 'rip-frontend-2fa-page' );
-		if ( function_exists( 'wp_is_block_theme' ) && wp_is_block_theme() ) {
-			$body_classes[] = 'wp-block-theme';
-		}
-		?>
-<!doctype html>
-<html <?php language_attributes(); ?>>
-<head>
-<meta charset="<?php bloginfo( 'charset' ); ?>">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="robots" content="noindex,nofollow,noarchive">
-<title><?php echo esc_html( wp_get_document_title() ); ?></title>
-		<?php wp_head(); ?>
-</head>
-<body <?php body_class( $body_classes ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>>
-		<?php wp_body_open(); ?>
-<div class="rip-frontend-2fa-frame">
-		<?php
-	}
-
-	/**
-	 * Close the minimal theme-frame opened by {@see self::open_theme_frame()}.
-	 *
-	 * @return void
-	 * @since 1.7.0
-	 */
-	public static function close_theme_frame() {
-		?>
-</div>
-		<?php wp_footer(); ?>
-</body>
-</html>
-		<?php
 	}
 
 	/**

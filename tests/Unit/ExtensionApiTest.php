@@ -606,4 +606,76 @@ class ExtensionApiTest extends TestCase {
 		$this->assertStringNotContainsString( 'Two_Factor_Policies', $body );
 		$this->assertLessThan( strpos( $body, 'submit_button(' ), strpos( $body, 'reportedip_hive_site_2fa_settings_after' ), 'The slot sits above the submit button.' );
 	}
+
+	/**
+	 * The challenge URL goes through a filter that sees the origin token.
+	 *
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_challenge_url_is_filterable_by_origin() {
+		$this->register_dummy_2fa_method();
+		$default = wp_login_url() . '?action=' . \ReportedIP_Hive_Two_Factor::ACTION_CHALLENGE;
+
+		$this->assertSame( $default, \ReportedIP_Hive_Two_Factor::resolve_challenge_url( 'shop' ), 'Without a listener every sign-in keeps wp-login.' );
+
+		add_filter(
+			'reportedip_hive_2fa_challenge_url',
+			static function ( $url, $origin ) {
+				return 'shop' === $origin ? 'https://example.org/verify/' : $url;
+			},
+			10,
+			2
+		);
+		$this->assertSame( 'https://example.org/verify/', \ReportedIP_Hive_Two_Factor::resolve_challenge_url( 'shop' ) );
+		$this->assertSame( $default, \ReportedIP_Hive_Two_Factor::resolve_challenge_url( '' ) );
+	}
+
+	/**
+	 * The redirect after a passed challenge keeps `redirect_to` and hands
+	 * event, context and payload to the filter.
+	 *
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_post_verify_redirect_is_filterable_per_context() {
+		$this->register_dummy_2fa_method();
+		$nonce = array(
+			'redirect_to' => 'https://example.org/wp-admin/profile.php',
+			'origin'      => 'shop',
+		);
+
+		$this->assertSame( 'https://example.org/wp-admin/profile.php', \ReportedIP_Hive_Two_Factor::resolve_post_verify_redirect( $nonce, 'storefront' ) );
+
+		$seen = array();
+		add_filter(
+			'reportedip_hive_2fa_redirect_url',
+			static function ( $url, $event, $context, $payload ) use ( &$seen ) {
+				$seen = array( $url, $event, $context, $payload );
+				return 'storefront' === $context ? 'https://example.org/account/' : $url;
+			},
+			10,
+			4
+		);
+		$this->assertSame( 'https://example.org/account/', \ReportedIP_Hive_Two_Factor::resolve_post_verify_redirect( $nonce, 'storefront' ) );
+		$this->assertSame( array( 'https://example.org/wp-admin/profile.php', 'verified', 'storefront', $nonce ), $seen );
+	}
+
+	/**
+	 * The challenge engine knows no storefront: the surface plugs in through
+	 * the payload, URL, redirect and render hooks, and wp-login renders when
+	 * nobody listens.
+	 */
+	public function test_challenge_engine_has_no_storefront_knowledge() {
+		$source = (string) file_get_contents( REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor.php' );
+
+		foreach ( array( 'wc_get_page_permalink', 'woocommerce', 'WooCommerce', 'Two_Factor_Frontend', 'open_theme_frame', 'HTTP_REFERER' ) as $needle ) {
+			$this->assertStringNotContainsString( $needle, $source, $needle );
+		}
+		$this->assertStringContainsString( "array_merge( (array) apply_filters( 'reportedip_hive_2fa_challenge_payload', array(), \$user ), \$nonce_data )", $source, 'Core payload fields win over extra fields.' );
+		$this->assertStringContainsString( "if ( 'wp_login' !== \$context && has_action( 'reportedip_hive_2fa_render_challenge_' . \$context ) ) {", $source );
+		$this->assertStringContainsString( "if ( 'wp_login' !== \$context && has_action( 'reportedip_hive_2fa_render_expired_' . \$context ) ) {", $source );
+		$this->assertStringContainsString( "self::challenge_redirect( 'locked', wp_login_url() . '?reportedip_2fa_locked=1', \$context, \$nonce_data )", $source );
+		$this->assertStringContainsString( "self::challenge_redirect( 'signed_in', admin_url(), \$context, array() )", $source );
+	}
 }

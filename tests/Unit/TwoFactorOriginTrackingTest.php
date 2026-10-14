@@ -1,23 +1,19 @@
 <?php
 /**
- * Unit tests for the WooCommerce-aware origin tracking added to
- * {@see ReportedIP_Hive_Two_Factor::filter_authenticate()} in 1.7.0.
+ * Unit tests for the WooCommerce-aware origin tracking of the storefront
+ * challenge in {@see ReportedIP_Hive_Two_Factor_Frontend}.
  *
  * The 2FA challenge URL has to differentiate between WordPress backend
  * logins (wp-login.php) and WooCommerce frontend logins (My Account /
- * checkout / blocks). Earlier releases hard-wired the challenge to
- * wp-login.php, so any customer using `[woocommerce_my_account]` got
- * thrown out of the theme frame on the second factor. The contract
- * locked in here:
+ * checkout / blocks). The contract locked in here:
  *
  *  - `detect_login_origin()` returns `'wc'`, `'wc-block'`, or `''`.
- *  - The persisted nonce payload carries `origin`, `origin_url`, and
+ *  - The challenge payload carries `origin`, `origin_url`, and
  *    `wc_session_hash` so the challenge page can preserve the cart and
  *    redirect back to the right WC endpoint.
- *  - `resolve_challenge_url()` falls back to wp-login when the Frontend
- *    Two-Factor module is not yet loaded (Phase 3 dependency), so
- *    activating the tracking in isolation never breaks the existing
- *    backend flow.
+ *  - The challenge URL listener keeps wp-login for a sign-in without an
+ *    origin and while the module is unavailable.
+ *  - The redirect listener leaves every other challenge context alone.
  *
  * @package    ReportedIP_Hive
  * @subpackage Tests\Unit
@@ -28,108 +24,134 @@
  * @since      1.7.0
  */
 
-namespace ReportedIP\Hive\Tests\Unit;
+namespace {
 
-use ReportedIP\Hive\Tests\TestCase;
-
-class TwoFactorOriginTrackingTest extends TestCase {
-
-	private function source(): string {
-		return (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-two-factor.php' );
+	if ( ! function_exists( 'home_url' ) ) {
+		function home_url( $path = '' ) {
+			return 'https://example.org' . $path;
+		}
 	}
-
-	public function test_nonce_data_carries_origin_origin_url_and_session_hash(): void {
-		$source = $this->source();
-
-		$this->assertStringContainsString(
-			"'origin'          => \$origin,",
-			$source,
-			'filter_authenticate() must persist the origin token in the challenge nonce so the challenge page can pick the right post-verify redirect.'
-		);
-		$this->assertStringContainsString(
-			"'origin_url'      => \$referer,",
-			$source,
-			'The login referrer has to ride along with the nonce so the customer is bounced back to the page they came from after a successful 2FA verify.'
-		);
-		$this->assertStringContainsString(
-			"'wc_session_hash' => \$wc_session,",
-			$source,
-			'The WooCommerce session customer-id must be captured before the redirect, otherwise the cart silently empties on the way to the challenge.'
-		);
+	if ( ! function_exists( 'add_action' ) ) {
+		function add_action( ...$args ) {}
 	}
-
-	public function test_filter_authenticate_picks_origin_aware_challenge_url(): void {
-		$source = $this->source();
-
-		$this->assertStringContainsString(
-			'$challenge_url = self::resolve_challenge_url( $origin );',
-			$source,
-			'The challenge URL must be resolved through the origin-aware helper, not the legacy `wp_login_url() . action=...` literal, otherwise WC frontend logins keep bouncing to wp-login.php.'
-		);
+	if ( ! function_exists( 'add_filter' ) ) {
+		function add_filter( ...$args ) {}
 	}
+}
 
-	public function test_detect_login_origin_returns_wc_block_for_store_api_routes(): void {
-		$source = $this->source();
+namespace ReportedIP\Hive\Tests\Unit {
 
-		$this->assertStringContainsString(
-			"return 'wc-block';",
-			$source,
-			'WC Store-API REST requests (Cart and Checkout blocks) must be tagged as `wc-block` so we can hand back a JSON redirect instead of trying to redirect-and-exit.'
-		);
-		$this->assertStringContainsString(
-			"'/wc/store/'",
-			$source,
-			'The `/wc/store/` route prefix is the canonical marker for the WC blocks REST namespace.'
-		);
-	}
+	use ReportedIP\Hive\Tests\TestCase;
 
-	public function test_detect_login_origin_recognises_classic_wc_form_marker(): void {
-		$source = $this->source();
+	/**
+	 * @runTestsInSeparateProcesses
+	 * @preserveGlobalState disabled
+	 */
+	class TwoFactorOriginTrackingTest extends TestCase {
 
-		$this->assertStringContainsString(
-			"woocommerce-login-nonce",
-			$source,
-			'The classic `woocommerce-login-nonce` POST field is the cheapest reliable signal that this submit came from `[woocommerce_my_account]`.'
-		);
-		$this->assertStringContainsString(
-			"did_action( 'woocommerce_login_form_start' )",
-			$source,
-			'`woocommerce_login_form_start` is dispatched by every WC login template, make sure we honour it so themes that override the form still get tagged.'
-		);
-	}
+		protected function set_up() {
+			parent::set_up();
+			$GLOBALS['wp_options'] = array();
+			require_once dirname( __DIR__, 2 ) . '/includes/class-mode-manager.php';
+			require_once dirname( __DIR__, 2 ) . '/includes/class-two-factor-frontend.php';
+			\ReportedIP_Hive_Two_Factor_Frontend::flush_memo();
+		}
 
-	public function test_resolve_challenge_url_falls_back_to_wp_login_without_frontend_module(): void {
-		$source = $this->source();
+		protected function tear_down() {
+			unset( $_SERVER['HTTP_REFERER'] );
+			parent::tear_down();
+		}
 
-		$this->assertMatchesRegularExpression(
-			'/\$default\s*=\s*wp_login_url\(\)\s*\.\s*\'\?action=\'\s*\.\s*self::ACTION_CHALLENGE;/',
-			$source,
-			'When the Frontend Two-Factor module is not loaded yet (Phase 3 dep) the helper must hand back the legacy wp-login URL, otherwise enabling Phase 2 alone would 404 every login.'
-		);
-		$this->assertStringContainsString(
-			"if ( ! class_exists( 'ReportedIP_Hive_Two_Factor_Frontend' ) ) {",
-			$source,
-			'The class-existence guard is critical: the Frontend module is gated by the PRO tier and may not be present on every install.'
-		);
-		$this->assertStringContainsString(
-			'ReportedIP_Hive_Two_Factor_Frontend::is_available()',
-			$source,
-			'Even when the Frontend class is loaded, the tier-gate has to be re-checked, otherwise a downgrade leaves customers stranded on a slug that the rewrite layer has stopped serving.'
-		);
-	}
+		private function source(): string {
+			return (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-two-factor-frontend.php' );
+		}
 
-	public function test_collect_wc_session_hash_is_safe_when_wc_is_absent(): void {
-		$source = $this->source();
+		public function test_payload_carries_origin_origin_url_and_session_hash(): void {
+			$_SERVER['HTTP_REFERER'] = 'https://example.org/my-account/';
 
-		$this->assertStringContainsString(
-			"if ( ! function_exists( 'WC' ) ) {",
-			$source,
-			'collect_wc_session_hash() must short-circuit when WC() is not defined, otherwise the helper triggers a fatal on plain WP installs.'
-		);
-		$this->assertStringContainsString(
-			"return '';",
-			$source,
-			'collect_wc_session_hash() must always return a string so the transient payload stays JSON-serialisable.'
-		);
+			$payload = \ReportedIP_Hive_Two_Factor_Frontend::challenge_payload( array( 'kept' => 1 ) );
+
+			$this->assertSame( '', $payload['origin'], 'Without WooCommerce the sign-in has no storefront origin.' );
+			$this->assertSame( 'https://example.org/my-account/', $payload['origin_url'], 'The login referrer rides along so the customer is bounced back to the page they came from.' );
+			$this->assertSame( '', $payload['wc_session_hash'], 'collect_wc_session_hash() must short-circuit when WC() is not defined.' );
+			$this->assertSame( 1, $payload['kept'], 'Fields of earlier listeners survive.' );
+		}
+
+		public function test_challenge_url_stays_on_wp_login_without_origin_or_module(): void {
+			$this->assertSame( 'https://example.org/wp-login.php?action=reportedip_2fa', \ReportedIP_Hive_Two_Factor_Frontend::filter_challenge_url( 'https://example.org/wp-login.php?action=reportedip_2fa', '' ) );
+			$this->assertSame(
+				'https://example.org/wp-login.php?action=reportedip_2fa',
+				\ReportedIP_Hive_Two_Factor_Frontend::filter_challenge_url( 'https://example.org/wp-login.php?action=reportedip_2fa', 'wc' ),
+				'A WooCommerce sign-in keeps wp-login while the module is switched off, a downgrade must never strand a customer on a dead slug.'
+			);
+		}
+
+		public function test_redirect_listener_ignores_other_contexts(): void {
+			foreach ( array( 'verified', 'locked', 'signed_in' ) as $event ) {
+				$this->assertSame( 'https://example.org/wp-admin/', \ReportedIP_Hive_Two_Factor_Frontend::filter_redirect_url( 'https://example.org/wp-admin/', $event, 'wp_login', array() ), $event );
+			}
+		}
+
+		public function test_redirect_listener_keeps_a_stored_redirect_to(): void {
+			$nonce = array(
+				'redirect_to' => 'https://example.org/cart/',
+				'origin'      => 'wc',
+			);
+			$this->assertSame( 'https://example.org/cart/', \ReportedIP_Hive_Two_Factor_Frontend::filter_redirect_url( 'https://example.org/cart/', 'verified', 'theme_frame', $nonce ) );
+		}
+
+		public function test_redirect_listener_falls_back_to_origin_url_then_home(): void {
+			$this->assertSame(
+				'https://example.org/shop/',
+				\ReportedIP_Hive_Two_Factor_Frontend::filter_redirect_url( 'https://example.org/wp-admin/', 'verified', 'theme_frame', array( 'origin_url' => 'https://example.org/shop/' ) )
+			);
+			$this->assertSame( 'https://example.org/', \ReportedIP_Hive_Two_Factor_Frontend::filter_redirect_url( 'https://example.org/wp-admin/', 'verified', 'theme_frame', array() ) );
+			$this->assertSame( 'https://example.org/', \ReportedIP_Hive_Two_Factor_Frontend::filter_redirect_url( 'https://example.org/wp-admin/', 'signed_in', 'theme_frame', array() ), 'Without WooCommerce a signed-in visitor goes home.' );
+		}
+
+		public function test_detect_login_origin_returns_wc_block_for_store_api_routes(): void {
+			$source = $this->source();
+
+			$this->assertStringContainsString(
+				"return 'wc-block';",
+				$source,
+				'WC Store-API REST requests (Cart and Checkout blocks) must be tagged as `wc-block` so we can hand back a JSON redirect instead of trying to redirect-and-exit.'
+			);
+			$this->assertStringContainsString(
+				"'/wc/store/'",
+				$source,
+				'The `/wc/store/` route prefix is the canonical marker for the WC blocks REST namespace.'
+			);
+		}
+
+		public function test_detect_login_origin_recognises_classic_wc_form_marker(): void {
+			$source = $this->source();
+
+			$this->assertStringContainsString(
+				'woocommerce-login-nonce',
+				$source,
+				'The classic `woocommerce-login-nonce` POST field is the cheapest reliable signal that this submit came from `[woocommerce_my_account]`.'
+			);
+			$this->assertStringContainsString(
+				"did_action( 'woocommerce_login_form_start' )",
+				$source,
+				'`woocommerce_login_form_start` is dispatched by every WC login template, make sure we honour it so themes that override the form still get tagged.'
+			);
+		}
+
+		public function test_listeners_are_wired_in_init(): void {
+			$source = $this->source();
+
+			foreach ( array(
+				"add_filter( 'reportedip_hive_2fa_challenge_payload', array( __CLASS__, 'challenge_payload' ) );",
+				"add_filter( 'reportedip_hive_2fa_challenge_url', array( __CLASS__, 'filter_challenge_url' ), 10, 2 );",
+				"add_filter( 'reportedip_hive_2fa_redirect_url', array( __CLASS__, 'filter_redirect_url' ), 10, 4 );",
+				"add_action( 'reportedip_hive_2fa_render_challenge_' . self::CONTEXT, array( __CLASS__, 'render_challenge_view' ), 10, 2 );",
+				"add_action( 'reportedip_hive_2fa_render_expired_' . self::CONTEXT, array( __CLASS__, 'render_expired_view' ), 10, 2 );",
+			) as $line ) {
+				$this->assertStringContainsString( $line, $source );
+			}
+			$this->assertSame( 'theme_frame', \ReportedIP_Hive_Two_Factor_Frontend::CONTEXT, 'The context of reportedip_hive_2fa_verified stays as in 2.1.x.' );
+		}
 	}
 }
