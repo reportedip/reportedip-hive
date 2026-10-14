@@ -140,7 +140,8 @@ class MailerTemplateTest extends TestCase {
 		$this->assertStringNotContainsString( '<svg', $html, 'Inline SVG is not rendered by GMX/Outlook and must stay out of the email template.' );
 		$this->assertStringContainsString( 'Example Site', $html, 'Site name must appear in header + footer.' );
 		$this->assertStringContainsString( 'Protected by ReportedIP Hive', $html, 'Footer trust line must appear.' );
-		$this->assertStringContainsString( 'https://reportedip.com/', $html, 'Footer must link to the ReportedIP brand site.' );
+		$this->assertStringContainsString( 'This message is protected by ReportedIP, Open Threat Intelligence for a Safer Internet.', $html, 'Footer names the ReportedIP brand.' );
+		$this->assertStringNotContainsString( 'https://reportedip.com/', $html, 'The free plugin puts no link to its vendor into a mail.' );
 
 		$this->assertStringContainsString( 'Hello Patrick,', $html );
 		$this->assertStringContainsString( 'A verification code is required.', $html );
@@ -171,7 +172,8 @@ class MailerTemplateTest extends TestCase {
 		$this->assertStringContainsString( 'Code: 123456', $plain, 'main_block_text should win over the HTML version.' );
 		$this->assertStringContainsString( 'Never share this code.', $plain );
 		$this->assertStringContainsString( 'Protected by ReportedIP Hive', $plain, 'Footer line must be present.' );
-		$this->assertStringContainsString( 'https://reportedip.com/', $plain, 'Plaintext footer must include the brand link.' );
+		$this->assertStringContainsString( 'This message is protected by ReportedIP', $plain, 'Plaintext footer names the brand.' );
+		$this->assertStringNotContainsString( 'https://reportedip.com/', $plain, 'The free plugin puts no link to its vendor into a mail.' );
 	}
 
 	public function test_headers_get_default_content_type_and_from() {

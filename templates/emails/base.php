@@ -127,14 +127,7 @@ $site_host       = '' !== $site_host ? preg_replace( '/^www\./i', '', $site_host
 			?>
 		</p>
 		<p style="margin:0;font-size:11px;color:#6B7280;">
-			<?php
-			printf(
-				/* translators: 1: opening link tag, 2: closing link tag */
-				esc_html__( 'This message is protected by %1$sReportedIP%2$s, Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' ),
-				'<a href="https://reportedip.com/" style="color:#4F46E5;text-decoration:none;" target="_blank" rel="noopener">',
-				'</a>'
-			);
-			?>
+			<?php esc_html_e( 'This message is protected by ReportedIP, Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' ); ?>
 		</p>
 	</td></tr>
 </table>

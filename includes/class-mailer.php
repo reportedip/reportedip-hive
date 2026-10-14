@@ -272,7 +272,6 @@ class ReportedIP_Hive_Mailer {
 			$args['site_url']
 		);
 		$lines[] = __( 'This message is protected by ReportedIP, Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' );
-		$lines[] = 'https://reportedip.com/';
 
 		return implode( "\n", $lines );
 	}
