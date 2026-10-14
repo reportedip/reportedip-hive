@@ -117,6 +117,16 @@ if ( ! function_exists( 'wp_login_url' ) ) {
 	}
 }
 
+if ( ! function_exists( 'admin_url' ) ) {
+	/**
+	 * @param string $path Path below wp-admin.
+	 * @return string
+	 */
+	function admin_url( $path = '' ) {
+		return 'https://example.org/wp-admin/' . ltrim( (string) $path, '/' );
+	}
+}
+
 if ( ! function_exists( 'add_query_arg' ) ) {
 	/**
 	 * @param array<string, string> $args Query arguments.

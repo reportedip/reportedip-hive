@@ -673,6 +673,42 @@ class ExtensionApiTest extends TestCase {
 	}
 
 	/**
+	 * A target on another host never leaves the challenge: neither from the
+	 * stored `redirect_to` nor from a listener. It ends on the dashboard,
+	 * the fallback of `wp_safe_redirect()`, so the URL the engine stores
+	 * for a duplicate submit is safe as well.
+	 *
+	 * @runInSeparateProcess
+	 * @preserveGlobalState disabled
+	 */
+	public function test_post_verify_redirect_never_leaves_the_site() {
+		$this->register_dummy_2fa_method();
+		$dashboard = admin_url();
+
+		$this->assertSame( $dashboard, \ReportedIP_Hive_Two_Factor::resolve_post_verify_redirect( array( 'redirect_to' => 'https://evil.example/phish' ), 'wp_login' ) );
+		$this->assertSame( $dashboard, \ReportedIP_Hive_Two_Factor::resolve_post_verify_redirect( array( 'redirect_to' => '//evil.example/phish' ), 'wp_login' ) );
+		$this->assertSame( $dashboard, \ReportedIP_Hive_Two_Factor::resolve_post_verify_redirect( array( 'redirect_to' => 'javascript:alert(1)' ), 'wp_login' ) );
+		$this->assertSame( '/wp-admin/profile.php', \ReportedIP_Hive_Two_Factor::resolve_post_verify_redirect( array( 'redirect_to' => '/wp-admin/profile.php' ), 'wp_login' ), 'A relative target stays.' );
+
+		add_filter(
+			'reportedip_hive_2fa_redirect_url',
+			static function () {
+				return 'https://evil.example/from-a-listener';
+			}
+		);
+		$this->assertSame( $dashboard, \ReportedIP_Hive_Two_Factor::resolve_post_verify_redirect( array( 'redirect_to' => 'https://example.org/shop/' ), 'storefront' ) );
+
+		add_filter(
+			'allowed_redirect_hosts',
+			static function ( $hosts ) {
+				$hosts[] = 'evil.example';
+				return $hosts;
+			}
+		);
+		$this->assertSame( 'https://evil.example/from-a-listener', \ReportedIP_Hive_Two_Factor::resolve_post_verify_redirect( array(), 'storefront' ), 'A host the site allows passes, as in wp_safe_redirect().' );
+	}
+
+	/**
 	 * The challenge engine knows no storefront: the surface plugs in through
 	 * the payload, URL, redirect and render hooks, and wp-login renders when
 	 * nobody listens.
@@ -691,18 +727,18 @@ class ExtensionApiTest extends TestCase {
 	}
 
 	/**
-	 * The onboarding knows no storefront: the wizard URL and the target
+	 * The onboarding knows no storefront 2FA: the wizard URL and the target
 	 * after a skip go through filters, a frontend render is described by
-	 * its caller.
+	 * its caller. The My Account target after a skip is free, as in 2.1.74.
 	 */
 	public function test_onboarding_has_no_storefront_knowledge() {
 		$source = (string) file_get_contents( REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-onboarding.php' );
 
-		foreach ( array( 'wc_get_page_permalink', 'Two_Factor_Frontend', '2fa_frontend_', 'My Account' ) as $needle ) {
+		foreach ( array( 'Two_Factor_Frontend', '2fa_frontend_' ) as $needle ) {
 			$this->assertStringNotContainsString( $needle, $source, $needle );
 		}
 		$this->assertStringContainsString( "apply_filters( 'reportedip_hive_2fa_onboarding_url', \$default, get_current_user_id() )", $source );
-		$this->assertStringContainsString( "apply_filters( 'reportedip_hive_2fa_post_skip_url', \$default, (int) \$user_id )", $source );
+		$this->assertStringContainsString( "apply_filters( 'reportedip_hive_2fa_post_skip_url', \$default, \$user_id )", $source );
 		$this->assertStringContainsString( "public function render_page( \$context = 'admin', array \$surface = array() ) {", $source );
 		$this->assertStringContainsString( "add_action( 'template_redirect', array( \$this, 'maybe_frontend_redirect' ) );", $source, 'Flagged users are still sent to the wizard from the frontend without the add-on.' );
 	}

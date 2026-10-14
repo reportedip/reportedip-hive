@@ -551,21 +551,34 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	/**
 	 * Pick a sensible "no longer here" target for the skip handler: the
 	 * dashboard, unless a listener knows a better place for the user.
+	 * Customers and Subscribers cannot reach `wp-admin/`, so a hard
+	 * dashboard target lands them on a 403/redirect loop; on a WooCommerce
+	 * site they go back to My Account.
 	 *
 	 * @param int $user_id User who skipped.
 	 * @return string
 	 * @since  1.7.0
 	 */
 	private static function default_post_skip_url( $user_id ) {
+		$user_id = (int) $user_id;
 		$default = is_network_admin() ? network_admin_url() : admin_url();
+		if ( $user_id > 0
+			&& ! user_can( $user_id, 'manage_options' )
+			&& ! user_can( $user_id, 'edit_posts' )
+			&& function_exists( 'wc_get_page_permalink' ) ) {
+			$account_url = (string) wc_get_page_permalink( 'myaccount' );
+			if ( '' !== $account_url ) {
+				$default = $account_url;
+			}
+		}
 
 		/**
 		 * Target after a skipped enrolment.
 		 *
-		 * @param string $url     Dashboard URL.
+		 * @param string $url     Dashboard URL, My Account for a customer on a WooCommerce site.
 		 * @param int    $user_id User who skipped.
 		 * @since 3.0.0
 		 */
-		return (string) apply_filters( 'reportedip_hive_2fa_post_skip_url', $default, (int) $user_id );
+		return (string) apply_filters( 'reportedip_hive_2fa_post_skip_url', $default, $user_id );
 	}
 }

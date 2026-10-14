@@ -992,6 +992,39 @@ if ( ! function_exists( 'wp_specialchars_decode' ) ) {
 	}
 }
 
+if ( ! function_exists( 'wp_validate_redirect' ) ) {
+	/**
+	 * Same-host check as in core: a relative target passes, an absolute one
+	 * only on the home host or a host from `allowed_redirect_hosts`.
+	 *
+	 * @param string $location     Target.
+	 * @param string $fallback_url Answer for a refused target.
+	 * @return string
+	 */
+	function wp_validate_redirect( $location, $fallback_url = '' ) { // phpcs:ignore
+		$location = trim( (string) $location );
+		if ( '' === $location ) {
+			return $fallback_url;
+		}
+		if ( 0 === strpos( $location, '//' ) ) {
+			$location = 'http:' . $location;
+		}
+		$parts = parse_url( $location ); // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url -- Stub of core code for unit-test runs without WP loaded.
+		if ( false === $parts ) {
+			return $fallback_url;
+		}
+		if ( isset( $parts['scheme'] ) && ! in_array( strtolower( $parts['scheme'] ), array( 'http', 'https' ), true ) ) {
+			return $fallback_url;
+		}
+		if ( ! isset( $parts['host'] ) ) {
+			return $location;
+		}
+		$home    = (string) parse_url( home_url(), PHP_URL_HOST ); // phpcs:ignore WordPress.WP.AlternativeFunctions.parse_url_parse_url -- Stub of core code for unit-test runs without WP loaded.
+		$allowed = array_map( 'strtolower', (array) apply_filters( 'allowed_redirect_hosts', array( $home ), $parts['host'] ) );
+		return in_array( strtolower( $parts['host'] ), $allowed, true ) ? $location : $fallback_url;
+	}
+}
+
 if ( ! function_exists( 'wp_mail' ) ) {
 	function wp_mail( $to, $subject, $message, $headers = array(), $attachments = array() ) { // phpcs:ignore
 		$GLOBALS['rip_test_wp_mail_calls'][] = compact( 'to', 'subject', 'message', 'headers', 'attachments' );

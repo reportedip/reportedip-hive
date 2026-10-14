@@ -1311,7 +1311,11 @@ class ReportedIP_Hive_Two_Factor {
 	/**
 	 * Where the challenge sends the browser next. The URL passed in is the
 	 * wp-login target; a listener that renders the challenge on its own
-	 * surface returns the target of that surface.
+	 * surface returns the target of that surface. The result passes the
+	 * same host check as `wp_safe_redirect()`: a target on another host,
+	 * from the stored `redirect_to` or from a listener, becomes the
+	 * dashboard, so a caller that stores or replays the URL never holds an
+	 * open redirect.
 	 *
 	 * @param string              $event      `verified` (second factor passed), `locked` (session invalidated after too many wrong codes) or `signed_in` (the challenge URL was opened by a signed-in visitor).
 	 * @param string              $url        The wp-login target.
@@ -1330,7 +1334,9 @@ class ReportedIP_Hive_Two_Factor {
 		 * @param array<string,mixed> $nonce_data Stored challenge payload, empty for `signed_in`.
 		 * @since 3.0.0
 		 */
-		return (string) apply_filters( 'reportedip_hive_2fa_redirect_url', (string) $url, (string) $event, (string) $context, $nonce_data );
+		$target = (string) apply_filters( 'reportedip_hive_2fa_redirect_url', (string) $url, (string) $event, (string) $context, $nonce_data );
+		$safe   = (string) wp_validate_redirect( $target, '' );
+		return '' !== $safe ? $safe : admin_url();
 	}
 
 	/**
