@@ -375,23 +375,22 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'applied', $result['results']['reportedip_hive_prohibited_usernames']['status'] );
 		}
 
-		public function test_eleventh_entry_needs_the_paid_plan() {
+		/**
+		 * Without the add-on a remote push of a long list or a regular
+		 * expression is stored as it came; only ten plain entries apply.
+		 */
+		public function test_long_lists_and_regex_entries_apply_without_the_add_on() {
 			$result = \ReportedIP_Hive_Settings_Apply::apply(
-				array( 'reportedip_hive_prohibited_usernames' => implode( "\n", array( 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9', 'a10', 'a11' ) ) ),
+				array(
+					'reportedip_hive_prohibited_usernames' => implode( "\n", array( 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9', 'a10', 'a11' ) ),
+					'reportedip_hive_email_rules'          => "example.com\n/^spam[0-9]+@/",
+				),
 				'test'
 			);
 
-			$this->assertSame( 'skipped_tier', $result['results']['reportedip_hive_prohibited_usernames']['status'] );
-			$this->assertArrayNotHasKey( 'reportedip_hive_prohibited_usernames', $GLOBALS['wp_options'] );
-		}
-
-		public function test_regex_entry_needs_the_paid_plan() {
-			$result = \ReportedIP_Hive_Settings_Apply::apply(
-				array( 'reportedip_hive_email_rules' => "example.com\n/^spam[0-9]+@/" ),
-				'test'
-			);
-
-			$this->assertSame( 'skipped_tier', $result['results']['reportedip_hive_email_rules']['status'] );
+			$this->assertSame( 'applied', $result['results']['reportedip_hive_prohibited_usernames']['status'] );
+			$this->assertSame( 'applied', $result['results']['reportedip_hive_email_rules']['status'] );
+			$this->assertSame( "*@example.com\n/^spam[0-9]+@/", \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_email_rules' ) );
 		}
 
 		public function test_plain_email_rules_stay_free() {
@@ -404,24 +403,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( '*@example.com', \ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_email_rules' ) );
 		}
 
-		public function test_non_empty_registration_allowlist_needs_the_paid_plan() {
+		public function test_registration_allowlist_is_unknown_without_the_add_on() {
 			$result = \ReportedIP_Hive_Settings_Apply::apply(
 				array( 'reportedip_hive_registration_allowlist' => '203.0.113.0/24' ),
 				'test'
 			);
 
-			$this->assertSame( 'skipped_tier', $result['results']['reportedip_hive_registration_allowlist']['status'] );
-		}
-
-		public function test_empty_registration_allowlist_is_never_gated() {
-			$GLOBALS['wp_options']['reportedip_hive_registration_allowlist'] = '203.0.113.0/24';
-
-			$result = \ReportedIP_Hive_Settings_Apply::apply(
-				array( 'reportedip_hive_registration_allowlist' => '' ),
-				'test'
-			);
-
-			$this->assertSame( 'applied', $result['results']['reportedip_hive_registration_allowlist']['status'], 'clearing a gated list must always be possible' );
+			$this->assertSame( 'unknown_key', $result['results']['reportedip_hive_registration_allowlist']['status'] );
+			$this->assertArrayNotHasKey( 'reportedip_hive_registration_allowlist', $GLOBALS['wp_options'] );
 		}
 
 		public function test_hide_login_cannot_be_enabled_without_slug() {

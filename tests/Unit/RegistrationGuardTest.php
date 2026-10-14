@@ -26,37 +26,6 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-proxy-trust.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-waf.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-registration-guard.php';
-
-	if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-		/**
-		 * Minimal Mode-Manager double: the unlimited-rules feature is never
-		 * available, so every plan gate behaves like a free installation.
-		 */
-		class ReportedIP_Hive_Mode_Manager {
-			/**
-			 * Singleton accessor.
-			 *
-			 * @return self
-			 */
-			public static function get_instance() {
-				return new self();
-			}
-
-			/**
-			 * Feature availability lookup.
-			 *
-			 * @param string $feature Feature slug.
-			 * @return array<string, mixed>
-			 */
-			public function feature_status( $feature ) {
-				unset( $feature );
-				return array(
-					'available' => false,
-					'min_tier'  => 'Professional',
-				);
-			}
-		}
-	}
 }
 
 namespace ReportedIP\Hive\Tests\Unit {
@@ -165,16 +134,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( array( 'admin', 'root' ), \ReportedIP_Hive_Registration_Guard::stored_entries( $raw ) );
 		}
 
-		public function test_list_needs_tier_flags_the_eleventh_entry_and_any_regex(): void {
-			$ten    = implode( "\n", array( 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9', 'a10' ) );
-			$eleven = $ten . "\na11";
-
-			$this->assertFalse( \ReportedIP_Hive_Registration_Guard::list_needs_tier( $ten ) );
-			$this->assertTrue( \ReportedIP_Hive_Registration_Guard::list_needs_tier( $eleven ) );
-			$this->assertTrue( \ReportedIP_Hive_Registration_Guard::list_needs_tier( "admin\n/^adm/" ) );
-			$this->assertFalse( \ReportedIP_Hive_Registration_Guard::list_needs_tier( '' ) );
-		}
-
 		public function test_username_list_splits_on_commas_only(): void {
 			$clean = \ReportedIP_Hive_Registration_Guard::sanitize_username_list( "John Doe, Admin\n# note\nroot" );
 
@@ -199,12 +158,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( "*@a.test\n*@b.test", $clean, 'a dashboard that flattens newlines must not produce one bogus entry' );
 		}
 
-		public function test_ip_list_delegates_to_the_trusted_proxy_parser(): void {
-			$clean = \ReportedIP_Hive_Registration_Guard::sanitize_ip_list( "# office\n203.0.113.0/24 198.51.100.7\nnot-an-ip\n2001:db8::/32" );
-
-			$this->assertSame( "203.0.113.0/24\n198.51.100.7\n2001:db8::/32", $clean );
-		}
-
 		public function test_every_option_key_is_a_remote_registry_key_with_a_default(): void {
 			$remote   = \ReportedIP_Hive_Settings_Registry::remote_spec();
 			$defaults = \ReportedIP_Hive_Defaults::all_option_defaults();
@@ -215,30 +168,54 @@ namespace ReportedIP\Hive\Tests\Unit {
 			}
 		}
 
-		public function test_registry_gate_rejects_an_eleventh_entry_on_a_free_plan(): void {
-			$ten    = implode( "\n", array( 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9', 'a10' ) );
-			$eleven = $ten . "\na11";
+		/**
+		 * Without the add-on the lists are lossless: a list a paid plan wrote
+		 * (more than ten entries, a regular expression) survives a save, it is
+		 * only not evaluated beyond the first ten plain entries.
+		 */
+		public function test_free_registry_stores_long_lists_and_regex_entries(): void {
+			$list = implode( "\n", array( 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9', 'a10', 'a11', '/^adm[0-9]+$/' ) );
 
-			$this->assertSame( $ten, \ReportedIP_Hive_Settings_Registry::sanitize( 'reportedip_hive_prohibited_usernames', $ten ) );
+			$this->assertSame( $list, \ReportedIP_Hive_Settings_Registry::sanitize( 'reportedip_hive_prohibited_usernames', $list ) );
+			$this->assertSame( "*@a.test\n/^spam@/", \ReportedIP_Hive_Settings_Registry::sanitize( 'reportedip_hive_email_rules', "a.test\n/^spam@/" ) );
 
-			$rejected = \ReportedIP_Hive_Settings_Registry::sanitize( 'reportedip_hive_prohibited_usernames', $eleven );
-			$this->assertTrue( is_wp_error( $rejected ) );
-			$this->assertSame( 'tier_locked', $rejected->get_error_code() );
+			foreach ( array( 'reportedip_hive_prohibited_usernames', 'reportedip_hive_email_rules' ) as $key ) {
+				$entry = \ReportedIP_Hive_Settings_Registry::spec()[ $key ];
+				$this->assertArrayNotHasKey( 'tier', $entry, "{$key}: the free plugin gates no local list by plan" );
+				$this->assertArrayNotHasKey( 'tier_gate', $entry, $key );
+				$this->assertArrayNotHasKey( 'partial', $entry, $key );
+			}
+			$this->assertArrayNotHasKey( 'reportedip_hive_registration_allowlist', \ReportedIP_Hive_Settings_Registry::spec(), 'the allowlist belongs to the add-on' );
+			$this->assertArrayNotHasKey( 'reportedip_hive_registration_allowlist', \ReportedIP_Hive_Defaults::all_option_defaults() );
 		}
 
-		public function test_registry_gate_rejects_a_regex_entry_on_a_free_plan(): void {
-			$rejected = \ReportedIP_Hive_Settings_Registry::sanitize( 'reportedip_hive_email_rules', '/^spam@/' );
+		/**
+		 * The cap stays on until a listener lifts it: without the add-on the
+		 * eleventh entry and every regular expression stay inert, as on a
+		 * 2.1.x plan below Professional.
+		 */
+		public function test_cap_is_lifted_only_by_the_filter(): void {
+			$method = new \ReflectionMethod( 'ReportedIP_Hive_Registration_Guard', 'unlimited' );
 
-			$this->assertTrue( is_wp_error( $rejected ) );
-			$this->assertSame( 'tier_locked', $rejected->get_error_code() );
-		}
+			$GLOBALS['wp_filters'] = array();
+			$this->assertFalse( $method->invoke( null ) );
 
-		public function test_registry_gate_rejects_a_non_empty_allowlist_but_never_an_empty_one(): void {
-			$rejected = \ReportedIP_Hive_Settings_Registry::sanitize( 'reportedip_hive_registration_allowlist', '203.0.113.0/24' );
-			$this->assertTrue( is_wp_error( $rejected ) );
-			$this->assertSame( 'tier_locked', $rejected->get_error_code() );
+			add_filter(
+				'reportedip_hive_registration_rules_unlimited',
+				static function () {
+					return true;
+				}
+			);
+			try {
+				$this->assertTrue( $method->invoke( null ) );
+			} finally {
+				$GLOBALS['wp_filters'] = array();
+			}
 
-			$this->assertSame( '', \ReportedIP_Hive_Settings_Registry::sanitize( 'reportedip_hive_registration_allowlist', '' ) );
+			$active = \ReportedIP_Hive_Registration_Guard::active_entries( implode( "\n", array( 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8', 'a9', 'a10', 'a11', '/^adm[0-9]+$/' ) ), false );
+			$this->assertNull( \ReportedIP_Hive_Registration_Guard::matches_any( 'a11', $active ) );
+			$this->assertNull( \ReportedIP_Hive_Registration_Guard::matches_any( 'adm7', $active ) );
+			$this->assertSame( 'a10', \ReportedIP_Hive_Registration_Guard::matches_any( 'a10', $active ) );
 		}
 
 		public function test_disposable_email_no_longer_registers_registration_hooks(): void {
@@ -288,7 +265,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_pipeline_order_is_allowlist_limit_username_email_disposable(): void {
 			$body = $this->guard_method( 'validate' );
 
-			$allowlist  = strpos( $body, 'deny_by_allowlist' );
+			$allowlist  = strpos( $body, "do_action( 'reportedip_hive_registration_validate'" );
 			$limit      = strpos( $body, 'deny_by_rate_limit' );
 			$username   = strpos( $body, 'deny_by_username' );
 			$email      = strpos( $body, 'deny_by_email' );
@@ -300,6 +277,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertLessThan( $username, $limit );
 			$this->assertLessThan( $email, $username );
 			$this->assertLessThan( $disposable, $email, 'an allow rule must be able to overrule the throwaway list' );
+			$this->assertLessThan( strpos( $body, 'deny_by_missing_form_proof' ), $allowlist, 'the add-on check runs where the 2.1.x allowlist ran: first' );
+			$this->assertStringContainsString(
+				'count( $errors->get_error_messages() ) > $before',
+				$body,
+				'a listener that adds an error stops the pipeline, so a denial stays one error and one log row'
+			);
 		}
 
 		public function test_login_probe_never_adds_an_error_or_visitor_text(): void {
@@ -324,7 +307,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 		public function test_applies_guard_precedes_every_rule(): void {
 			foreach ( array(
-				'validate'                => 'deny_by_allowlist',
+				'validate'                => "do_action( 'reportedip_hive_registration_validate'",
 				'count_registration'      => 'is_multisite(',
 				'count_signup'            => 'count_source_ip',
 				'on_login_failed'         => 'OPT_BLOCK_UNKNOWN_USERNAME',

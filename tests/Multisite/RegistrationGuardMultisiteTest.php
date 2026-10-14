@@ -37,6 +37,8 @@ class ReportedIP_Hive_Registration_Guard_Multisite_Test extends WP_UnitTestCase 
 		'reportedip_hive_block_unknown_username_login',
 		'reportedip_hive_disposable_email_action',
 		'reportedip_hive_notify_admin',
+		'reportedip_hive_registration_allowlist',
+		'reportedip_hive_known_tier',
 	);
 
 	/**
@@ -384,5 +386,27 @@ class ReportedIP_Hive_Registration_Guard_Multisite_Test extends WP_UnitTestCase 
 		wp_authenticate( 'nobody-here-either', 'wrong-password' );
 
 		$this->assertFalse( ReportedIP_Hive_Database::get_instance()->is_blocked( $ip ) );
+	}
+
+	/**
+	 * Without the add-on the plan does not lift the cap, not even on
+	 * Professional: the first ten plain entries apply, an eleventh entry and
+	 * a regular expression stay stored and inert, a stored allowlist refuses
+	 * nobody (the 2.1.x behaviour below Professional).
+	 */
+	public function test_without_the_add_on_only_ten_plain_entries_apply() {
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_known_tier', 'professional' );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_prohibited_usernames_baseline', 0 );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_prohibited_usernames', "n1\nn2\nn3\nn4\nn5\nn6\nn7\nn8\nn9\nn10\nn11\n/^regexname[0-9]+$/" );
+		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_registration_allowlist', '198.51.100.0/24' );
+
+		$this->assertContains( 'reportedip_hive_prohibited_username', $this->validate_signup( 'n10', 'n10@example.org' )->get_error_codes() );
+
+		foreach ( array( 'n11', 'regexname7' ) as $login ) {
+			$codes = $this->validate_signup( $login, $login . '@example.org' )->get_error_codes();
+			$this->assertNotContains( 'reportedip_hive_prohibited_username', $codes, "{$login} is beyond the free cap" );
+			$this->assertNotContains( 'reportedip_hive_registration_ip', $codes, 'a stored allowlist is inert without the add-on' );
+		}
+		$this->assertStringContainsString( '/^regexname[0-9]+$/', (string) get_site_option( 'reportedip_hive_prohibited_usernames' ), 'the stored list keeps its regular expression' );
 	}
 }

@@ -1,8 +1,10 @@
 <?php
 /**
  * Registration protection: prohibited usernames, e-mail allow/block rules, a
- * registration rate limit, allowlist-only registration and the opt-in instant
- * block for logins with a non-existent username.
+ * registration rate limit and the opt-in instant block for logins with a
+ * non-existent username. An add-on adds its own checks (allowlist-only
+ * registration) through `reportedip_hive_registration_validate` and lifts the
+ * entry cap through `reportedip_hive_registration_rules_unlimited`.
  *
  * This class owns every registration-time hook. The disposable-mail classifier
  * {@see ReportedIP_Hive_Disposable_Email} used to hook the same two surfaces
@@ -72,11 +74,6 @@ final class ReportedIP_Hive_Registration_Guard {
 	const OPT_LIMIT_TIMEFRAME = 'reportedip_hive_registration_limit_timeframe';
 
 	/**
-	 * IP/CIDR list registration is restricted to (empty = everyone).
-	 */
-	const OPT_ALLOWLIST = 'reportedip_hive_registration_allowlist';
-
-	/**
 	 * Opt-in instant block for logins with a non-existent username.
 	 */
 	const OPT_BLOCK_UNKNOWN_USERNAME = 'reportedip_hive_block_unknown_username_login';
@@ -94,12 +91,12 @@ final class ReportedIP_Hive_Registration_Guard {
 		self::OPT_LIMIT_ENABLED,
 		self::OPT_LIMIT_COUNT,
 		self::OPT_LIMIT_TIMEFRAME,
-		self::OPT_ALLOWLIST,
 		self::OPT_BLOCK_UNKNOWN_USERNAME,
 	);
 
 	/**
-	 * Entries per list a plan without `registration_rules_unlimited` may use.
+	 * Entries per list the rules enforce while
+	 * `reportedip_hive_registration_rules_unlimited` does not lift the cap.
 	 */
 	const FREE_MAX_ENTRIES = 10;
 
@@ -299,7 +296,7 @@ final class ReportedIP_Hive_Registration_Guard {
 	 *
 	 * The whole pipeline runs: WooCommerce creates the account for a checkout
 	 * without firing `woocommerce_register_post`, so this is the only place a
-	 * rate limit or an allowlist can still refuse it. The one carve-out is the
+	 * rate limit or an add-on check can still refuse it. The one carve-out is the
 	 * second half of a Multisite signup, `wp-activate.php` creates the user
 	 * long after the visitor passed the form and from the activation link's
 	 * request, not the registration's.
@@ -453,7 +450,22 @@ final class ReportedIP_Hive_Registration_Guard {
 		}
 		$this->judged[ self::subject_key( $login, $email ) ] = true;
 
-		if ( $this->deny_by_allowlist( $errors, $surface ) ) {
+		$before = count( $errors->get_error_messages() );
+
+		/**
+		 * Add a registration check ahead of every built-in rule, so it runs
+		 * before the form proof, the community reputation and the rate limit.
+		 * A listener that refuses adds its error to `$errors`; the pipeline
+		 * then stops, so a denied attempt still produces one error and one
+		 * log row. The listener logs its own denial.
+		 *
+		 * @param WP_Error $errors  Collected errors, add with ->add().
+		 * @param string   $surface Surface (`wp`, `woocommerce`, `multisite`, `programmatic` or the one a foreign form passes, such as `ultimate_member`).
+		 * @param string   $ip      Client IP.
+		 * @since 3.0.0
+		 */
+		do_action( 'reportedip_hive_registration_validate', $errors, $surface, ReportedIP_Hive::get_client_ip() );
+		if ( count( $errors->get_error_messages() ) > $before ) {
 			return;
 		}
 		if ( $this->deny_by_missing_form_proof( $errors, $surface ) ) {
@@ -563,50 +575,6 @@ final class ReportedIP_Hive_Registration_Guard {
 					'reason'  => 'form_proof',
 					'surface' => $surface,
 					'verdict' => (string) $proof->last_verdict(),
-				),
-				'low'
-			);
-		}
-
-		return true;
-	}
-
-	/**
-	 * Refuse registration from outside the operator's IP allowlist.
-	 *
-	 * @param WP_Error $errors  Errors object.
-	 * @param string   $surface Surface identifier.
-	 * @return bool True when the pipeline must stop.
-	 * @since  2.1.51
-	 */
-	private function deny_by_allowlist( WP_Error $errors, $surface ) {
-		if ( ! self::unlimited() ) {
-			return false;
-		}
-
-		$ranges = ReportedIP_Hive_Proxy_Trust::parse_ranges( (string) ReportedIP_Hive_Option_Routing::get( self::OPT_ALLOWLIST, '' ) );
-		if ( empty( $ranges ) ) {
-			return false;
-		}
-
-		$ip = ReportedIP_Hive::get_client_ip();
-		if ( ReportedIP_Hive_Proxy_Trust::source_is_trusted( $ip, $ranges ) ) {
-			return false;
-		}
-
-		$errors->add(
-			'reportedip_hive_registration_ip',
-			__( 'Registration is not available from your network.', 'reportedip-hive' )
-		);
-
-		$logger = self::logger();
-		if ( $logger instanceof ReportedIP_Hive_Logger ) {
-			$logger->log_security_event(
-				'registration_denied',
-				$ip,
-				array(
-					'reason'  => 'ip_not_allowlisted',
-					'surface' => $surface,
 				),
 				'low'
 			);
@@ -847,18 +815,21 @@ final class ReportedIP_Hive_Registration_Guard {
 	}
 
 	/**
-	 * Whether the plan lifts the entry cap, allows regular expressions and
-	 * enables allowlist-only registration.
+	 * Whether the rules run without the entry cap and with regular
+	 * expressions. Without a listener the first {@see FREE_MAX_ENTRIES} plain
+	 * entries of each list apply.
 	 *
 	 * @return bool
 	 * @since  2.1.51
 	 */
 	private static function unlimited() {
-		if ( ! class_exists( 'ReportedIP_Hive_Mode_Manager' ) ) {
-			return false;
-		}
-		$status = ReportedIP_Hive_Mode_Manager::get_instance()->feature_status( 'registration_rules_unlimited' );
-		return ! empty( $status['available'] );
+		/**
+		 * Lift the ten-entry cap and evaluate regular-expression entries.
+		 *
+		 * @param bool $unlimited Default false.
+		 * @since 3.0.0
+		 */
+		return (bool) apply_filters( 'reportedip_hive_registration_rules_unlimited', false );
 	}
 
 	/**
@@ -935,13 +906,13 @@ final class ReportedIP_Hive_Registration_Guard {
 	}
 
 	/**
-	 * The entries a plan actually enforces: everything on Professional and
-	 * above, the first {@see FREE_MAX_ENTRIES} plain entries otherwise.
+	 * The entries that are actually enforced: everything while the cap is
+	 * lifted, the first {@see FREE_MAX_ENTRIES} plain entries otherwise.
 	 * Regular expressions are dropped rather than treated as literals so a
 	 * downgrade cannot turn a pattern into a rule that matches nothing.
 	 *
 	 * @param string $raw       Stored option value.
-	 * @param bool   $unlimited Whether the plan lifts the cap.
+	 * @param bool   $unlimited Whether the cap is lifted.
 	 * @return string[]
 	 * @since  2.1.51
 	 */
@@ -1081,48 +1052,6 @@ final class ReportedIP_Hive_Registration_Guard {
 	 */
 	public static function sanitize_email_rule_list( $value ) {
 		return self::sanitize_list( $value, '/[\s,]+/', true );
-	}
-
-	/**
-	 * Sanitize the registration IP allowlist through the shared trusted-proxy
-	 * parser, so one validator decides what a valid IP or CIDR entry is.
-	 *
-	 * @param mixed $value Raw textarea value.
-	 * @return string Canonical newline-joined list.
-	 * @since  2.1.51
-	 */
-	public static function sanitize_ip_list( $value ) {
-		$lines = array();
-		foreach ( preg_split( '/\r\n|\r|\n/', (string) ( is_scalar( $value ) ? $value : '' ) ) as $line ) {
-			$line = trim( (string) $line );
-			if ( '' === $line || 0 === strpos( $line, '#' ) ) {
-				continue;
-			}
-			$lines[] = (string) preg_replace( '/[\s,]+/', "\n", $line );
-		}
-
-		return implode( "\n", ReportedIP_Hive_Proxy_Trust::parse_ranges( implode( "\n", $lines ) ) );
-	}
-
-	/**
-	 * Whether a sanitized list value needs the Professional entry allowance:
-	 * more than {@see FREE_MAX_ENTRIES} entries, or any regular expression.
-	 *
-	 * @param mixed $value Sanitized list value.
-	 * @return bool
-	 * @since  2.1.51
-	 */
-	public static function list_needs_tier( $value ) {
-		$entries = self::stored_entries( (string) ( is_scalar( $value ) ? $value : '' ) );
-		if ( count( $entries ) > self::FREE_MAX_ENTRIES ) {
-			return true;
-		}
-		foreach ( $entries as $entry ) {
-			if ( 'regex' === self::entry_kind( $entry ) ) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	/**

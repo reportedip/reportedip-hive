@@ -109,7 +109,6 @@ class SettingsImportExportTest extends TestCase {
 			'reportedip_hive_registration_limit_enabled',
 			'reportedip_hive_registration_limit_count',
 			'reportedip_hive_registration_limit_timeframe',
-			'reportedip_hive_registration_allowlist',
 			'reportedip_hive_block_unknown_username_login',
 		);
 		foreach ( $registration_keys as $registration_key ) {

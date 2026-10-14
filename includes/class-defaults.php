@@ -116,7 +116,6 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_registration_limit_enabled'      => true,
 		'reportedip_hive_registration_limit_count'        => 3,
 		'reportedip_hive_registration_limit_timeframe'    => 60,
-		'reportedip_hive_registration_allowlist'          => '',
 		'reportedip_hive_block_unknown_username_login'    => false,
 
 		'reportedip_hive_headers_enabled'                 => false,
