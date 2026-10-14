@@ -37,9 +37,6 @@ class AdminNoticeHooksTest extends TestCase {
 		'includes/class-two-factor-recommend.php' => array(
 			'admin_notices' => 'Reminder for a user without a second factor, shown after sign-in; a security prompt, not an offer.',
 		),
-		'admin/class-user-admin.php'            => array(
-			'all_admin_notices' => 'Users screen: result of a block or unblock bulk action. Leaves with the account blocking in D7b.',
-		),
 	);
 
 	/**

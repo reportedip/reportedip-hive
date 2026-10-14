@@ -124,17 +124,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * The note is exported to the data subject, so the profile label must
-		 * not promise that it stays internal.
-		 */
-		public function test_note_label_does_not_promise_secrecy(): void {
-			$source = $this->source( 'admin/class-user-admin.php' );
-
-			$this->assertStringContainsString( 'Administrator note (not shown at login)', $source );
-			$this->assertStringNotContainsString( 'never shown to the user', $source );
-		}
-
-		/**
 		 * The audit table belongs to the add-on: the free exporter and eraser
 		 * reach it only through the legacy routine (rows a 2.x release left
 		 * behind, no add-on claiming them) and hand the rest to the filters.

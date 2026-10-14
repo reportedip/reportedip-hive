@@ -66,7 +66,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 			'admin/class-two-factor-admin.php',
 			'admin/class-quickstart.php',
 			'admin/class-protection-page.php',
-			'admin/class-user-admin.php',
 			'includes/class-ajax-handler.php',
 			'includes/class-two-factor-dashboard.php',
 			'includes/class-two-factor-onboarding.php',

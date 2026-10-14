@@ -436,8 +436,6 @@ class ReportedIP_Hive {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-api-queue-table.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-settings-import-export.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-dashboard-widget.php';
-			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-sessions-table.php';
-			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-user-admin.php';
 			ReportedIP_Hive_Dashboard_Widget::init();
 		}
 
@@ -514,7 +512,6 @@ class ReportedIP_Hive {
 		if ( is_admin() ) {
 			new ReportedIP_Hive_Two_Factor_Admin();
 			new ReportedIP_Hive_Two_Factor_Dashboard();
-			new ReportedIP_Hive_User_Admin();
 		}
 
 		/**
