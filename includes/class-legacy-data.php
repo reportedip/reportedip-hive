@@ -183,7 +183,8 @@ final class ReportedIP_Hive_Legacy_Data {
 		}
 
 		if ( self::orphaned( self::GROUP_ENTRIES ) ) {
-			$wpdb->query( 'DELETE FROM ' . ReportedIP_Hive_Schema::table( self::GROUP_ENTRIES ) );
+			$entries = ReportedIP_Hive_Schema::table( self::GROUP_ENTRIES );
+			$wpdb->query( "DELETE FROM {$entries}" );
 		}
 		foreach ( self::GROUP_OPTIONS as $option ) {
 			ReportedIP_Hive_Option_Routing::delete( $option );
