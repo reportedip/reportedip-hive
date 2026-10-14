@@ -149,6 +149,20 @@ class ReportedIP_Hive_Legacy_Audit_Multisite_Test extends WP_UnitTestCase {
 		$this->assertSame( 4, $this->count(), 'The rows stay, only the personal fields go.' );
 	}
 
+	public function test_the_wordpress_exporter_and_eraser_include_the_legacy_rows() {
+		global $wpdb;
+		$this->seed();
+		$privacy = ReportedIP_Hive_Privacy::get_instance();
+
+		$export = $privacy->export_personal_data( 'legacy-audit@example.org' );
+		$audit  = wp_list_filter( $export['data'], array( 'group_id' => 'reportedip-hive-audit' ) );
+		$this->assertCount( 3, $audit );
+
+		$erase = $privacy->erase_personal_data( 'legacy-audit@example.org' );
+		$this->assertGreaterThanOrEqual( 3, $erase['items_removed'] );
+		$this->assertSame( 0, (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM {$this->table} WHERE user_id = %d", $this->user_id ) ) );
+	}
+
 	public function test_a_2_1_61_table_is_exported_and_erased_by_its_user_column() {
 		$this->seed( false );
 		$user = get_userdata( $this->user_id );

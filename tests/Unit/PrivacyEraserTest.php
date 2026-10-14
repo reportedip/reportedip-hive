@@ -76,7 +76,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertStringContainsString( "ReportedIP_Hive_User_Block::update_texts( \$user->ID, '', '' )", $body );
 			$this->assertStringContainsString( '$retained   = 1;', $body );
-			$this->assertStringContainsString( "'items_retained' => \$retained", $body );
+			$this->assertStringContainsString( "'retained' => \$retained", $body );
+			$this->assertStringContainsString( "'items_retained' => (int) ( \$result['retained'] ?? \$retained )", $body );
 			$this->assertStringNotContainsString( 'User_Block::unblock(', $body );
 		}
 
@@ -131,6 +132,22 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$this->assertStringContainsString( 'Administrator note (not shown at login)', $source );
 			$this->assertStringNotContainsString( 'never shown to the user', $source );
+		}
+
+		/**
+		 * The audit table belongs to the add-on: the free exporter and eraser
+		 * reach it only through the legacy routine (rows a 2.x release left
+		 * behind, no add-on claiming them) and hand the rest to the filters.
+		 */
+		public function test_audit_rows_go_through_the_legacy_routine_and_the_filters(): void {
+			$source = $this->source( 'includes/class-privacy.php' );
+
+			$this->assertStringNotContainsString( 'reportedip_hive_audit_log', $source );
+			$this->assertStringContainsString( 'ReportedIP_Hive_Legacy_Data::export_items( $user )', $source );
+			$this->assertStringContainsString( 'ReportedIP_Hive_Legacy_Data::erase( $user )', $source );
+			$this->assertStringContainsString( "apply_filters( 'reportedip_hive_privacy_export_items', \$items, \$user )", $source );
+			$this->assertStringContainsString( "'reportedip_hive_privacy_erase',", $source );
+			$this->assertLessThan( strpos( $source, "'reportedip_hive_privacy_erase'," ), strpos( $source, 'ReportedIP_Hive_Legacy_Data::erase( $user )' ) );
 		}
 	}
 }

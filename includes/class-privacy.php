@@ -205,38 +205,7 @@ class ReportedIP_Hive_Privacy {
 			);
 		}
 
-		$audit_table = $wpdb->base_prefix . 'reportedip_hive_audit_log';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name from base_prefix, every value bound through prepare().
-		$audit = $wpdb->get_results( $wpdb->prepare( "SELECT id, created_at, ip, event_type, event_action, event_data FROM {$audit_table} WHERE user_id = %d OR (object_type = 'user' AND object_id = %d)", $user->ID, $user->ID ) );
-		foreach ( (array) $audit as $row ) {
-			$items[] = array(
-				'group_id'    => 'reportedip-hive-audit',
-				'group_label' => __( 'ReportedIP Hive: audit trail', 'reportedip-hive' ),
-				'item_id'     => 'rip-hive-audit-' . (int) $row->id,
-				'data'        => array(
-					array(
-						'name'  => __( 'Time', 'reportedip-hive' ),
-						'value' => $row->created_at,
-					),
-					array(
-						'name'  => __( 'Event', 'reportedip-hive' ),
-						'value' => $row->event_type,
-					),
-					array(
-						'name'  => __( 'Action', 'reportedip-hive' ),
-						'value' => $row->event_action,
-					),
-					array(
-						'name'  => __( 'IP address', 'reportedip-hive' ),
-						'value' => $row->ip,
-					),
-					array(
-						'name'  => __( 'Details', 'reportedip-hive' ),
-						'value' => $row->event_data,
-					),
-				),
-			);
-		}
+		$items = array_merge( $items, ReportedIP_Hive_Legacy_Data::export_items( $user ) );
 
 		$block = ReportedIP_Hive_User_Block::get( $user->ID );
 		if ( null !== $block ) {
@@ -330,8 +299,19 @@ class ReportedIP_Hive_Privacy {
 			);
 		}
 
+		/**
+		 * Extend the personal data export of one user with the items of an
+		 * add-on, each in the shape of a WordPress exporter item
+		 * (`group_id`, `group_label`, `item_id`, `data`).
+		 *
+		 * @param array<int,array<string,mixed>> $items Export items.
+		 * @param WP_User                        $user  User under request.
+		 * @since 3.0.0
+		 */
+		$items = apply_filters( 'reportedip_hive_privacy_export_items', $items, $user );
+
 		return array(
-			'data' => $items,
+			'data' => is_array( $items ) ? array_values( $items ) : array(),
 			'done' => true,
 		);
 	}
@@ -398,11 +378,7 @@ class ReportedIP_Hive_Privacy {
 
 		$removed += ReportedIP_Hive_Two_Factor::revoke_all_trusted_devices( $user->ID );
 
-		$audit_table = $wpdb->base_prefix . 'reportedip_hive_audit_log';
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name from base_prefix, every value bound through prepare().
-		$removed += (int) $wpdb->query( $wpdb->prepare( "UPDATE {$audit_table} SET username = '', ip = '', user_id = NULL, event_data = NULL WHERE user_id = %d", $user->ID ) );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name from base_prefix, every value bound through prepare().
-		$removed += (int) $wpdb->query( $wpdb->prepare( "UPDATE {$audit_table} SET object_label = NULL, event_data = NULL WHERE object_type = 'user' AND object_id = %d", $user->ID ) );
+		$removed += ReportedIP_Hive_Legacy_Data::erase( $user );
 
 		delete_user_meta( $user->ID, '_reportedip_hive_known_ips' );
 		delete_user_meta( $user->ID, ReportedIP_Hive_Two_Factor::META_LOGIN_CONTEXT );
@@ -415,10 +391,31 @@ class ReportedIP_Hive_Privacy {
 			$messages[] = __( 'The account block itself was retained for security; its free-text fields were cleared.', 'reportedip-hive' );
 		}
 
+		/**
+		 * Erase the data an add-on keeps about one user and add its counts.
+		 * The listener returns the array with `removed` and `retained`
+		 * raised by what it erased or kept, and its sentences appended to
+		 * `messages`.
+		 *
+		 * @param array{removed:int,retained:int,messages:string[]} $result Counts and messages so far.
+		 * @param WP_User                                           $user   User under request.
+		 * @since 3.0.0
+		 */
+		$result = apply_filters(
+			'reportedip_hive_privacy_erase',
+			array(
+				'removed'  => $removed,
+				'retained' => $retained,
+				'messages' => $messages,
+			),
+			$user
+		);
+		$result = is_array( $result ) ? $result : array();
+
 		return array(
-			'items_removed'  => $removed,
-			'items_retained' => $retained,
-			'messages'       => $messages,
+			'items_removed'  => (int) ( $result['removed'] ?? $removed ),
+			'items_retained' => (int) ( $result['retained'] ?? $retained ),
+			'messages'       => array_values( (array) ( $result['messages'] ?? $messages ) ),
 			'done'           => true,
 		);
 	}
