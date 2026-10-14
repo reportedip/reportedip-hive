@@ -92,7 +92,6 @@ class ReportedIP_Hive_Pre_Auth_Block_Reason_Multisite_Test extends WP_UnitTestCa
 	 */
 	private function client_property() {
 		$property = new ReflectionProperty( 'ReportedIP_Hive', 'api_client' );
-		$property->setAccessible( true );
 		return $property;
 	}
 

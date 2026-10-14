@@ -20,7 +20,6 @@
 declare(strict_types=1);
 
 namespace {
-	require_once dirname( __DIR__ ) . '/stubs/two-factor-runtime-stubs.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-account-block.php';
 }
 
@@ -170,6 +169,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * the audit row 2.1.74 wrote from here.
 		 */
 		public function test_unblock_lifts_the_record_and_announces_it(): void {
+			require_once dirname( __DIR__ ) . '/stubs/two-factor-runtime-stubs.php';
 			$GLOBALS['wp_user_meta'][42][ \ReportedIP_Hive_Account_Block::META ] = array( 'blocked_at' => '2026-09-08 10:00:00' );
 			$heard = array();
 			add_action(
