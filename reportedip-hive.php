@@ -1746,10 +1746,8 @@ class ReportedIP_Hive {
 				);
 				ReportedIP_Hive_Admin_Notice::render(
 					array(
-						'variant'        => 'error',
-						'dismissible'    => true,
-						'data_notice_id' => 'queue_critical_' . gmdate( 'Y-m-d' ),
-						'body'           => $body,
+						'variant' => 'error',
+						'body'    => $body,
 					)
 				);
 			} elseif ( $pending_count >= $warning_threshold && ! $queue_dismissed ) {
