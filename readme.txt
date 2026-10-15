@@ -151,7 +151,7 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 6. Firewall rules and the pre-WordPress guard on the Tools page.
 7. Community page with the connection card.
 8. System status and readiness check.
-9. Network admin on a multisite installation.
+9. Site view on a multisite network: local activity, protection managed centrally by the network admin.
 
 == Changelog ==
 
