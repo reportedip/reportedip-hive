@@ -91,8 +91,7 @@ export async function loginAsAdmin(page: Page, loginPath = '/wp-login.php'): Pro
 
     await context.clearCookies();
     await page.goto(loginPath);
-    await page.fill('#user_login', ADMIN_USER);
-    await page.fill('#user_pass', ADMIN_PASS);
+    await fillLoginForm(page, ADMIN_USER, ADMIN_PASS);
     await page.click('#wp-submit');
     await page.waitForURL((url) => url.pathname.includes('/wp-admin/'));
 
@@ -107,6 +106,31 @@ export async function loginAsAdmin(page: Page, loginPath = '/wp-login.php'): Pro
     } catch {
         /* A session that cannot be stored only costs the next test its own sign-in. */
     }
+}
+
+/**
+ * Fill the wp-login.php credentials so that each value ends up in its own field.
+ *
+ * wp-login.php runs `wp_attempt_focus()` 200 ms after the form renders: it
+ * focuses and selects `#user_login` (or, when the username is prefilled,
+ * empties `#user_pass`). A fill() racing that timer types the password into
+ * the selected username field. The timer is waited out first (the focus lands
+ * on one of the two fields), then the values are written and read back until
+ * both hold, which also covers a timer that fires late on a slow page.
+ */
+export async function fillLoginForm(page: Page, login: string, pass: string): Promise<void> {
+    const user = page.locator('#user_login');
+    const password = page.locator('#user_pass');
+    await password.waitFor();
+    await page
+        .waitForFunction(() => ['user_login', 'user_pass'].includes(document.activeElement?.id ?? ''), null, { timeout: 2_000 })
+        .catch(() => undefined);
+    await expect(async () => {
+        await user.fill(login);
+        await password.fill(pass);
+        await expect(user).toHaveValue(login, { timeout: 1_000 });
+        await expect(password).toHaveValue(pass, { timeout: 1_000 });
+    }).toPass({ timeout: 20_000 });
 }
 
 /**

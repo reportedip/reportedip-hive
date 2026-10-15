@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import type { APIRequestContext, Page, Response } from '@playwright/test';
-import { test, expect, loginAsAdmin } from '../../fixtures/admin';
+import { test, expect, loginAsAdmin, fillLoginForm } from '../../fixtures/admin';
 import { resetAdminBaseline } from '../../fixtures/admin-reset';
 import { FORCE_FREE_PHP, forceTierPhp } from '../../fixtures/tier';
 
@@ -305,8 +305,7 @@ test.describe('registration rules', () => {
 		const guest = await visitor.newPage();
 
 		await guest.goto('/wp-login.php');
-		await guest.fill('#user_login', GHOST_LOGIN_ON);
-		await guest.fill('#user_pass', 'wrong-password-on-purpose');
+		await fillLoginForm(guest, GHOST_LOGIN_ON, 'wrong-password-on-purpose');
 		await guest.click('#wp-submit');
 
 		const errorOn = guest.locator('#login_error');
@@ -324,8 +323,7 @@ test.describe('registration rules', () => {
 		expect(blockedIp.length, 'the probing address must have been blocked').toBeGreaterThan(0);
 
 		await guest.goto('/wp-login.php');
-		await guest.fill('#user_login', GHOST_LOGIN_OFF);
-		await guest.fill('#user_pass', 'wrong-password-on-purpose');
+		await fillLoginForm(guest, GHOST_LOGIN_OFF, 'wrong-password-on-purpose');
 		await guest.click('#wp-submit');
 
 		const errorOff = guest.locator('#login_error');

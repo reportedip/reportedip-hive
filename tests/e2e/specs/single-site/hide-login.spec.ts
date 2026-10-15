@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { test, expect } from '../../fixtures/admin';
+import { test, expect, fillLoginForm } from '../../fixtures/admin';
 
 /**
  * Hide Login, driven over real HTTP.
@@ -140,8 +140,7 @@ test.describe('hide login', () => {
 		hideLogin(true);
 
 		await page.goto(`/${SLUG}/`);
-		await page.fill('#user_login', 'admin');
-		await page.fill('#user_pass', 'admin');
+		await fillLoginForm(page, 'admin', 'admin');
 		await page.click('#wp-submit');
 
 		await page.waitForURL((url) => url.pathname.includes('/wp-admin/'), { timeout: 60_000 });

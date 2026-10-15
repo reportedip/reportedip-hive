@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process';
 import type { CDPSession, Page } from '@playwright/test';
+import { fillLoginForm } from './admin';
 import { workspaceRoot } from './workspace';
 
 /**
@@ -105,20 +106,7 @@ export async function attachVirtualAuthenticator(
  */
 export async function submitLoginForm(page: Page): Promise<void> {
     await page.goto('/wp-login.php');
-    await page.waitForSelector('#user_pass');
-
-    // wp-login.php's wp_attempt_focus() steals focus onto #user_login and
-    // select()s it ~200ms after load. A fill() racing that timer can end
-    // up typing the password into the username field. Wait the timer out,
-    // then verify the fields actually hold what we typed before submitting.
-    await page.waitForTimeout(400);
-    await page.fill('#user_login', WEBAUTHN_USER);
-    await page.fill('#user_pass', WEBAUTHN_PASS);
-    if ((await page.inputValue('#user_login')) !== WEBAUTHN_USER
-        || (await page.inputValue('#user_pass')) !== WEBAUTHN_PASS) {
-        await page.fill('#user_login', WEBAUTHN_USER);
-        await page.fill('#user_pass', WEBAUTHN_PASS);
-    }
+    await fillLoginForm(page, WEBAUTHN_USER, WEBAUTHN_PASS);
     await page.click('#wp-submit');
 }
 

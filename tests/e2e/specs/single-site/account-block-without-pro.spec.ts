@@ -1,6 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import type { Page } from '@playwright/test';
-import { test, expect, loginAsAdmin } from '../../fixtures/admin';
+import { test, expect, loginAsAdmin, fillLoginForm } from '../../fixtures/admin';
 
 /**
  * Account block without the add-on: a block record written by a 2.x release
@@ -35,8 +35,7 @@ function wpTolerant(...args: string[]): string {
 
 async function submitLogin(page: Page): Promise<void> {
 	await page.goto('/wp-login.php');
-	await page.fill('#user_login', BLOCKED);
-	await page.fill('#user_pass', BLOCKED_PASS);
+	await fillLoginForm(page, BLOCKED, BLOCKED_PASS);
 	await page.click('#wp-submit');
 }
 
