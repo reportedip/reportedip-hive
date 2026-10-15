@@ -2,6 +2,84 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [3.0.0] - unreleased
+
+### Security
+
+- **A security key is used once.** Two parallel submissions of one
+  sign-in assertion can no longer both sign in, and two parallel
+  completions of one key registration store one key.
+- **Closing a notice writes only known ids.** The dismiss handler accepts
+  the fixed notice ids the plugin reads and nothing else. The readiness
+  notice is closed site-wide and only by an administrator.
+- **The migration lock is taken atomically.** A request releases only the
+  lock it took itself.
+
+### Fixes
+
+- **Update from ReportedIP Hive Light 1.3.9.** Light used the same slug,
+  so a Light site receives this release as a normal update. Migration v24
+  and the merged schema step keep its data working:
+  - permanent whitelist entries, stored by Light with a zero date, stay
+    permanent instead of counting as expired;
+  - whitelisted ranges and IPv6 addresses get their type back, so they
+    match again;
+  - attempt counters kept per user name are merged into one row per
+    address and type with the counts summed, and the unique key is added;
+  - `attempts.window_start` accepts NULL, so new counters insert under a
+    strict SQL mode;
+  - the proxy headers True-Client-IP and X-Cluster-Client-IP, offered by
+    Light, are accepted and stay selected after the next save;
+  - Light's untouched hourly API limit of 100 becomes 0 (bound to the
+    plan); a value set on purpose stays.
+- **Duplicate attempt rows are merged, not dropped.** The v15 cleanup kept
+  only the freshest row and lost the other counts.
+- **Tools page outside the menu.** Without expert mode the page had no
+  title, which left the browser tab empty and raised a PHP deprecation
+  notice.
+- **Language leftovers.** "Unbegrenzt" in the English source and the
+  label "ReportedIP.de API key" are fixed.
+
+### Changed
+
+- **Free plugin and Pro add-on.** ReportedIP Hive is now the free plugin
+  from the WordPress plugin directory: firewall, login security, core 2FA
+  and the Community Network, complete and without locked switches. The
+  features of the paid plans moved to the separate ReportedIP Hive Pro
+  add-on. A 2.x site keeps every setting and every row; with the add-on
+  installed the paid features work as before.
+- **Updates come from wordpress.org.** The GitHub update checker is gone.
+  Migration v22 removes its cron event and its stored state on every site.
+- **Plugin name** as in the plugin directory: "ReportedIP Hive: Firewall,
+  Login Security, Brute Force Protection and 2FA".
+- **The breach check is off by default.** New passwords are checked
+  against Have I Been Pwned only after the switch is turned on. A 2.x site
+  keeps its stored value.
+- **.htaccess is edited only after an operator action.** Activation writes
+  nothing. The quickstart, a save of the bait-path or uploads switch, a
+  settings import, WP-CLI or a remote apply give the go-ahead; a reset to
+  the defaults does not. A site updating from 2.x with a completed
+  quickstart keeps its blocks, and a reactivation with the go-ahead writes
+  them again at once.
+- **Local Shield sends nothing, even with a key stored.** Reports,
+  positive feedback and the quota refresh stay local until the Community
+  Network is switched on. System Status reads "Local Shield mode active".
+- **The news card loads its feed only in Community Network mode.**
+- **Notices can be closed.** Every notice carries a fixed id. The
+  rate-limit notice returns after an hour; the 2FA reminder, the missing
+  key, the domain limit and the queue warning after a day. A critical
+  queue state and a critical readiness issue stay until they are fixed.
+  Migration v23 deletes the per-day dismissal rows of older releases.
+
+### New
+
+- **Proxy headers True-Client-IP and X-Cluster-Client-IP** in the trusted
+  header select, the remote schema and the pre-WordPress guard.
+- **Extension API for the add-on.** Documented actions and filters,
+  including `reportedip_hive_dismissible_notice_ids` for notices an add-on
+  renders.
+- **Database schema 24** (migrations v22 to v24).
+
 ## [2.1.74] (2026-10-12)
 
 ### Fixes

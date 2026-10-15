@@ -52,7 +52,7 @@ Both layers are fail-open: a broken rule or an unwritable directory lets the req
 
 - **404 and scanner detection.** Bursts of 404s and requests for bait paths such as `.env` or `.git/config` block the address.
 - **Verified bot detection.** Googlebot, Bingbot and other large crawlers are confirmed through their published address ranges or reverse DNS. A fake Googlebot gains nothing.
-- **Cloudflare and reverse proxies.** A trusted IP header (CF-Connecting-IP, X-Forwarded-For, X-Real-IP, True-Client-IP) is honoured only for requests from the trusted proxy list, so nobody can smuggle an allowed address into the header.
+- **Cloudflare and reverse proxies.** A trusted IP header (CF-Connecting-IP, X-Forwarded-For, X-Real-IP, Client-IP, True-Client-IP, X-Cluster-Client-IP) is honoured only for requests from the trusted proxy list, so nobody can smuggle an allowed address into the header.
 
 ## Spam protection for forms and comments
 
@@ -69,7 +69,7 @@ Each a switch: the REST API for signed-in users or chosen roles, XML-RPC and pin
 
 ## Community IP blocklist
 
-- **Local Shield** is the default. The plugin makes no outbound request; every decision is taken from the data on your own server.
+- **Local Shield** is the default. The plugin makes no outbound request, even with a key stored; every decision is taken from the data on your own server.
 - **Community Network** is optional. With a free Community Access Key from [reportedip.com](https://reportedip.com/register/?rc=hive-github) the plugin checks the IP reputation of attacking addresses during sign-in and on forms, shares the addresses it blocks with the community blocklist, and receives signed firewall rulesets every six hours.
 
 Only the attacking IP address, the event category, the time, the site name and address, the attempt count and the plugin version leave the site. Usernames, passwords and form content never do. Every request is listed under External Services in [`readme.txt`](./readme.txt).
@@ -95,6 +95,10 @@ A separate add-on, ReportedIP Hive Pro, extends this plugin with a managed EU re
 ## Installation
 
 Install ReportedIP Hive from the WordPress plugin directory: [wordpress.org/plugins/reportedip-hive](https://wordpress.org/plugins/reportedip-hive/). On a multisite network, activate it network-wide. The quickstart under ReportedIP Hive lets you pick Local Shield or the Community Network and applies the recommended settings with one click. Updates arrive through the plugin directory.
+
+The two optional `.htaccess` blocks (bait-path responses and PHP execution in uploads) are written only after an operator action: the quickstart, saving either switch, a settings import or WP-CLI. Activation writes nothing. A site updating from 2.x with a completed quickstart keeps its blocks.
+
+ReportedIP Hive Light used the same plugin slug, so a Light 1.3.9 site receives this plugin as a normal update. Its whitelist (including ranges and permanent entries), blocks, attempt counters, proxy header and settings are carried over.
 
 ## Requirements
 

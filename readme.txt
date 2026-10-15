@@ -123,7 +123,7 @@ Only the attacking IP address, the event category, the time, your site name and 
 
 = Does it work behind Cloudflare or a reverse proxy? =
 
-Yes. Choose the header that carries the visitor address (CF-Connecting-IP, X-Forwarded-For, X-Real-IP or True-Client-IP) and list the trusted proxy ranges.
+Yes. Choose the header that carries the visitor address (CF-Connecting-IP, X-Forwarded-For, X-Real-IP, Client-IP, True-Client-IP or X-Cluster-Client-IP) and list the trusted proxy ranges.
 
 = Does it work with caching plugins? =
 
@@ -136,6 +136,10 @@ Yes. Any FIDO2 or WebAuthn authenticator works as a second factor, including Yub
 = Do I still need a CAPTCHA? =
 
 Usually not. The invisible form check stops scripted submissions on comments, registrations, password resets and Contact Form 7 without a puzzle for your visitors.
+
+= I use ReportedIP Hive Light. What happens on the update? =
+
+ReportedIP Hive replaces ReportedIP Hive Light under the same name in the plugin directory, so the update arrives like any other. Your whitelist, blocks, counters and settings are carried over, including ranges, permanent whitelist entries and the True-Client-IP or X-Cluster-Client-IP proxy header. Open the quickstart afterwards to pick Local Shield or the Community Network.
 
 = What if I lock myself out? =
 
@@ -159,13 +163,16 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 * The plugin now comes from the WordPress plugin directory. The former GitHub update checker is gone.
 * Paid features moved to the separate ReportedIP Hive Pro add-on.
 * The breach check for new passwords is off until you switch it on.
-* .htaccess blocks are written when the quickstart completes or a switch is saved, not at activation.
-* Every notice is dismissible.
+* .htaccess blocks are written after an operator action (quickstart, saving the switch, import, WP-CLI), never at activation. A site updating from 2.x with a completed quickstart keeps its blocks.
+* Local Shield sends no request to reportedip.com, even with a key stored. The news feed loads only in Community Network mode.
+* Notices can be closed and return after an hour or a day; a critical queue or readiness problem stays until it is fixed.
+* Update path from ReportedIP Hive Light 1.3.9: permanent and range whitelist entries, attempt counters and the proxy header are kept.
+* Database schema 24.
 
 == Upgrade Notice ==
 
 = 3.0.0 =
-Updates now come from wordpress.org. Sites with a paid plan install the Pro add-on from their reportedip.com account.
+Updates now come from wordpress.org. Sites with a paid plan install the Pro add-on from their reportedip.com account. Sites on ReportedIP Hive Light 1.3.9 keep their whitelist, blocks and settings.
 
 == Privacy Policy ==
 
