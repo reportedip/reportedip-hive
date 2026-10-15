@@ -1529,9 +1529,29 @@ class ReportedIP_Hive_Admin_Settings {
 		add_submenu_page( 'reportedip-hive', __( 'Activity', 'reportedip-hive' ), __( 'Activity', 'reportedip-hive' ), $cap, 'reportedip-hive-security', array( $this, 'security_page' ) );
 		add_submenu_page( 'reportedip-hive', __( 'Protection', 'reportedip-hive' ), __( 'Protection', 'reportedip-hive' ), $cap, ReportedIP_Hive_Protection_Page::PAGE_SLUG, array( 'ReportedIP_Hive_Protection_Page', 'render_page' ) );
 		$tools_parent = ReportedIP_Hive_Protection_Page::is_expert() ? 'reportedip-hive' : '';
-		add_submenu_page( $tools_parent, __( 'Tools', 'reportedip-hive' ), __( 'Tools', 'reportedip-hive' ), $cap, ReportedIP_Hive_Tools_Page::PAGE_SLUG, array( new ReportedIP_Hive_Tools_Page(), 'render_page' ) );
+		$tools_hook   = add_submenu_page( $tools_parent, __( 'Tools', 'reportedip-hive' ), __( 'Tools', 'reportedip-hive' ), $cap, ReportedIP_Hive_Tools_Page::PAGE_SLUG, array( new ReportedIP_Hive_Tools_Page(), 'render_page' ) );
+		if ( '' === $tools_parent && is_string( $tools_hook ) ) {
+			add_action( 'load-' . $tools_hook, array( __CLASS__, 'title_hidden_tools_page' ) );
+		}
 		add_submenu_page( 'reportedip-hive', __( 'Community & Quota', 'reportedip-hive' ), __( 'Community', 'reportedip-hive' ), $cap, 'reportedip-hive-community', array( $this, 'community_page' ) );
 		add_submenu_page( 'reportedip-hive', __( 'System Status', 'reportedip-hive' ), __( 'System Status', 'reportedip-hive' ), $cap, 'reportedip-hive-debug', array( $this, 'debug_page' ) );
+	}
+
+	/**
+	 * Give the Tools page its title while it is outside the menu.
+	 *
+	 * A page without a parent is not in `$submenu`, so
+	 * `get_admin_page_title()` finds no title and admin-header.php hands
+	 * null to `strip_tags()`. On PHP 8.1 that deprecation notice is the
+	 * first output with WP_DEBUG on, and every later header (the user
+	 * settings cookie on Multisite) fails with "headers already sent".
+	 *
+	 * @return void
+	 * @since  3.0.0
+	 */
+	public static function title_hidden_tools_page() {
+		global $title;
+		$title = __( 'Tools', 'reportedip-hive' ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- core reads the page title from this global and finds none for a page outside the menu.
 	}
 
 	/**
