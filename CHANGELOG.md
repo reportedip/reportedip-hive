@@ -48,6 +48,9 @@ All changes to ReportedIP Hive are documented here.
   notice.
 - **Language leftovers.** "Unbegrenzt" in the English source and the
   label "ReportedIP.de API key" are fixed.
+- **Deleting a network site no longer logs a database error.** The
+  cleanup read per-site options after WordPress had dropped the site's
+  tables.
 
 ### Changed
 

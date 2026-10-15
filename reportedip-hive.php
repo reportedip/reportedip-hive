@@ -237,6 +237,10 @@ class ReportedIP_Hive {
 	/**
 	 * Clean up `blog_id`-scoped plugin data when a site is deleted.
 	 *
+	 * Per-site options need no cleanup: `wp_delete_site` fires after core
+	 * has dropped the site's tables on `wp_uninitialize_site`, so a
+	 * `delete_blog_option()` here only queried a missing options table.
+	 *
 	 * @param WP_Site $site WordPress site object being deleted.
 	 */
 	public static function on_site_deleted( $site ) {
@@ -245,7 +249,6 @@ class ReportedIP_Hive {
 			return;
 		}
 		ReportedIP_Hive_Schema::cleanup_blog_data( $blog_id );
-		delete_blog_option( $blog_id, 'reportedip_hive_2fa_enforce_roles_extra' );
 	}
 
 	/**
