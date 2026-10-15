@@ -15,7 +15,7 @@ test('reportedip-hive is network-active on WPMU stack', async ({ page }) => {
     await loginAsAdmin(page);
 
     await page.goto('/wp-admin/network/plugins.php');
-    const row = page.locator('tr[data-slug="reportedip-hive"]');
+    const row = page.locator('tr[data-plugin="reportedip-hive/reportedip-hive.php"]');
     await expect(row).toBeVisible();
     await expect(row).toHaveClass(/\bactive\b/);
     await expect(row.locator('span.deactivate a')).toContainText(/Network Deactivate/i);
