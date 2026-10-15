@@ -3,8 +3,9 @@
  * Unit tests for the v15 attempts-table uniqueness migration.
  *
  * Locks down `migrate_to_v15()`: when the `unique_ip_type` key is missing the
- * migration first deduplicates stale (ip_address, attempt_type) rows and only
- * then adds the UNIQUE key (the ALTER would fail on duplicates otherwise);
+ * migration first folds duplicate (ip_address, attempt_type) rows into one
+ * (summed counter, see `Schema::merge_duplicate_attempts()`) and only then
+ * adds the UNIQUE key (the ALTER would fail on duplicates otherwise);
  * when the key already exists neither statement runs again; and the redundant
  * non-unique `composite_ip_type` index is dropped when present. Also pins
  * `CURRENT_VERSION` at 15 so the migration actually runs on upgrade.
@@ -77,12 +78,25 @@ class Migration_V15_WPDB_Stub {
 	}
 
 	/**
-	 * Answer the index-existence probe from the configured map.
+	 * Escape LIKE wildcards.
+	 *
+	 * @param string $text Raw text.
+	 * @return string
+	 */
+	public function esc_like( $text ) {
+		return addcslashes( (string) $text, '_%\\' );
+	}
+
+	/**
+	 * Answer the table and index-existence probes from the configured map.
 	 *
 	 * @param string|null $sql Interpolated probe SQL.
-	 * @return int 1 when the probed index is in the map, 0 otherwise.
+	 * @return int|string The table name for SHOW TABLES, 1 when the probed index is in the map, 0 otherwise.
 	 */
 	public function get_var( $sql = null ) {
+		if ( 0 === strpos( (string) $sql, 'SHOW TABLES' ) ) {
+			return 'wp_reportedip_hive_attempts';
+		}
 		foreach ( $this->existing_indexes as $index ) {
 			if ( false !== strpos( (string) $sql, "'" . $index . "'" ) ) {
 				return 1;
@@ -145,12 +159,14 @@ class MigrationV15Test extends TestCase {
 		$this->run_v15();
 
 		$queries = $this->queries();
-		$this->assertCount( 2, $queries );
-		$this->assertStringContainsString( 'DELETE stale FROM wp_reportedip_hive_attempts', $queries[0] );
-		$this->assertStringContainsString( 'INNER JOIN wp_reportedip_hive_attempts AS fresh', $queries[0] );
+		$this->assertCount( 3, $queries );
+		$this->assertStringContainsString( 'SUM(attempt_count)', $queries[0], 'The surviving row carries the sum of all duplicate counters.' );
+		$this->assertStringContainsString( 'MAX(last_attempt)', $queries[0] );
+		$this->assertStringContainsString( 'DELETE stale FROM wp_reportedip_hive_attempts', $queries[1] );
+		$this->assertStringContainsString( 'stale.id < keep.id', $queries[1], 'Only the rows folded into the highest id are deleted.' );
 		$this->assertStringContainsString(
 			'ADD UNIQUE KEY unique_ip_type (ip_address, attempt_type)',
-			$queries[1],
+			$queries[2],
 			'The dedupe DELETE must run before the ALTER, the ADD UNIQUE KEY fails on duplicate rows.'
 		);
 	}
@@ -183,9 +199,27 @@ class MigrationV15Test extends TestCase {
 		$this->run_v15();
 
 		$queries = $this->queries();
-		$this->assertCount( 3, $queries );
-		$this->assertStringContainsString( 'DELETE stale FROM', $queries[0] );
-		$this->assertStringContainsString( 'ADD UNIQUE KEY unique_ip_type', $queries[1] );
-		$this->assertStringContainsString( 'DROP INDEX composite_ip_type', $queries[2] );
+		$this->assertCount( 4, $queries );
+		$this->assertStringContainsString( 'SUM(attempt_count)', $queries[0] );
+		$this->assertStringContainsString( 'DELETE stale FROM', $queries[1] );
+		$this->assertStringContainsString( 'ADD UNIQUE KEY unique_ip_type', $queries[2] );
+		$this->assertStringContainsString( 'DROP INDEX composite_ip_type', $queries[3] );
+	}
+
+	public function test_merge_is_skipped_once_the_key_exists() {
+		$GLOBALS['wpdb']->existing_indexes = array( 'unique_ip_type' );
+
+		\ReportedIP_Hive_Schema::merge_duplicate_attempts();
+
+		$this->assertSame( array(), $this->queries() );
+	}
+
+	public function test_ensure_tables_merges_before_dbdelta_adds_the_key() {
+		$src    = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-schema.php' );
+		$merge  = strpos( $src, 'self::merge_duplicate_attempts();' );
+		$delta  = strpos( $src, 'dbDelta( $sql_attempts );' );
+		$this->assertNotFalse( $merge );
+		$this->assertNotFalse( $delta );
+		$this->assertLessThan( $delta, $merge, 'dbDelta adds unique_ip_type; duplicates must be folded first or the key fails with a duplicate-entry error.' );
 	}
 }

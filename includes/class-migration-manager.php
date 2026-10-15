@@ -43,7 +43,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 23;
+	public const CURRENT_VERSION = 24;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -54,6 +54,19 @@ final class ReportedIP_Hive_Migration_Manager {
 	 * Network option name used as an atomic lock during migration.
 	 */
 	public const LOCK_OPTION = 'reportedip_hive_migration_lock';
+
+	/**
+	 * Whether the running migration started from ReportedIP Hive Light.
+	 *
+	 * Light (the wordpress.org plugin on the same slug up to 1.3.x) stored
+	 * its schema version as a dotted string such as `1.2.0`; every Hive
+	 * release stored an integer. The integer cast reads `1.2.0` as 1, so the
+	 * whole 2.x chain runs, which is right for the tables; the flag lets the
+	 * steps that only make sense for a 2.x install leave Light data alone.
+	 *
+	 * @var bool
+	 */
+	private static $from_light = false;
 
 	/**
 	 * Values of the locks this request holds, keyed by lock name.
@@ -87,6 +100,12 @@ final class ReportedIP_Hive_Migration_Manager {
 			return;
 		}
 
+		$raw = get_site_option( self::VERSION_OPTION, 0 );
+		if ( ! self::is_light_version( $raw ) && is_multisite() ) {
+			$raw = get_option( self::VERSION_OPTION, 0 );
+		}
+		self::$from_light = self::is_light_version( $raw );
+
 		try {
 			for ( $v = $current + 1; $v <= self::CURRENT_VERSION; $v++ ) {
 				$method = "migrate_to_v{$v}";
@@ -96,8 +115,20 @@ final class ReportedIP_Hive_Migration_Manager {
 				update_site_option( self::VERSION_OPTION, $v );
 			}
 		} finally {
+			self::$from_light = false;
 			self::release_lock();
 		}
+	}
+
+	/**
+	 * Whether a stored schema version comes from ReportedIP Hive Light.
+	 *
+	 * @param mixed $raw Stored `reportedip_hive_db_version`.
+	 * @return bool True for a dotted version string such as `1.2.0`.
+	 * @since  3.0.0
+	 */
+	public static function is_light_version( $raw ) {
+		return is_string( $raw ) && 1 === preg_match( '/^\d+\.\d+(\.\d+)?$/D', $raw );
 	}
 
 	/**
@@ -265,11 +296,19 @@ final class ReportedIP_Hive_Migration_Manager {
 	 * Also drops the legacy single-counter transient so the new per-bucket
 	 * counters start from a clean slate.
 	 *
+	 * Hive Light had no field for the option, so its 100 is the untouched
+	 * Light default and becomes the free default 0 as well; kept as 100 it
+	 * would cap every paid plan at 100 lookups an hour. Any other value on
+	 * a Light install was set on purpose (WP-CLI) and stays.
+	 *
 	 * @return void
 	 * @since  2.0.7
 	 */
 	private static function migrate_to_v6() {
-		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_max_api_calls_per_hour', 0 );
+		$key = 'reportedip_hive_max_api_calls_per_hour';
+		if ( ! self::$from_light || 100 === (int) ReportedIP_Hive_Option_Routing::get( $key, 100 ) ) {
+			ReportedIP_Hive_Option_Routing::set( $key, 0 );
+		}
 		delete_site_transient( 'reportedip_hive_hourly_api_calls' );
 		delete_transient( 'reportedip_hive_hourly_api_calls' );
 	}
@@ -519,9 +558,10 @@ final class ReportedIP_Hive_Migration_Manager {
 	 * idle hour" behavior produced duplicate rows per (ip, attempt_type) by
 	 * design. This migration:
 	 *
-	 *   1. Deduplicates: keeps only the freshest row per (ip_address,
-	 *      attempt_type), losing stale duplicate counters is fail-safe, it can
-	 *      only undercount.
+	 *   1. Deduplicates through
+	 *      {@see ReportedIP_Hive_Schema::merge_duplicate_attempts()}: one row
+	 *      per (ip_address, attempt_type) carrying the summed counters (until
+	 *      3.0.0 the stale rows were dropped and their counts lost).
 	 *   2. Adds `UNIQUE KEY unique_ip_type (ip_address, attempt_type)` so the
 	 *      rewritten `track_attempt()` upsert (`INSERT ... ON DUPLICATE KEY
 	 *      UPDATE` with a conditional one-hour window reset) is atomic.
@@ -536,14 +576,7 @@ final class ReportedIP_Hive_Migration_Manager {
 		$attempts = ReportedIP_Hive_Schema::table( ReportedIP_Hive_Schema::TABLE_ATTEMPTS );
 
 		if ( ! ReportedIP_Hive_Schema::index_exists( ReportedIP_Hive_Schema::TABLE_ATTEMPTS, 'unique_ip_type' ) ) {
-			$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Schema migration.
-				"DELETE stale FROM $attempts AS stale
-				 INNER JOIN $attempts AS fresh
-				         ON stale.ip_address = fresh.ip_address
-				        AND stale.attempt_type = fresh.attempt_type
-				        AND ( stale.last_attempt < fresh.last_attempt
-				              OR ( stale.last_attempt = fresh.last_attempt AND stale.id < fresh.id ) )"
-			);
+			ReportedIP_Hive_Schema::merge_duplicate_attempts();
 
 			$wpdb->query( "ALTER TABLE $attempts ADD UNIQUE KEY unique_ip_type (ip_address, attempt_type)" ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- Schema migration.
 		}
@@ -718,6 +751,45 @@ final class ReportedIP_Hive_Migration_Manager {
 		foreach ( self::DATED_DISMISS_IDS as $id ) {
 			$like = $wpdb->esc_like( 'reportedip_dismissed_' . $id . '_' ) . '%';
 			$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s", $like ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- One-time cleanup of inert rows; no cache holds them.
+		}
+	}
+
+	/**
+	 * Migrate to v24: make data stored by ReportedIP Hive Light behave.
+	 *
+	 * All three steps are data-driven and idempotent, so they also run on a
+	 * 2.x install, where they find nothing to change:
+	 *
+	 *   1. Whitelist entries without an expiry: Light bound `null` through
+	 *      `prepare( '%s' )`, which stores the zero date. A NOW() comparison
+	 *      is false for it, so the entries stopped working. NULL is the free
+	 *      plugin's "never expires".
+	 *   2. Whitelist `ip_type`: Light had no such column, dbDelta filled the
+	 *      default `ipv4` in, and range entries are only matched with
+	 *      `ip_type = 'cidr'`. The type follows from the address.
+	 *   3. `attempts.window_start`: a Light column, NOT NULL without a default.
+	 *      The free plugin never writes it, so a strict SQL mode would refuse
+	 *      every new counter row. It becomes nullable; the values stay.
+	 *
+	 * @return void
+	 * @since  3.0.0
+	 */
+	private static function migrate_to_v24() {
+		global $wpdb;
+
+		$whitelist = ReportedIP_Hive_Schema::table( ReportedIP_Hive_Schema::TABLE_WHITELIST );
+		if ( ReportedIP_Hive_Schema::column_exists( ReportedIP_Hive_Schema::TABLE_WHITELIST, 'expires_at' ) ) {
+			$wpdb->query( "UPDATE $whitelist SET expires_at = NULL WHERE expires_at = '0000-00-00 00:00:00'" );
+		}
+		if ( ReportedIP_Hive_Schema::column_exists( ReportedIP_Hive_Schema::TABLE_WHITELIST, 'ip_type' ) ) {
+			$wpdb->query( "UPDATE $whitelist SET ip_type = 'cidr' WHERE ip_address LIKE '%/%' AND ( ip_type IS NULL OR ip_type <> 'cidr' )" );
+			$wpdb->query( "UPDATE $whitelist SET ip_type = 'ipv6' WHERE ip_address LIKE '%:%' AND ip_address NOT LIKE '%/%' AND ( ip_type IS NULL OR ip_type <> 'ipv6' )" );
+		}
+		ReportedIP_Hive_Database::flush_ip_state_caches();
+
+		if ( ReportedIP_Hive_Schema::column_exists( ReportedIP_Hive_Schema::TABLE_ATTEMPTS, 'window_start' ) ) {
+			$attempts = ReportedIP_Hive_Schema::table( ReportedIP_Hive_Schema::TABLE_ATTEMPTS );
+			$wpdb->query( "ALTER TABLE $attempts MODIFY window_start datetime NULL DEFAULT NULL" );
 		}
 	}
 

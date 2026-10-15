@@ -354,6 +354,7 @@ final class ReportedIP_Hive_Schema {
 		dbDelta( $sql_logs );
 		dbDelta( $sql_whitelist );
 		dbDelta( $sql_blocked );
+		self::merge_duplicate_attempts();
 		dbDelta( $sql_attempts );
 		dbDelta( $sql_queue );
 		dbDelta( $sql_stats );
@@ -361,6 +362,48 @@ final class ReportedIP_Hive_Schema {
 		dbDelta( $sql_waf_exceptions );
 
 		self::ensure_additional_indexes();
+	}
+
+	/**
+	 * Fold duplicate attempt rows into one row per (ip_address, attempt_type).
+	 *
+	 * The UNIQUE key `unique_ip_type` cannot be added while duplicates exist:
+	 * dbDelta fails with a duplicate-entry error and the key stays missing.
+	 * Duplicates come from 2.x before 2.1.41 (a new row per idle hour) and
+	 * from Hive Light, which keeps one row per user name. The row with the
+	 * highest id survives and carries the sum of all counters and the latest
+	 * `last_attempt`, so no counted attempt is lost. Runs only while the
+	 * table exists and the key is missing, so it is a no-op afterwards.
+	 *
+	 * @return void
+	 * @since  3.0.0
+	 */
+	public static function merge_duplicate_attempts() {
+		global $wpdb;
+		$table = self::table( self::TABLE_ATTEMPTS );
+		if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $table ) ) ) !== $table ) {
+			return;
+		}
+		if ( self::index_exists( self::TABLE_ATTEMPTS, 'unique_ip_type' ) ) {
+			return;
+		}
+		$wpdb->query(
+			"UPDATE $table AS keep
+			 INNER JOIN (
+				SELECT MAX(id) AS keep_id, SUM(attempt_count) AS total, MAX(last_attempt) AS latest
+				FROM $table
+				GROUP BY ip_address, attempt_type
+				HAVING COUNT(*) > 1
+			 ) AS dup ON keep.id = dup.keep_id
+			 SET keep.attempt_count = dup.total, keep.last_attempt = dup.latest"
+		);
+		$wpdb->query(
+			"DELETE stale FROM $table AS stale
+			 INNER JOIN $table AS keep
+			         ON stale.ip_address = keep.ip_address
+			        AND stale.attempt_type = keep.attempt_type
+			        AND stale.id < keep.id"
+		);
 	}
 
 	/**
