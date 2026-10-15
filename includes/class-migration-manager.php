@@ -43,7 +43,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 21;
+	public const CURRENT_VERSION = 22;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -656,6 +656,40 @@ final class ReportedIP_Hive_Migration_Manager {
 	 * @since  2.1.67
 	 */
 	private static function migrate_to_v21() {
+	}
+
+	/**
+	 * Migrate to v22: drop what the update checker of 2.x left behind.
+	 *
+	 * 2.x shipped an update checker that polled GitHub releases. The
+	 * wordpress.org build has none, so nothing listens to its cron event or
+	 * reads its state option any more; both are removed here. The checker
+	 * scheduled its event on every site of a network that loaded it, so a
+	 * network clears the hook site by site. Idempotent: a second run finds
+	 * nothing to remove.
+	 *
+	 * @return void
+	 * @since  3.0.0
+	 */
+	private static function migrate_to_v22() {
+		$hook = 'puc_cron_check_updates-reportedip-hive';
+		if ( is_multisite() ) {
+			foreach ( (array) get_sites(
+				array(
+					'fields' => 'ids',
+					'number' => 0,
+				)
+			) as $site_id ) {
+				switch_to_blog( (int) $site_id );
+				wp_clear_scheduled_hook( $hook );
+				delete_option( 'external_updates-reportedip-hive' );
+				restore_current_blog();
+			}
+		} else {
+			wp_clear_scheduled_hook( $hook );
+		}
+		delete_option( 'external_updates-reportedip-hive' );
+		delete_site_option( 'external_updates-reportedip-hive' );
 	}
 
 	/**
