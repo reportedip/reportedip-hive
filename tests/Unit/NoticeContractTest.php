@@ -75,42 +75,99 @@ class NoticeContractTest extends TestCase {
 
 	/**
 	 * Callbacks allowed on the core notice hooks, which print on every admin
-	 * screen including the WordPress dashboard. Both are account-security
-	 * messages for the user in front of the screen, never plan wording.
+	 * screen including the WordPress dashboard, keyed by the file path below
+	 * `plugins/`, one reason per callback. None carries plan wording.
 	 */
 	private const CORE_HOOK_CALLBACKS = array(
-		'includes/class-two-factor-recommend.php' => 'maybe_render_soft_banner',
-		'admin/class-two-factor-admin.php'        => 'show_admin_reset_notice',
+		'reportedip-hive/admin/class-two-factor-admin.php'        => array(
+			'show_admin_reset_notice' => 'Confirms the 2FA reset the admin just triggered.',
+		),
+		'reportedip-hive/includes/class-two-factor-recommend.php' => array(
+			'maybe_render_soft_banner' => 'Account-security reminder for the user in front of the screen.',
+		),
+		'reportedip-hive-pro/admin/class-relay-cards.php'         => array(
+			'render_cap_status_notice' => 'Pro is not on wordpress.org; an exhausted relay quota is an operating state, not an upsell, and also shows on the WordPress dashboard.',
+		),
+		'reportedip-hive-pro/admin/class-user-admin.php'          => array(
+			'show_users_notice' => 'Result of the bulk account action the admin just ran (query flag of the redirect).',
+		),
+		'reportedip-hive-pro/includes/class-dependency.php'       => array(
+			'render_notice' => 'The add-on cannot run without the free plugin; the notice is the only way to say so.',
+		),
 	);
 
 	/**
+	 * Closures and string callbacks on a core notice hook, keyed by file and
+	 * a fragment of the callback source. They cannot be inspected by name,
+	 * so each one needs a reason here. Empty on purpose.
+	 */
+	private const NON_ARRAY_CALLBACKS = array();
+
+	/**
 	 * Notices about the account, the queue, the plan or the add-on print
-	 * through the in-page funnel on the plugin pages only. Only the two
-	 * listed security callbacks hang on the core notice hooks, and neither
-	 * carries upgrade or plan wording.
+	 * through the in-page funnel on the plugin pages only. Only the listed
+	 * callbacks hang on the core notice hooks, and none carries upgrade or
+	 * plan wording. The add-on is scanned too when it sits next to the free
+	 * plugin (monorepo); the public mirror has no add-on to scan.
 	 */
 	public function test_no_notice_targets_the_wp_dashboard_with_upgrade_wording() {
-		$files = array_merge(
+		$plugins = dirname( REPORTEDIP_HIVE_PLUGIN_DIR ) . '/';
+		$files   = array_merge(
 			glob( REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/*.php' ),
 			glob( REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/*.php' ),
 			array( REPORTEDIP_HIVE_PLUGIN_FILE )
 		);
-		$found = array();
-		foreach ( $files as $file ) {
-			$source = (string) file_get_contents( $file );
-			if ( preg_match_all( "/add_action\(\s*'(?:network_|all_|user_)?admin_notices',\s*array\(\s*[^,]+,\s*'([a-z_]+)'/", $source, $m ) ) {
-				$rel = str_replace( '\\', '/', substr( $file, strlen( REPORTEDIP_HIVE_PLUGIN_DIR ) ) );
-				foreach ( $m[1] as $callback ) {
-					$found[ $rel ] = $callback;
+		$expected = self::CORE_HOOK_CALLBACKS;
+		if ( is_dir( $plugins . 'reportedip-hive-pro' ) ) {
+			$files = array_merge(
+				$files,
+				glob( $plugins . 'reportedip-hive-pro/includes/*.php' ),
+				glob( $plugins . 'reportedip-hive-pro/admin/*.php' ),
+				array( $plugins . 'reportedip-hive-pro/reportedip-hive-pro.php' )
+			);
+		} else {
+			foreach ( array_keys( $expected ) as $rel ) {
+				if ( 0 === strpos( $rel, 'reportedip-hive-pro/' ) ) {
+					unset( $expected[ $rel ] );
 				}
 			}
 		}
-		$this->assertSame( self::CORE_HOOK_CALLBACKS, $found, 'A new callback on a core notice hook reaches the WordPress dashboard.' );
 
-		foreach ( self::CORE_HOOK_CALLBACKS as $rel => $callback ) {
-			$source = (string) file_get_contents( REPORTEDIP_HIVE_PLUGIN_DIR . $rel );
-			$this->assertSame( 1, preg_match( '/function ' . $callback . '\(.*?\n\t\}/s', $source, $body ), $callback );
-			$this->assertDoesNotMatchRegularExpression( '/upgrade|pricing|plan\b|tier/i', $body[0], $callback . ' carries plan wording.' );
+		$hook  = "add_action\(\s*'(?:network_|all_|user_)?admin_notices'\s*,\s*+";
+		$found = array();
+		foreach ( $files as $file ) {
+			$source = (string) file_get_contents( $file );
+			$rel    = str_replace( '\\', '/', substr( $file, strlen( $plugins ) ) );
+			if ( preg_match_all( '/' . $hook . "array\(\s*[^,]+,\s*'([a-z_]+)'/", $source, $m ) ) {
+				foreach ( $m[1] as $callback ) {
+					$found[ $rel ][] = $callback;
+				}
+			}
+			if ( preg_match_all( '/' . $hook . '(?!array)([^\n]{1,60})/', $source, $m ) ) {
+				foreach ( $m[1] as $snippet ) {
+					$this->assertTrue( $this->is_listed_non_array( $rel, $snippet ), $rel . ': closure or string callback on a core notice hook: ' . $snippet );
+				}
+			}
+		}
+
+		$expected_lists = array();
+		foreach ( $expected as $rel => $callbacks ) {
+			$expected_lists[ $rel ] = array_keys( $callbacks );
+		}
+		foreach ( $found as $rel => $callbacks ) {
+			$found[ $rel ] = array_values( array_unique( $callbacks ) );
+			sort( $found[ $rel ] );
+		}
+		ksort( $found );
+		ksort( $expected_lists );
+		$this->assertSame( $expected_lists, $found, 'A new callback on a core notice hook reaches the WordPress dashboard.' );
+
+		foreach ( $expected as $rel => $callbacks ) {
+			$source = (string) file_get_contents( $plugins . $rel );
+			foreach ( array_keys( $callbacks ) as $callback ) {
+				$this->assertSame( 1, preg_match( '/function ' . $callback . '\(.*?\n\t\}/s', $source, $body ), $callback );
+				$this->assertDoesNotMatchRegularExpression( '/upgrade|pricing|plan\b|tier/i', $body[0], $callback . ' carries plan wording.' );
+			}
 		}
 
 		$settings = (string) file_get_contents( REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-admin-settings.php' );
@@ -118,5 +175,21 @@ class NoticeContractTest extends TestCase {
 		foreach ( array( 'display_api_status_notices()', 'maybe_render_domain_limit_notice()', 'Addon_Notice::render()' ) as $call ) {
 			$this->assertStringContainsString( $call, $funnel[0], $call . ' left the in-page funnel.' );
 		}
+	}
+
+	/**
+	 * Whether a closure or string callback is listed with a reason.
+	 *
+	 * @param string $rel     File path below `plugins/`.
+	 * @param string $snippet Start of the callback source.
+	 * @return bool
+	 */
+	private function is_listed_non_array( $rel, $snippet ) {
+		foreach ( array_keys( self::NON_ARRAY_CALLBACKS[ $rel ] ?? array() ) as $fragment ) {
+			if ( false !== strpos( $snippet, $fragment ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
