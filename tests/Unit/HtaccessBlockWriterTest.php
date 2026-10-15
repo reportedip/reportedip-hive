@@ -217,6 +217,43 @@ RewriteEngine On
 			$this->assertFalse( $this->writer->is_block_present() );
 		}
 
+		public function test_update_from_2x_with_completed_quickstart_grants_consent(): void {
+			$this->assertTrue( \ReportedIP_Hive_Htaccess_Block_Writer::upgrade_grants_consent( '2.1.74', true ) );
+		}
+
+		public function test_update_within_3x_never_grants_consent(): void {
+			$this->assertFalse( \ReportedIP_Hive_Htaccess_Block_Writer::upgrade_grants_consent( '3.0.0', true ) );
+			$this->assertFalse( \ReportedIP_Hive_Htaccess_Block_Writer::upgrade_grants_consent( '3.0.1', true ) );
+		}
+
+		public function test_fresh_install_and_open_quickstart_never_grant_consent(): void {
+			$this->assertFalse( \ReportedIP_Hive_Htaccess_Block_Writer::upgrade_grants_consent( '', true ) );
+			$this->assertFalse( \ReportedIP_Hive_Htaccess_Block_Writer::upgrade_grants_consent( '2.1.74', false ) );
+		}
+
+		/**
+		 * The update path asks the version rule, not the quickstart flag alone,
+		 * so a 3.0.0 site without consent stays without it on 3.0.1.
+		 */
+		public function test_upgrade_seed_asks_the_version_rule(): void {
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/reportedip-hive.php' );
+			$this->assertSame( 1, preg_match( '/public static function maybe_seed_on_upgrade\(\).*?\n\t\}/s', $source, $m ) );
+			$this->assertStringContainsString( 'upgrade_grants_consent( $stored,', $m[0] );
+		}
+
+		/**
+		 * A reactivation with consent rewrites both blocks at once instead of
+		 * leaving them missing until the hourly self-heal.
+		 */
+		public function test_activation_resyncs_both_writers_when_consented(): void {
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/reportedip-hive.php' );
+			$this->assertSame( 1, preg_match( '/public static function activate_plugin\(.*?\n\t\}/s', $source, $m ) );
+			$this->assertSame(
+				1,
+				preg_match( '/if \( ReportedIP_Hive_Htaccess_Block_Writer::consented\(\) \) \{\s*ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance\(\)->sync\(\);\s*ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance\(\)->sync\(\);/', $m[0] )
+			);
+		}
+
 		public function test_is_block_present_is_false_for_a_missing_file(): void {
 			unlink( $this->path );
 			$this->assertFalse( $this->writer->is_block_present() );

@@ -38,8 +38,12 @@ abstract class ReportedIP_Hive_Htaccess_Block_Writer {
 
 	/**
 	 * Option that records the operator's explicit go-ahead for `.htaccess`
-	 * changes: set when the quickstart completes or when one of the two
-	 * switches is saved by hand. Never written by activation.
+	 * changes. Every operator action on one of the two switches gives it:
+	 * a save in wp-admin, the quickstart, a settings import, an apply from
+	 * MainWP or the cloud and WP-CLI. Activation, seeding, a reset to the
+	 * defaults and an update from 3.0.0 on never give it; only the update
+	 * from a 2.x release with a completed quickstart carries the go-ahead
+	 * that release worked with, see {@see upgrade_grants_consent()}.
 	 */
 	const OPTION_CONSENT = 'reportedip_hive_htaccess_consent';
 
@@ -61,6 +65,26 @@ abstract class ReportedIP_Hive_Htaccess_Block_Writer {
 	 */
 	public static function consent() {
 		ReportedIP_Hive_Option_Routing::set( self::OPTION_CONSENT, 1 );
+	}
+
+	/**
+	 * Whether an update carries the consent over from the stored version.
+	 *
+	 * A 2.x release edited `.htaccess` once the quickstart was done, so a
+	 * site leaving 2.x with a completed quickstart keeps that go-ahead. A
+	 * fresh install (no stored version) and every update from 3.0.0 on
+	 * already ran with the consent flag and get nothing new from it.
+	 *
+	 * @param string $stored_version   Version the defaults were last seeded with.
+	 * @param bool   $wizard_completed Whether the quickstart was completed.
+	 * @return bool
+	 * @since  3.0.0
+	 */
+	public static function upgrade_grants_consent( $stored_version, $wizard_completed ) {
+		$stored_version = (string) $stored_version;
+		return '' !== $stored_version
+			&& version_compare( $stored_version, '3.0.0', '<' )
+			&& (bool) $wizard_completed;
 	}
 
 	/**

@@ -584,6 +584,10 @@ class ReportedIP_Hive {
 		if ( ! class_exists( 'ReportedIP_Hive_Uploads_Htaccess_Writer' ) ) {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-uploads-htaccess-writer.php';
 		}
+		if ( ReportedIP_Hive_Htaccess_Block_Writer::consented() ) {
+			ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->sync();
+			ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()->sync();
+		}
 
 		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_waf_dropin_enabled', false ) ) {
 			foreach ( array(
@@ -2405,9 +2409,10 @@ class ReportedIP_Hive {
 	 * change (gated by a stored version marker, main-site-only on Multisite so
 	 * the network keys are written once) closes that gap.
 	 *
-	 * A site whose operator completed the quickstart keeps its `.htaccess`
-	 * blocks across the update: the completed quickstart counts as the
-	 * go-ahead {@see ReportedIP_Hive_Htaccess_Block_Writer::consented()} asks for.
+	 * A site that leaves 2.x with a completed quickstart keeps its
+	 * `.htaccess` blocks: the 2.x release edited the file on that go-ahead,
+	 * see {@see ReportedIP_Hive_Htaccess_Block_Writer::upgrade_grants_consent()}.
+	 * An update from 3.0.0 on grants nothing.
 	 *
 	 * The update that leaves 2.x also purges the page caches when the 2.x
 	 * computation check was on and no add-on takes it over, see
@@ -2422,7 +2427,7 @@ class ReportedIP_Hive {
 			return;
 		}
 		ReportedIP_Hive_Defaults::note_first_seeded_version( $stored );
-		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_wizard_completed', false ) ) {
+		if ( ReportedIP_Hive_Htaccess_Block_Writer::upgrade_grants_consent( $stored, ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_wizard_completed', false ) ) ) {
 			ReportedIP_Hive_Htaccess_Block_Writer::consent();
 		}
 		ReportedIP_Hive_Defaults::seed_missing();
