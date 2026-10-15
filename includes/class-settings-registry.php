@@ -139,7 +139,7 @@ final class ReportedIP_Hive_Settings_Registry {
 			'reportedip_hive_trusted_ip_header'            => array(
 				'section'     => 'detection',
 				'kind'        => 'enum',
-				'allowed'     => array( '', 'HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP' ),
+				'allowed'     => array( '', 'HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_CLIENT_IP', 'HTTP_TRUE_CLIENT_IP', 'HTTP_X_CLUSTER_CLIENT_IP' ),
 				'sanitize'    => array( 'ReportedIP_Hive_Proxy_Trust', 'sanitize_header' ),
 				'remote'      => true,
 				'label'       => __( 'Client IP header', 'reportedip-hive' ),

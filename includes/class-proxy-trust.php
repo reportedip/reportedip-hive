@@ -72,6 +72,8 @@ final class ReportedIP_Hive_Proxy_Trust {
 		'HTTP_X_REAL_IP',
 		'HTTP_X_FORWARDED_FOR',
 		'HTTP_CLIENT_IP',
+		'HTTP_TRUE_CLIENT_IP',
+		'HTTP_X_CLUSTER_CLIENT_IP',
 	);
 
 	/**

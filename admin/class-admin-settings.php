@@ -3859,6 +3859,12 @@ class ReportedIP_Hive_Admin_Settings {
 						<option value="HTTP_CLIENT_IP" <?php selected( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_ip_header', '' ), 'HTTP_CLIENT_IP' ); ?>>
 							<?php esc_html_e( 'Client-IP Header', 'reportedip-hive' ); ?>
 						</option>
+						<option value="HTTP_TRUE_CLIENT_IP" <?php selected( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_ip_header', '' ), 'HTTP_TRUE_CLIENT_IP' ); ?>>
+							True-Client-IP
+						</option>
+						<option value="HTTP_X_CLUSTER_CLIENT_IP" <?php selected( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_trusted_ip_header', '' ), 'HTTP_X_CLUSTER_CLIENT_IP' ); ?>>
+							X-Cluster-Client-IP
+						</option>
 					</select>
 					<p class="rip-help-text">
 						<?php esc_html_e( 'Select which HTTP header to trust for determining the client IP. Use "None" unless your site is behind a reverse proxy.', 'reportedip-hive' ); ?>
