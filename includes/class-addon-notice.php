@@ -102,7 +102,7 @@ final class ReportedIP_Hive_Addon_Notice {
 		}
 		$tier = (string) ReportedIP_Hive_Mode_Manager::get_instance()->get_current_tier();
 		$id   = self::notice_id( $tier );
-		$body = self::message_for( $tier, self::addon_running(), (bool) get_user_meta( get_current_user_id(), 'reportedip_dismissed_' . $id, true ) );
+		$body = self::message_for( $tier, self::addon_running(), ReportedIP_Hive_Admin_Notice::is_dismissed( $id ) );
 		if ( '' === $body ) {
 			return;
 		}

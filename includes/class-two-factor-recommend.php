@@ -286,8 +286,8 @@ class ReportedIP_Hive_Two_Factor_Recommend {
 		if ( ! $user_id || ! self::should_show_soft( $user_id ) ) {
 			return;
 		}
-		$notice_id = 'twofa_recommend_' . gmdate( 'Y-m-d' );
-		if ( get_user_meta( $user_id, 'reportedip_dismissed_' . $notice_id, true ) ) {
+		$notice_id = 'twofa_recommend';
+		if ( ReportedIP_Hive_Admin_Notice::is_dismissed( $notice_id, $user_id ) ) {
 			return;
 		}
 

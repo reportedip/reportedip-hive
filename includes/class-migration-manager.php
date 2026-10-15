@@ -43,7 +43,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 22;
+	public const CURRENT_VERSION = 23;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -690,6 +690,35 @@ final class ReportedIP_Hive_Migration_Manager {
 		}
 		delete_option( 'external_updates-reportedip-hive' );
 		delete_site_option( 'external_updates-reportedip-hive' );
+	}
+
+	/**
+	 * Notice ids whose dismissal rows carried a date or a hash up to 3.0.0.
+	 * Since then each id is fixed and the row holds the time of the click,
+	 * see {@see ReportedIP_Hive_Admin_Notice::DISMISS_TTL}.
+	 */
+	public const DATED_DISMISS_IDS = array( 'rate_limited', 'twofa_recommend', 'no_api_key', 'domain_limit', 'queue_warning', 'queue_critical', 'readiness' );
+
+	/**
+	 * Migrate to v23: drop the dated notice-dismissal rows.
+	 *
+	 * Each dismissal used to write a new user-meta row per day (per hour for
+	 * the rate-limit notice, per issue set for the readiness notice). The
+	 * rows are inert now; one `LIKE` delete per old id removes them. The
+	 * fixed rows of 3.0.0 carry no suffix and do not match. Idempotent.
+	 *
+	 * @return void
+	 * @since  3.0.0
+	 */
+	private static function migrate_to_v23() {
+		global $wpdb;
+		if ( ! isset( $wpdb->usermeta ) ) {
+			return;
+		}
+		foreach ( self::DATED_DISMISS_IDS as $id ) {
+			$like = $wpdb->esc_like( 'reportedip_dismissed_' . $id . '_' ) . '%';
+			$wpdb->query( $wpdb->prepare( "DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE %s", $like ) ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- One-time cleanup of inert rows; no cache holds them.
+		}
 	}
 
 	/**

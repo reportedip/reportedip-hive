@@ -1297,8 +1297,8 @@ class ReportedIP_Hive_Admin_Settings {
 			return;
 		}
 		$address   = (string) ( $reputation['address'] ?? '' );
-		$notice_id = 'reputation_listed_' . md5( $address );
-		if ( get_user_meta( get_current_user_id(), 'reportedip_dismissed_' . $notice_id, true ) ) {
+		$notice_id = ReportedIP_Hive_Admin_Notice::reputation_notice_id( $address );
+		if ( ReportedIP_Hive_Admin_Notice::is_dismissed( $notice_id ) ) {
 			return;
 		}
 		/* translators: 1: IP address, 2: number of reports, 3: confidence score */
@@ -1348,7 +1348,7 @@ class ReportedIP_Hive_Admin_Settings {
 		if ( '' === (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' ) ) {
 			return;
 		}
-		if ( get_user_meta( get_current_user_id(), 'reportedip_dismissed_domain_limit_' . gmdate( 'Y-m-d' ), true ) ) {
+		if ( ReportedIP_Hive_Admin_Notice::is_dismissed( 'domain_limit' ) ) {
 			return;
 		}
 
@@ -1367,7 +1367,7 @@ class ReportedIP_Hive_Admin_Settings {
 			array(
 				'variant'        => 'warning',
 				'dismissible'    => true,
-				'data_notice_id' => 'domain_limit_' . gmdate( 'Y-m-d' ),
+				'data_notice_id' => 'domain_limit',
 				'body'           => $body,
 			)
 		);
@@ -1381,9 +1381,8 @@ class ReportedIP_Hive_Admin_Settings {
 	 * in-page banner reaches the operator.
 	 */
 	public static function render_inline_notices() {
-		$mode_manager  = ReportedIP_Hive_Mode_Manager::get_instance();
-		$rate_limit_id = 'rate_limited_' . gmdate( 'Y-m-d-H' );
-		if ( $mode_manager->is_community_layer_degraded() && ! get_user_meta( get_current_user_id(), 'reportedip_dismissed_' . $rate_limit_id, true ) ) {
+		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
+		if ( $mode_manager->is_community_layer_degraded() && ! ReportedIP_Hive_Admin_Notice::is_dismissed( 'rate_limited' ) ) {
 			$body = sprintf(
 				'<strong>%1$s</strong> %2$s <a href="%3$s" target="_blank" rel="noopener noreferrer">%4$s</a>',
 				esc_html__( 'Community threat-check rate-limited.', 'reportedip-hive' ),
@@ -1395,7 +1394,7 @@ class ReportedIP_Hive_Admin_Settings {
 				array(
 					'variant'        => 'warning',
 					'dismissible'    => true,
-					'data_notice_id' => $rate_limit_id,
+					'data_notice_id' => 'rate_limited',
 					'body'           => $body,
 				)
 			);
@@ -1437,10 +1436,8 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$has_critical = false;
 		$lines        = array();
-		$keys         = array();
 		foreach ( $issues as $issue ) {
 			$has_critical = $has_critical || ReportedIP_Hive_Readiness::SEV_CRITICAL === (string) $issue['severity'];
-			$keys[]       = (string) $issue['key'];
 			$lines[]      = sprintf(
 				'<strong>%1$s</strong> %2$s',
 				esc_html( $issue['label'] ),
@@ -1448,16 +1445,11 @@ class ReportedIP_Hive_Admin_Settings {
 			);
 		}
 
-		$readiness_id = 'readiness_' . md5( implode( ',', $keys ) );
-		if ( ! $has_critical && get_user_meta( get_current_user_id(), 'reportedip_dismissed_' . $readiness_id, true ) ) {
-			return;
-		}
-
 		ReportedIP_Hive_Admin_Notice::render(
 			array(
 				'variant'        => $has_critical ? 'error' : 'warning',
 				'dismissible'    => ! $has_critical,
-				'data_notice_id' => $has_critical ? '' : $readiness_id,
+				'data_notice_id' => $has_critical ? '' : ReportedIP_Hive_Admin_Notice::READINESS_ID,
 				'extra_classes'  => 'rip-readiness-notice',
 				'title'          => sprintf(
 					/* translators: %d: number of open readiness issues. */

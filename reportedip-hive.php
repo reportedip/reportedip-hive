@@ -1730,7 +1730,7 @@ class ReportedIP_Hive {
 			$critical_threshold = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_queue_critical_threshold', 200 );
 			$queue_url          = ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-security&tab=api_queue' );
 			$community_url      = ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive-community' );
-			$queue_dismissed    = get_user_meta( $user_id, 'reportedip_dismissed_queue_warning_' . gmdate( 'Y-m-d' ), true );
+			$queue_dismissed    = ReportedIP_Hive_Admin_Notice::is_dismissed( 'queue_warning', $user_id );
 
 			if ( $pending_count >= $critical_threshold ) {
 				$body = sprintf(
@@ -1765,7 +1765,7 @@ class ReportedIP_Hive {
 					array(
 						'variant'        => 'warning',
 						'dismissible'    => true,
-						'data_notice_id' => 'queue_warning_' . gmdate( 'Y-m-d' ),
+						'data_notice_id' => 'queue_warning',
 						'body'           => $body,
 					)
 				);
@@ -1773,8 +1773,8 @@ class ReportedIP_Hive {
 		}
 
 		$api_key    = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' );
-		$no_key_id  = 'no_api_key_' . gmdate( 'Y-m-d' );
-		$no_key_off = (bool) get_user_meta( $user_id, 'reportedip_dismissed_' . $no_key_id, true );
+		$no_key_id  = 'no_api_key';
+		$no_key_off = ReportedIP_Hive_Admin_Notice::is_dismissed( $no_key_id, $user_id );
 		if ( empty( $api_key ) && ! $no_key_off && ReportedIP_Hive_Mode_Manager::get_instance()->is_community_mode() ) {
 			$settings_url = ReportedIP_Hive_Admin_Settings::get_admin_page_url( 'admin.php?page=reportedip-hive' );
 			$body         = sprintf(
