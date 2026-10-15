@@ -389,5 +389,25 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringNotContainsString( "SUM( CASE WHEN status = 'failed'", $body );
 			$this->assertStringNotContainsString( "SUM( CASE WHEN status = 'failed'", $source );
 		}
+
+		/**
+		 * The readiness notice id reaches the AJAX handler for every logged-in
+		 * reader; the register's site-wide dismissal must still refuse a
+		 * subscriber while a dismissable issue is open.
+		 */
+		public function test_dismiss_notice_issues_needs_the_manage_capability(): void {
+			$issue = array(
+				'key'         => 'queue_failed',
+				'severity'    => \ReportedIP_Hive_Readiness::SEV_WARNING,
+				'label'       => 'x',
+				'message'     => 'y',
+				'dismissable' => true,
+			);
+			set_site_transient( \ReportedIP_Hive_Readiness::CACHE_KEY, array( $issue ), 300 );
+
+			$GLOBALS['wp_current_user_can'] = false;
+			$this->assertSame( 0, \ReportedIP_Hive_Readiness::dismiss_notice_issues( 1750000000 ), 'A subscriber dismisses nothing.' );
+			$this->assertFalse( get_site_option( \ReportedIP_Hive_Readiness::OPT_STATE, false ), 'No readiness state is written.' );
+		}
 	}
 }

@@ -87,6 +87,21 @@ if ( 'integration' === $suite ) {
 
 	require_once __DIR__ . '/stubs/wordpress-stubs.php';
 
+	if ( ! function_exists( 'current_user_can' ) ) {
+		/**
+		 * Capability double of the free suite (the add-on suite brings its
+		 * own). Grants every capability unless a test sets
+		 * `$GLOBALS['wp_current_user_can']` to false.
+		 *
+		 * @param string $capability Capability name.
+		 * @return bool
+		 */
+		function current_user_can( $capability ) {
+			unset( $capability );
+			return $GLOBALS['wp_current_user_can'] ?? true;
+		}
+	}
+
 	$plugin_dir = dirname( __DIR__ );
 
 	if ( ! defined( 'ABSPATH' ) ) {
