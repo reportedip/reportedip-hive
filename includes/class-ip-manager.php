@@ -531,15 +531,10 @@ class ReportedIP_Hive_IP_Manager {
 
 		$cleaned = 0;
 
-		$whitelist_table = ReportedIP_Hive_Schema::table( 'reportedip_hive_whitelist' );
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from Schema::table() with a hardcoded suffix; safe.
-		$expired_whitelist = $wpdb->query(
-			"UPDATE $whitelist_table
-             SET is_active = 0
-             WHERE expires_at IS NOT NULL
-             AND expires_at < NOW()
-             AND is_active = 1"
-		);
+		$whitelist_table   = ReportedIP_Hive_Schema::table( 'reportedip_hive_whitelist' );
+		$expired_condition = ReportedIP_Hive_Database::WHITELIST_EXPIRED;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name from Schema::table(), condition is a class constant; safe.
+		$expired_whitelist = $wpdb->query( "UPDATE $whitelist_table SET is_active = 0 WHERE $expired_condition AND is_active = 1" );
 
 		if ( $expired_whitelist !== false ) {
 			$cleaned += $expired_whitelist;

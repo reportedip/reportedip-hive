@@ -178,7 +178,7 @@ class ReportedIP_Hive_Whitelist_Table extends WP_List_Table {
 			$orderby = 'created_at';
 		}
 
-		$where = array( 'is_active = 1 AND (expires_at IS NULL OR expires_at > NOW())' );
+		$where = array( 'is_active = 1 AND ' . ReportedIP_Hive_Database::WHITELIST_UNEXPIRED );
 
 		if ( ! empty( $_REQUEST['ip_type'] ) ) {
 			$ip_type = sanitize_text_field( wp_unslash( $_REQUEST['ip_type'] ) );

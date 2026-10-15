@@ -29,6 +29,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ReportedIP_Hive_Database {
 
 	/**
+	 * SQL condition: a whitelist row has not expired. The zero date counts as
+	 * "never expires": ReportedIP Hive Light stored a permanent entry that
+	 * way, and migration v24 rewrites it to NULL. Until it has run, the entry
+	 * must neither stop working nor be purged as expired. `expires_at` is
+	 * the admin-entered local-time exception, hence NOW().
+	 */
+	const WHITELIST_UNEXPIRED = "(expires_at IS NULL OR expires_at = '0000-00-00 00:00:00' OR expires_at > NOW())";
+
+	/**
+	 * SQL condition: a whitelist row has expired, the counterpart of
+	 * {@see self::WHITELIST_UNEXPIRED}.
+	 */
+	const WHITELIST_EXPIRED = "(expires_at IS NOT NULL AND expires_at <> '0000-00-00 00:00:00' AND expires_at <= NOW())";
+
+	/**
 	 * Single instance of the class
 	 */
 	private static $instance = null;
@@ -225,7 +240,7 @@ class ReportedIP_Hive_Database {
 			$wpdb->prepare(
 				"DELETE FROM $table_name
 				 WHERE ip_address = %s
-				 AND ( is_active = 0 OR ( expires_at IS NOT NULL AND expires_at <= NOW() ) )",
+				 AND ( is_active = 0 OR " . self::WHITELIST_EXPIRED . ' )',
 				$ip_address
 			)
 		);
@@ -280,7 +295,7 @@ class ReportedIP_Hive_Database {
 				"SELECT COUNT(*) FROM $table_name
                  WHERE ip_address = %s
                  AND is_active = 1
-                 AND (expires_at IS NULL OR expires_at > NOW())",
+                 AND " . self::WHITELIST_UNEXPIRED,
 				$ip_address
 			)
 		);
@@ -296,7 +311,7 @@ class ReportedIP_Hive_Database {
 				"SELECT ip_address FROM $table_name
 				 WHERE ip_type = 'cidr'
 				 AND is_active = 1
-				 AND (expires_at IS NULL OR expires_at > NOW())"
+				 AND " . self::WHITELIST_UNEXPIRED
 			);
 			wp_cache_set( 'rip_whitelist_cidrs', $cidr_ranges, 'reportedip', 300 );
 		}
@@ -322,7 +337,7 @@ class ReportedIP_Hive_Database {
 
 		$where_clause = '';
 		if ( $active_only ) {
-			$where_clause = 'WHERE is_active = 1 AND (expires_at IS NULL OR expires_at > NOW())';
+			$where_clause = 'WHERE is_active = 1 AND ' . self::WHITELIST_UNEXPIRED;
 		}
 
 		return $wpdb->get_results( "SELECT * FROM $table_name $where_clause ORDER BY created_at DESC" );
@@ -342,7 +357,7 @@ class ReportedIP_Hive_Database {
 
 		$row = $wpdb->get_row(
 			$wpdb->prepare(
-				"SELECT * FROM $table_name WHERE ip_address = %s AND is_active = 1 AND (expires_at IS NULL OR expires_at > NOW())",
+				"SELECT * FROM $table_name WHERE ip_address = %s AND is_active = 1 AND " . self::WHITELIST_UNEXPIRED,
 				$ip_address
 			)
 		);
@@ -2192,14 +2207,13 @@ class ReportedIP_Hive_Database {
 		$stats['active_whitelist'] = $wpdb->get_var(
 			"SELECT COUNT(*) FROM $whitelist_table 
              WHERE is_active = 1 
-             AND (expires_at IS NULL OR expires_at > NOW())"
+             AND " . self::WHITELIST_UNEXPIRED
 		);
 
 		$stats['expired_whitelist'] = $wpdb->get_var(
 			"SELECT COUNT(*) FROM $whitelist_table 
              WHERE is_active = 1 
-             AND expires_at IS NOT NULL 
-             AND expires_at <= NOW()"
+             AND " . self::WHITELIST_EXPIRED
 		);
 
 		$stats['expired_entries'] = $stats['expired_blocked'] + $stats['expired_whitelist'];
