@@ -132,10 +132,6 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
-		 * A setting without a declared side effect owes nothing, and a token
-		 * declared by two settings is still queued once.
-		 */
-		/**
 		 * Seeding runs on activation, and activation is no consent to edit
 		 * `.htaccess` (wordpress.org rule 13). The two switches that write
 		 * there owe the consent token only when a channel writes them.
@@ -158,6 +154,10 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertContains( 'htaccess_consent', $spec['reportedip_hive_block_uploads_php']['side_effects'] ?? array() );
 		}
 
+		/**
+		 * A setting without a declared side effect owes nothing, and a token
+		 * declared by two settings is still queued once.
+		 */
 		public function test_seed_effect_tokens_are_declared_and_unique() {
 			$this->assertSame( array(), \ReportedIP_Hive_Defaults::seed_effect_tokens( array( 'reportedip_hive_headers_enabled' ) ) );
 			$this->assertSame( array(), \ReportedIP_Hive_Defaults::seed_effect_tokens( array() ) );

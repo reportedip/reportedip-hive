@@ -21,7 +21,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 	/**
 	 * @covers \ReportedIP_Hive_News_Feed::url_for_locale
- * @covers \ReportedIP_Hive_News_Feed::items
+	 * @covers \ReportedIP_Hive_News_Feed::items
 	 */
 	class NewsFeedTest extends TestCase {
 
