@@ -43,7 +43,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 24;
+	public const CURRENT_VERSION = 25;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -54,6 +54,17 @@ final class ReportedIP_Hive_Migration_Manager {
 	 * Network option name used as an atomic lock during migration.
 	 */
 	public const LOCK_OPTION = 'reportedip_hive_migration_lock';
+
+	/**
+	 * Per-site option of migration v25: the highest Light row id already
+	 * copied, keyed by table suffix.
+	 */
+	public const LIGHT_MERGE_OPTION = 'reportedip_hive_light_merge';
+
+	/**
+	 * Rows per statement when v25 copies a per-site Light table.
+	 */
+	public const LIGHT_MERGE_CHUNK = 1000;
 
 	/**
 	 * Whether the running migration started from ReportedIP Hive Light.
@@ -794,6 +805,165 @@ final class ReportedIP_Hive_Migration_Manager {
 	}
 
 	/**
+	 * Migrate to v25: adopt the rows of Hive Light activated per site.
+	 *
+	 * Light could be activated on single sites of a network and kept four
+	 * tables under each site prefix (`wp_2_reportedip_hive_*`). The free
+	 * plugin reads the network tables only, so the main site's Light rows
+	 * were adopted in place and every sub-site's rows went unused. This step
+	 * copies them for each site whose own `db_version` is a Light version:
+	 *
+	 *   - whitelist: `ip_type` from the address, the zero date as NULL, as
+	 *     v24 does; a duplicate keeps the entry that lasts longer.
+	 *   - blocked: a duplicate keeps the block that lasts longer (an active
+	 *     one beats an inactive one, NULL beats any date).
+	 *   - attempts: one row per (ip, type), counters summed into an existing
+	 *     row, as {@see ReportedIP_Hive_Schema::merge_duplicate_attempts()}.
+	 *   - api_queue: every row, `blog_id` set to the site.
+	 *
+	 * Chunked by id; the highest copied id per table is stored in the site's
+	 * {@see LIGHT_MERGE_OPTION}, so a rerun copies nothing twice. A table
+	 * that lacks a Light column or whose copy fails is left alone. The
+	 * per-site tables stay as a backup until an uninstall with data deletion
+	 * drops them. Light kept no logs or stats. Its per-site options were
+	 * promoted by v5 (the first site with a value wins); the Community
+	 * Access Key is taken here as well while the network has none, because
+	 * Light seeded an empty key on every site it ran on.
+	 *
+	 * @return void
+	 * @since  3.0.0
+	 */
+	private static function migrate_to_v25() {
+		global $wpdb;
+		if ( ! is_multisite() ) {
+			return;
+		}
+
+		foreach ( (array) get_sites(
+			array(
+				'fields' => 'ids',
+				'number' => 0,
+			)
+		) as $site_id ) {
+			$site_id = (int) $site_id;
+			$prefix  = $wpdb->get_blog_prefix( $site_id );
+			if ( $prefix === $wpdb->base_prefix || ! self::is_light_version( get_blog_option( $site_id, self::VERSION_OPTION, '' ) ) ) {
+				continue;
+			}
+
+			$key = (string) get_blog_option( $site_id, 'reportedip_hive_api_key', '' );
+			if ( '' !== $key && '' === (string) get_site_option( 'reportedip_hive_api_key', '' ) ) {
+				update_site_option( 'reportedip_hive_api_key', $key );
+			}
+
+			$cursor = (array) get_blog_option( $site_id, self::LIGHT_MERGE_OPTION, array() );
+			foreach ( ReportedIP_Hive_Schema::LIGHT_SITE_SUFFIXES as $suffix ) {
+				$source = $prefix . $suffix;
+				if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $wpdb->esc_like( $source ) ) ) !== $source ) {
+					continue;
+				}
+				if ( array() !== array_diff( self::light_columns( $suffix ), (array) $wpdb->get_col( "SHOW COLUMNS FROM $source" ) ) ) {
+					continue;
+				}
+
+				$sql  = self::light_copy_sql( $suffix, $source, $site_id );
+				$last = (int) ( $cursor[ $suffix ] ?? 0 );
+				$max  = (int) $wpdb->get_var( "SELECT MAX(id) FROM $source" );
+				while ( $last < $max ) {
+					$upto = min( $max, $last + self::LIGHT_MERGE_CHUNK );
+					if ( false === $wpdb->query( sprintf( $sql, $last, $upto ) ) ) {
+						break;
+					}
+					$last              = $upto;
+					$cursor[ $suffix ] = $last;
+					update_blog_option( $site_id, self::LIGHT_MERGE_OPTION, $cursor );
+				}
+			}
+		}
+		ReportedIP_Hive_Database::flush_ip_state_caches();
+	}
+
+	/**
+	 * Light columns a v25 copy of a table reads.
+	 *
+	 * @param string $suffix Table suffix.
+	 * @return string[]
+	 * @since  3.0.0
+	 */
+	private static function light_columns( $suffix ) {
+		$columns = array(
+			ReportedIP_Hive_Schema::TABLE_WHITELIST => array( 'id', 'ip_address', 'reason', 'added_by', 'expires_at', 'is_active', 'created_at' ),
+			ReportedIP_Hive_Schema::TABLE_BLOCKED   => array( 'id', 'ip_address', 'reason', 'block_type', 'blocked_until', 'failed_attempts', 'is_active', 'created_at' ),
+			ReportedIP_Hive_Schema::TABLE_ATTEMPTS  => array( 'id', 'ip_address', 'attempt_type', 'attempt_count', 'window_start', 'last_attempt' ),
+			ReportedIP_Hive_Schema::TABLE_API_QUEUE => array( 'id', 'ip_address', 'category_ids', 'comment', 'attempts', 'max_attempts', 'submitted_at', 'status', 'error_message', 'created_at' ),
+		);
+		return $columns[ $suffix ];
+	}
+
+	/**
+	 * The statement that copies one id range of a per-site Light table into
+	 * the network table; `sprintf()` fills the exclusive lower and the
+	 * inclusive upper id bound.
+	 *
+	 * @param string $suffix  Table suffix.
+	 * @param string $source  Per-site Light table.
+	 * @param int    $site_id Site the rows belong to.
+	 * @return string
+	 * @since  3.0.0
+	 */
+	private static function light_copy_sql( $suffix, $source, $site_id ) {
+		$target = ReportedIP_Hive_Schema::table( $suffix );
+		$range  = 'WHERE l.id > %1$d AND l.id <= %2$d';
+		$longer = static function ( $until ) use ( $target ) {
+			return "VALUES(is_active) = 1 AND ( $target.is_active = 0 OR ( $target.$until IS NOT NULL AND ( VALUES($until) IS NULL OR VALUES($until) > $target.$until ) ) )";
+		};
+
+		switch ( $suffix ) {
+			case ReportedIP_Hive_Schema::TABLE_WHITELIST:
+				$take = $longer( 'expires_at' );
+				return "INSERT INTO $target (ip_address, ip_type, reason, added_by, source, expires_at, is_active, created_at)
+					SELECT l.ip_address,
+						CASE WHEN l.ip_address LIKE '%%/%%' THEN 'cidr' WHEN l.ip_address LIKE '%%:%%' THEN 'ipv6' ELSE 'ipv4' END,
+						l.reason, COALESCE(l.added_by, 0), 'manual', NULLIF(l.expires_at, '0000-00-00 00:00:00'), l.is_active, l.created_at
+					FROM $source AS l $range
+					ON DUPLICATE KEY UPDATE
+						$target.expires_at = IF( $take, VALUES(expires_at), $target.expires_at ),
+						$target.is_active = GREATEST( $target.is_active, VALUES(is_active) )";
+
+			case ReportedIP_Hive_Schema::TABLE_BLOCKED:
+				$take = $longer( 'blocked_until' );
+				return "INSERT INTO $target (ip_address, reason, block_type, blocked_until, failed_attempts, is_active, created_at)
+					SELECT l.ip_address, l.reason,
+						IF( l.block_type IN ('manual','automatic','reputation'), l.block_type, 'automatic' ),
+						NULLIF(l.blocked_until, '0000-00-00 00:00:00'), l.failed_attempts, l.is_active, l.created_at
+					FROM $source AS l $range
+					ON DUPLICATE KEY UPDATE
+						$target.reason = IF( $take, VALUES(reason), $target.reason ),
+						$target.block_type = IF( $take, VALUES(block_type), $target.block_type ),
+						$target.blocked_until = IF( $take, VALUES(blocked_until), $target.blocked_until ),
+						$target.failed_attempts = GREATEST( $target.failed_attempts, VALUES(failed_attempts) ),
+						$target.is_active = GREATEST( $target.is_active, VALUES(is_active) )";
+
+			case ReportedIP_Hive_Schema::TABLE_ATTEMPTS:
+				return "INSERT INTO $target (ip_address, attempt_type, attempt_count, first_attempt, last_attempt)
+					SELECT * FROM (
+						SELECT l.ip_address, l.attempt_type, SUM(l.attempt_count) AS total, MIN(l.window_start) AS first_seen, MAX(l.last_attempt) AS latest
+						FROM $source AS l $range
+						GROUP BY l.ip_address, l.attempt_type
+					) AS merged
+					ON DUPLICATE KEY UPDATE
+						$target.attempt_count = $target.attempt_count + VALUES(attempt_count),
+						$target.last_attempt = GREATEST( $target.last_attempt, VALUES(last_attempt) )";
+
+			default:
+				return "INSERT INTO $target (blog_id, ip_address, category_ids, comment, attempts, max_attempts, submitted_at, status, error_message, created_at)
+					SELECT " . (int) $site_id . ", l.ip_address, l.category_ids, l.comment, l.attempts, l.max_attempts, NULLIF(l.submitted_at, '0000-00-00 00:00:00'),
+						IF( l.status IN ('pending','processing','completed','failed'), l.status, 'failed' ), l.error_message, l.created_at
+					FROM $source AS l $range";
+		}
+	}
+
+	/**
 	 * On Multisite installs that previously ran Hive on individual sites,
 	 * promote network-class options out of `wp_X_options` into the network
 	 * `sitemeta` storage. The first site in `get_sites()` order to have a
@@ -804,7 +974,12 @@ final class ReportedIP_Hive_Migration_Manager {
 	 * @since  2.0.0
 	 */
 	private static function promote_per_site_options_to_network() {
-		$site_ids = (array) get_sites( array( 'fields' => 'ids' ) );
+		$site_ids = (array) get_sites(
+			array(
+				'fields' => 'ids',
+				'number' => 0,
+			)
+		);
 		foreach ( $site_ids as $site_id ) {
 			switch_to_blog( (int) $site_id );
 

@@ -32,6 +32,15 @@ All changes to ReportedIP Hive are documented here.
     Light, are accepted and stay selected after the next save;
   - Light's untouched hourly API limit of 100 becomes 0 (bound to the
     plan); a value set on purpose stays.
+- **Networks that ran Light site by site keep every site's data.**
+  Migration v25 copies the blocks, whitelist entries, attempt counters and
+  pending reports each sub-site kept in its own tables into the network
+  tables. A duplicate keeps the block or entry that lasts longer, counters
+  are summed, reports keep their site. The copy runs in chunks and never
+  twice; the per-site tables stay as a backup until an uninstall with data
+  deletion. A Community Access Key stored on a sub-site is used when the
+  network has none, and the option promotion reads every site, not only
+  the first 100.
 - **Duplicate attempt rows are merged, not dropped.** The v15 cleanup kept
   only the freshest row and lost the other counts.
 - **Tools page outside the menu.** Without expert mode the page had no
@@ -78,7 +87,7 @@ All changes to ReportedIP Hive are documented here.
 - **Extension API for the add-on.** Documented actions and filters,
   including `reportedip_hive_dismissible_notice_ids` for notices an add-on
   renders.
-- **Database schema 24** (migrations v22 to v24).
+- **Database schema 25** (migrations v22 to v25).
 
 ## [2.1.74] (2026-10-12)
 

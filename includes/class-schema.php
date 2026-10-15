@@ -82,6 +82,16 @@ final class ReportedIP_Hive_Schema {
 	public const LEGACY_SUFFIXES = array( 'reportedip_hive_audit_log', 'reportedip_hive_group_entries' );
 
 	/**
+	 * Tables Hive Light kept under each site prefix of a network where it
+	 * was activated per site. Migration v25 copies their rows into the
+	 * network tables and leaves them as a backup; `drop_all_tables()`
+	 * removes them with the rest.
+	 *
+	 * @var string[]
+	 */
+	public const LIGHT_SITE_SUFFIXES = array( self::TABLE_WHITELIST, self::TABLE_BLOCKED, self::TABLE_ATTEMPTS, self::TABLE_API_QUEUE );
+
+	/**
 	 * Table suffixes this plugin and its add-ons own, for teardown and
 	 * per-site cleanup.
 	 *
@@ -453,7 +463,8 @@ final class ReportedIP_Hive_Schema {
 	 *
 	 * The unclaimed legacy tables are included. An active add-on has dropped
 	 * its own tables in its `reportedip_hive_uninstall` listener before this
-	 * runs, so `IF EXISTS` finds nothing left to do there.
+	 * runs, so `IF EXISTS` finds nothing left to do there. On a network the
+	 * per-site Hive Light tables go too ({@see LIGHT_SITE_SUFFIXES}).
 	 *
 	 * @return void
 	 * @since  2.0.0
@@ -463,6 +474,23 @@ final class ReportedIP_Hive_Schema {
 		foreach ( array_reverse( self::managed_tables() ) as $suffix ) {
 			$table = self::table( $suffix );
 			$wpdb->query( "DROP TABLE IF EXISTS $table" );
+		}
+		if ( ! is_multisite() ) {
+			return;
+		}
+		foreach ( (array) get_sites(
+			array(
+				'fields' => 'ids',
+				'number' => 0,
+			)
+		) as $site_id ) {
+			$prefix = $wpdb->get_blog_prefix( (int) $site_id );
+			if ( $prefix === $wpdb->base_prefix ) {
+				continue;
+			}
+			foreach ( self::LIGHT_SITE_SUFFIXES as $suffix ) {
+				$wpdb->query( "DROP TABLE IF EXISTS {$prefix}{$suffix}" );
+			}
 		}
 	}
 

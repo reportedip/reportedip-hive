@@ -139,7 +139,7 @@ Usually not. The invisible form check stops scripted submissions on comments, re
 
 = I use ReportedIP Hive Light. What happens on the update? =
 
-ReportedIP Hive replaces ReportedIP Hive Light under the same name in the plugin directory, so the update arrives like any other. Your whitelist, blocks, counters and settings are carried over, including ranges, permanent whitelist entries and the True-Client-IP or X-Cluster-Client-IP proxy header. Open the quickstart afterwards to pick Local Shield or the Community Network.
+ReportedIP Hive replaces ReportedIP Hive Light under the same name in the plugin directory, so the update arrives like any other. Your whitelist, blocks, counters and settings are carried over, including ranges, permanent whitelist entries and the True-Client-IP or X-Cluster-Client-IP proxy header. On a multisite network where Light ran site by site, the data of every site moves into the network tables. Open the quickstart afterwards to pick Local Shield or the Community Network.
 
 = What if I lock myself out? =
 
@@ -167,7 +167,8 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 * Local Shield sends no request to reportedip.com, even with a key stored. The news feed loads only in Community Network mode.
 * Notices can be closed and return after an hour or a day; a critical queue or readiness problem stays until it is fixed.
 * Update path from ReportedIP Hive Light 1.3.9: permanent and range whitelist entries, attempt counters and the proxy header are kept.
-* Database schema 24.
+* Networks that ran ReportedIP Hive Light per site keep the blocks, whitelist entries, counters and pending reports of every site.
+* Database schema 25.
 
 == Upgrade Notice ==
 
