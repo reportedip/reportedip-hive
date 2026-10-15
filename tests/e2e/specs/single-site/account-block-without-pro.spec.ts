@@ -43,6 +43,7 @@ async function submitLogin(page: Page): Promise<void> {
 test.describe.configure({ mode: 'serial' });
 
 test.describe('account block without the add-on', () => {
+	test.skip(process.env.RIP_E2E_WITH_PRO === '1', 'tests the free plugin alone; with the add-on the account block runs through its user-block path (pro suite user-sessions)');
 	let threshold = '';
 
 	test.beforeAll(() => {

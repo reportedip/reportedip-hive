@@ -22,6 +22,7 @@ const FORGET_DISMISSALS = `foreach ( array( 'professional', 'business', 'enterpr
 test.describe.configure({ mode: 'serial' });
 
 test.describe('free plugin without the add-on', () => {
+	test.skip(process.env.RIP_E2E_WITH_PRO === '1', 'the add-on brings the plan surfaces back; see the pro suite plan-surfaces');
 	let wizard = '';
 	let mode = '';
 

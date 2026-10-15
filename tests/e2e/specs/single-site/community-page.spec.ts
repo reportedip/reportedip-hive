@@ -33,6 +33,7 @@ test.describe('community page', () => {
 	});
 
 	test('the add-on tab lists the catalog and how to get the add-on, without a price', async ({ page }) => {
+		test.skip(process.env.RIP_E2E_WITH_PRO === '1', 'with the add-on the tab shows the active add-on instead of the catalog (pro suite plan-surfaces)');
 		await loginAsAdmin(page);
 		await page.goto(`${PAGE}&tab=addon`);
 		await expect(page.locator('.rip-nav-tabs__tab--active')).toHaveText('Add-on');

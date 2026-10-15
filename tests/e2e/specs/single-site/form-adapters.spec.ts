@@ -530,6 +530,7 @@ test.describe('form adapters', () => {
 	 * that did not cover them.
 	 */
 	test('without the add-on business arms Contact Form 7 only', async ({ page, request }) => {
+		test.skip(process.env.RIP_E2E_WITH_PRO === '1', 'with the add-on Business arms every adapter, as 2.1.74 (pro suite form-adapters)');
 		await expectCf7Refused(request);
 
 		const elementor = await postElementor(request);

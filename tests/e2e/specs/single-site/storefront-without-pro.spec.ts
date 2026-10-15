@@ -49,6 +49,7 @@ let accountUrl = '';
 test.describe.configure({ mode: 'serial' });
 
 test.describe('storefront sign-in without the add-on', () => {
+	test.skip(process.env.RIP_E2E_WITH_PRO === '1', 'the add-on owns storefront 2FA; see the pro suite storefront-2fa');
 	test.beforeAll(() => {
 		try {
 			wp('plugin', 'is-active', 'woocommerce');

@@ -348,6 +348,7 @@ test.describe('registration rules', () => {
 	 * first ten plain entries refuse, and a stored allowlist refuses nobody.
 	 */
 	test('without the add-on a long list is stored but only ten plain entries apply', async ({ page, request }) => {
+		test.skip(process.env.RIP_E2E_WITH_PRO === '1', 'with the add-on the 2.1.74 plan gate applies (pro suite registration-rules)');
 		php(`
 			${forceTierPhp('professional')}
 			ReportedIP_Hive_Option_Routing::set(ReportedIP_Hive_Registration_Guard::OPT_USERNAMES_BASELINE, 0);

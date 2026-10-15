@@ -20,6 +20,14 @@ import { resetAdminBaseline } from '../../fixtures/admin-reset';
 const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 const PRO_KEY = 'e2eprofessionalkey0123456789abcdef012345';
 
+/**
+ * `RIP_E2E_WITH_PRO=1` runs this spec with the add-on active: the catalog
+ * gives way to the plan-ranked feature list of 2.1.74 and the
+ * recommendation switches on the add-on features, so the catalog
+ * assertions turn into the 2.1.74 ones.
+ */
+const WITH_ADD_ON = process.env.RIP_E2E_WITH_PRO === '1';
+
 function wp(args: string): string {
 	return execSync(`docker exec ${WP_CONTAINER} wp --allow-root ${args}`, { encoding: 'utf8' }).toString().trim();
 }
@@ -43,6 +51,7 @@ function resetQuickstart(): void {
 		'reportedip_hive_data_retention_days',
 		'reportedip_hive_headers_enabled',
 		'reportedip_hive_2fa_enabled_global',
+		'reportedip_hive_2fa_frontend_enabled',
 		'reportedip_hive_auto_footer_enabled',
 		'reportedip_hive_notify_admin',
 	];
@@ -99,9 +108,13 @@ test.describe('quickstart', () => {
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-quickstart');
 
 		await expect(page.locator('.rip-mode-card[data-mode="community"]')).toHaveClass(/rip-mode-card--selected/);
-		await expect(page.locator('#rip-quickstart-addon li'), 'the add-on features come from the catalog').toHaveCount(14);
-		await expect(page.locator('.rip-quickstart__feature--locked')).toHaveCount(0);
-		await expect(page.locator('.rip-quickstart')).not.toContainText(/€|upgrade|unl[o]ck/i);
+		if (WITH_ADD_ON) {
+			await expect(page.locator('#rip-quickstart-features li[data-rank="1"]').first()).toHaveClass(/rip-quickstart__feature--locked/);
+		} else {
+			await expect(page.locator('#rip-quickstart-addon li'), 'the add-on features come from the catalog').toHaveCount(14);
+			await expect(page.locator('.rip-quickstart__feature--locked')).toHaveCount(0);
+			await expect(page.locator('.rip-quickstart')).not.toContainText(/€|upgrade|unl[o]ck/i);
+		}
 
 		await page.locator('.rip-mode-card[data-mode="local"]').click();
 		await expect(page.locator('#rip-api-key-card')).toHaveClass(/rip-is-hidden/);
@@ -127,8 +140,13 @@ test.describe('quickstart', () => {
 		await page.fill('#rip-api-key', PRO_KEY);
 		await page.locator('#rip-validate-key').click();
 		await expect(page.locator('#rip-api-key-status .rip-input-status--success')).toContainText('Professional');
-		await expect(page.locator('#rip-quickstart-addon li'), 'the catalog does not change with the plan').toHaveCount(14);
-		await expect(page.locator('.rip-quickstart__feature--locked')).toHaveCount(0);
+		if (WITH_ADD_ON) {
+			await expect(page.locator('#rip-quickstart-features li[data-rank="1"]').first()).not.toHaveClass(/rip-quickstart__feature--locked/);
+			await expect(page.locator('#rip-quickstart-features li[data-rank="2"]').first()).toHaveClass(/rip-quickstart__feature--locked/);
+		} else {
+			await expect(page.locator('#rip-quickstart-addon li'), 'the catalog does not change with the plan').toHaveCount(14);
+			await expect(page.locator('.rip-quickstart__feature--locked')).toHaveCount(0);
+		}
 		await expect(page.locator('#rip-quickstart-teaser')).toHaveCount(0);
 
 		await page.locator('#rip-quickstart-activate').click();
@@ -137,7 +155,11 @@ test.describe('quickstart', () => {
 		expect(wpOption('reportedip_hive_operation_mode')).toBe('community');
 		expect(wpOption('reportedip_hive_known_tier')).toBe('professional');
 		/* Tor blocking is a row of the add-on matrix: without the add-on the recommendation cannot switch it on. */
-		expect(wpOption('reportedip_hive_block_tor')).not.toBe('1');
+		if (WITH_ADD_ON) {
+			expect(wpOption('reportedip_hive_block_tor')).toBe('1');
+		} else {
+			expect(wpOption('reportedip_hive_block_tor')).not.toBe('1');
+		}
 		expect(wpOption('reportedip_hive_data_retention_days')).toBe('90');
 		expect(wpOption('reportedip_hive_bot_action')).toBe('block');
 		expect(wpOption('reportedip_hive_2fa_enabled_global')).toBe('1');

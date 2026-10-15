@@ -57,6 +57,7 @@ test.describe('protection page', () => {
 	});
 
 	test('five tabs, four with a status pill, the first one open', async ({ page }) => {
+		test.skip(process.env.RIP_E2E_WITH_PRO === '1', 'with the add-on all five tabs carry a status pill, as 2.1.74');
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
 		const tabs = page.locator('.rip-protection__tabs .rip-nav-tabs__tab');
@@ -124,6 +125,7 @@ test.describe('protection page', () => {
 	});
 
 	test('values of the add-on stored without it survive a save of every tab', async ({ page }) => {
+		test.skip(process.env.RIP_E2E_WITH_PRO === '1', 'with the add-on its fields are inputs again');
 		/* The plan cases of these fields run in the add-on suite (plan-surfaces.spec.ts). */
 		wp('option update reportedip_hive_block_tor 1');
 		wp('option update reportedip_hive_hsts_enabled 1');
@@ -147,6 +149,7 @@ test.describe('protection page', () => {
 	});
 
 	test('runtime locks and fixed choices render as the old tabs did', async ({ page }) => {
+		test.skip(process.env.RIP_E2E_WITH_PRO === '1', 'with the add-on sms is a choice of the allowed methods, as 2.1.74');
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
 		await page.locator('#detection .rip-protection__details > summary').click();
@@ -190,6 +193,7 @@ test.describe('protection page', () => {
 	});
 
 	test('the add-on features sit in their sections as catalog rows, without an input or a price', async ({ page }) => {
+		test.skip(process.env.RIP_E2E_WITH_PRO === '1', 'with the add-on the sections render their fields (pro suite plan-surfaces)');
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
 		const rows = page.locator('.rip-protection__field--catalog');

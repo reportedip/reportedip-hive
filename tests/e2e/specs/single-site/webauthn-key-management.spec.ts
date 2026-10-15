@@ -41,6 +41,7 @@ test.describe.serial('webauthn key manager', () => {
     });
 
     test('one key: add, limit, rename and delete-to-disable', async ({ page }) => {
+        test.skip(process.env.RIP_E2E_WITH_PRO === '1', 'with the add-on Business keeps the add button for a backup key (pro suite webauthn-key-management)');
         page.on('dialog', (dialog) => dialog.accept());
         await attachVirtualAuthenticator(page);
 

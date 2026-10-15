@@ -27,7 +27,7 @@ function cli(multisite: boolean, ...args: string[]): string {
 	const argv = multisite
 		? ['compose', '-f', 'docker-compose.multisite.yml', 'exec', '-T', 'wordpress-ms', 'wp', '--allow-root', ...args, '--network']
 		: ['exec', WP_CONTAINER, 'wp', '--allow-root', ...args];
-	return execFileSync('docker', argv, { cwd: workspaceRoot(), encoding: 'utf8' }).toString().trim();
+	return execFileSync('docker', argv, { cwd: workspaceRoot(), encoding: 'utf8' }).trim();
 }
 
 function isActive(multisite: boolean): boolean {
