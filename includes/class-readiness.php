@@ -615,6 +615,32 @@ final class ReportedIP_Hive_Readiness {
 	}
 
 	/**
+	 * Dismiss every issue the readiness notice on the plugin pages lists:
+	 * the open, dismissable issues that are not advisory. The X on that
+	 * notice runs the same seven-day dismissal as the System Status page.
+	 * Only for an operator who may manage the plugin, because the dismissal
+	 * is site-wide.
+	 *
+	 * @param int $now Current UNIX time.
+	 * @return int Number of issues dismissed.
+	 * @since  3.0.0
+	 */
+	public static function dismiss_notice_issues( $now ) {
+		if ( ! ReportedIP_Hive_Option_Routing::current_user_can_manage() ) {
+			return 0;
+		}
+		$count = 0;
+		foreach ( self::open_issues() as $issue ) {
+			if ( self::SEV_ADVISORY === (string) $issue['severity'] || empty( $issue['dismissable'] ) ) {
+				continue;
+			}
+			self::dismiss( (string) $issue['key'], (int) $now );
+			++$count;
+		}
+		return $count;
+	}
+
+	/**
 	 * `admin-post.php?action=reportedip_hive_readiness_dismiss` handler.
 	 *
 	 * @return void

@@ -158,8 +158,8 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * `manage_options` and must not be able to write network state through
 	 * admin-ajax.php, which accepts requests from any blog of the network.
 	 * The read-only Site Admin pages issue no AJAX call at all; the single
-	 * handler a site administrator legitimately reaches (the per-user notice
-	 * dismissal) uses {@see require_site_capability()} instead.
+	 * handler every logged-in user reaches (the per-user notice dismissal)
+	 * uses {@see require_logged_in_reader()} instead.
 	 *
 	 * @return void
 	 * @since  2.1.44
@@ -171,20 +171,19 @@ class ReportedIP_Hive_Ajax_Handler {
 	}
 
 	/**
-	 * Enforce the site-level administrator capability, or terminate with a
-	 * JSON error.
+	 * Enforce a logged-in user with the `read` capability, or terminate with
+	 * a JSON error.
 	 *
-	 * Reserved for handlers that only touch the acting user's own state (user
-	 * meta) and are triggered from surfaces a sub-site administrator can see,
-	 * such as the dismissible admin notices. Every handler that reads or
-	 * writes plugin options, tables or network state uses
-	 * {@see require_admin_capability()}.
+	 * Reserved for the notice dismissal: it writes the acting user's own
+	 * meta for a closed list of notice ids, and the 2FA reminder it serves
+	 * reaches every role. Every handler that reads or writes plugin options,
+	 * tables or network state uses {@see require_admin_capability()}.
 	 *
 	 * @return void
-	 * @since  2.1.51
+	 * @since  3.0.0
 	 */
-	private function require_site_capability() {
-		if ( ! current_user_can( 'manage_options' ) ) {
+	private function require_logged_in_reader() {
+		if ( ! is_user_logged_in() || ! current_user_can( 'read' ) ) {
 			wp_send_json_error( __( 'Insufficient permissions.', 'reportedip-hive' ) );
 		}
 	}
@@ -1566,22 +1565,28 @@ class ReportedIP_Hive_Ajax_Handler {
 	/**
 	 * AJAX: Dismiss admin notice persistently.
 	 *
-	 * Writes the acting user's own meta only, and the notices it serves can
-	 * surface on any admin screen of a sub-site, so the site-level capability
-	 * is sufficient here.
+	 * Writes the acting user's own meta only, for an id from the closed list
+	 * of {@see ReportedIP_Hive_Admin_Notice::dismissible_ids()}; the 2FA
+	 * reminder reaches every role, so a logged-in reader is enough. The
+	 * readiness notice runs the register's own site-wide dismissal, which
+	 * checks the manage capability itself.
 	 */
 	public function ajax_dismiss_notice() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
-		$this->require_site_capability();
+		$this->require_logged_in_reader();
 
 		$notice_id = isset( $_POST['notice_id'] ) ? sanitize_key( $_POST['notice_id'] ) : '';
-		if ( empty( $notice_id ) ) {
+		if ( ! ReportedIP_Hive_Admin_Notice::is_dismissible_id( $notice_id ) ) {
 			wp_send_json_error( __( 'Invalid notice ID.', 'reportedip-hive' ) );
 		}
 
-		$meta_key = 'reportedip_dismissed_' . $notice_id;
-		update_user_meta( get_current_user_id(), $meta_key, time() );
+		if ( ReportedIP_Hive_Admin_Notice::READINESS_ID === $notice_id ) {
+			ReportedIP_Hive_Readiness::dismiss_notice_issues( time() );
+			wp_send_json_success();
+		}
+
+		update_user_meta( get_current_user_id(), ReportedIP_Hive_Admin_Notice::DISMISS_META_PREFIX . $notice_id, time() );
 
 		wp_send_json_success();
 	}

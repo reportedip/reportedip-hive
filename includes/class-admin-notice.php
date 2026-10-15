@@ -29,6 +29,107 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class ReportedIP_Hive_Admin_Notice {
 
 	/**
+	 * User-meta prefix of a persistent dismissal; the notice id follows it
+	 * and the value is the UNIX time of the click.
+	 */
+	const DISMISS_META_PREFIX = 'reportedip_dismissed_';
+
+	/**
+	 * Fixed notice ids whose dismissal expires, in seconds. The id never
+	 * carries a date, so each user holds one meta row per notice, and the
+	 * time of the click decides when the notice may return.
+	 */
+	const DISMISS_TTL = array(
+		'rate_limited'    => 3600,
+		'twofa_recommend' => 86400,
+		'no_api_key'      => 86400,
+		'domain_limit'    => 86400,
+		'queue_warning'   => 86400,
+	);
+
+	/**
+	 * Notice id of the readiness summary. Its dismissal is the readiness
+	 * register's own seven-day dismissal of the listed issues, not user meta.
+	 */
+	const READINESS_ID = 'readiness';
+
+	/**
+	 * Id of the notice that the address of this site is listed. Bound to the
+	 * address, so a new listing after a clean-up shows up again.
+	 *
+	 * @param string $address IP address of the listing.
+	 * @return string
+	 * @since  3.0.0
+	 */
+	public static function reputation_notice_id( $address ) {
+		return 'reputation_listed_' . md5( (string) $address );
+	}
+
+	/**
+	 * Every notice id the dismiss handler accepts. A closed list, so a
+	 * logged-in user can only ever create the few meta rows the plugin reads.
+	 *
+	 * @return string[]
+	 * @since  3.0.0
+	 */
+	public static function dismissible_ids() {
+		$ids   = array_keys( self::DISMISS_TTL );
+		$ids[] = self::READINESS_ID;
+		foreach ( ReportedIP_Hive_Addon_Notice::PAID_TIERS as $tier ) {
+			$ids[] = ReportedIP_Hive_Addon_Notice::notice_id( $tier );
+		}
+		$reputation = ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_reputation', null );
+		if ( is_array( $reputation ) && ! empty( $reputation['listed'] ) ) {
+			$ids[] = self::reputation_notice_id( (string) ( $reputation['address'] ?? '' ) );
+		}
+
+		/**
+		 * Notice ids an add-on renders with `data_notice_id`. Only listed ids
+		 * can be dismissed; each one must be a fixed string, never a value a
+		 * request can choose.
+		 *
+		 * @since 3.0.0
+		 *
+		 * @param string[] $ids Accepted ids.
+		 */
+		$ids = (array) apply_filters( 'reportedip_hive_dismissible_notice_ids', $ids );
+
+		return array_values( array_unique( array_map( 'strval', $ids ) ) );
+	}
+
+	/**
+	 * Whether the dismiss handler accepts this id.
+	 *
+	 * @param string $notice_id Notice id after `sanitize_key()`.
+	 * @return bool
+	 * @since  3.0.0
+	 */
+	public static function is_dismissible_id( $notice_id ) {
+		return '' !== (string) $notice_id && in_array( (string) $notice_id, self::dismissible_ids(), true );
+	}
+
+	/**
+	 * Whether the user dismissed the notice and the dismissal still holds.
+	 * Ids in {@see DISMISS_TTL} expire, every other id holds until it changes.
+	 *
+	 * @param string $notice_id Notice id.
+	 * @param int    $user_id   User id, 0 for the current user.
+	 * @param int    $now       UNIX time, 0 for now.
+	 * @return bool
+	 * @since  3.0.0
+	 */
+	public static function is_dismissed( $notice_id, $user_id = 0, $now = 0 ) {
+		$user_id = $user_id ? (int) $user_id : get_current_user_id();
+		$clicked = (int) get_user_meta( $user_id, self::DISMISS_META_PREFIX . $notice_id, true );
+		if ( $clicked <= 0 ) {
+			return false;
+		}
+		$ttl = (int) ( self::DISMISS_TTL[ $notice_id ] ?? 0 );
+		$now = $now ? (int) $now : time();
+		return 0 === $ttl || $now - $clicked < $ttl;
+	}
+
+	/**
 	 * Wire the global asset enqueue. Idempotent.
 	 *
 	 * @return void

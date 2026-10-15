@@ -5,8 +5,8 @@
  * On Multisite every plugin option is sitemeta, so a handler that writes
  * settings must demand `manage_network_options`; a sub-site administrator
  * holding only `manage_options` must never reach the option router through
- * admin-ajax.php. The one handler a site administrator legitimately calls
- * (per-user notice dismissal) keeps the site-level check. The rule itself
+ * admin-ajax.php. The one handler every logged-in user may call (per-user
+ * notice dismissal for a closed id list) only needs `read`. The rule itself
  * has exactly one owner, `ReportedIP_Hive_Option_Routing::manage_capability()`.
  *
  * @package    ReportedIP_Hive
@@ -119,9 +119,9 @@ class AjaxCapabilityTest extends TestCase {
 		);
 	}
 
-	public function test_site_capability_helper_checks_manage_options_only() {
+	public function test_reader_helper_demands_a_logged_in_reader() {
 		$this->assertMatchesRegularExpression(
-			'/function require_site_capability\(\)\s*\{\s*if \( ! current_user_can\( \'manage_options\' \) \)/s',
+			'/function require_logged_in_reader\(\)\s*\{\s*if \( ! is_user_logged_in\(\) \|\| ! current_user_can\( \'read\' \) \)/s',
 			$this->handler_source()
 		);
 	}
@@ -136,7 +136,7 @@ class AjaxCapabilityTest extends TestCase {
 				$bodies[ $handler ],
 				"$handler() must call require_admin_capability()"
 			);
-			$this->assertStringNotContainsString( 'require_site_capability', $bodies[ $handler ] );
+			$this->assertStringNotContainsString( 'require_logged_in_reader', $bodies[ $handler ] );
 		}
 	}
 
@@ -182,10 +182,11 @@ class AjaxCapabilityTest extends TestCase {
 		}
 	}
 
-	public function test_notice_dismissal_keeps_the_site_level_capability() {
+	public function test_notice_dismissal_needs_a_reader_and_a_listed_id() {
 		$bodies = $this->handler_bodies();
 
-		$this->assertStringContainsString( '$this->require_site_capability();', $bodies['ajax_dismiss_notice'] );
+		$this->assertStringContainsString( '$this->require_logged_in_reader();', $bodies['ajax_dismiss_notice'] );
+		$this->assertStringContainsString( 'ReportedIP_Hive_Admin_Notice::is_dismissible_id( $notice_id )', $bodies['ajax_dismiss_notice'] );
 		$this->assertStringNotContainsString( 'require_admin_capability', $bodies['ajax_dismiss_notice'] );
 		$this->assertStringNotContainsString( 'Option_Routing::', $bodies['ajax_dismiss_notice'] );
 	}
