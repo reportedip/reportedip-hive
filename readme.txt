@@ -175,13 +175,13 @@ Verified bot detection resolves the host name of visitors that claim to be a sea
 
 == External Services ==
 
-In Local Shield (the default) the plugin contacts no external service.
+In Local Shield (the default) the plugin contacts no external service on its own, even with a key stored. Only a click on "Check" in the quickstart or on "Test Connection" sends one `verify-key` request.
 
-**reportedip.com (Community Network, only with a Community Access Key you enter)**
+**reportedip.com (Community Network on, only with a Community Access Key you enter)**
 
 Endpoint base: `https://reportedip.com/wp-json/reportedip/v2/`. Every request carries the key, the site address (`X-Rip-Site`) and a user agent with the plugin and WordPress version.
 
-* `verify-key`: validates the key when you enter it and every six hours; receives the plan and quotas of your account.
+* `verify-key`: validates the key when you check it and, while the Community Network is on, every six hours; receives the plan and quotas of your account.
 * `check`: looks up an attacking address during sign-in attempts and on the comment, registration and password-reset forms; sends the address.
 * `report`: shares an address the plugin blocked; sends the address, the event category and a one-line description with the site name, site address and attempt count. Queued and sent in batches.
 * `whitelist`: sends an address marked as legitimate, as positive feedback.

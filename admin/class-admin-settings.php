@@ -4626,7 +4626,9 @@ class ReportedIP_Hive_Admin_Settings {
 		}
 
 		try {
-			if ( ! $this->api_client->is_configured() ) {
+			if ( $this->api_client->is_configured() && ! $this->api_client->can_use_api() ) {
+				$health['api']['message'] = __( 'Local Shield mode active', 'reportedip-hive' );
+			} elseif ( ! $this->api_client->is_configured() ) {
 				$health['api']['status']    = 'warning';
 				$health['api']['message']   = __( 'API not configured', 'reportedip-hive' );
 				$health['api']['details'][] = __( 'API key not set. Some features will not work.', 'reportedip-hive' );

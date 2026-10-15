@@ -509,7 +509,7 @@ class ReportedIP_Hive_API {
 	 * Report positive feedback (whitelist/unblock)
 	 */
 	public function report_positive_feedback( $ip_address, $reason = '' ) {
-		if ( ! $this->is_configured() ) {
+		if ( ! $this->can_use_api() ) {
 			return false;
 		}
 
@@ -544,7 +544,7 @@ class ReportedIP_Hive_API {
 	 * Get threat categories
 	 */
 	public function get_categories() {
-		if ( ! $this->is_configured() ) {
+		if ( ! $this->can_use_api() ) {
 			return false;
 		}
 
@@ -1265,7 +1265,7 @@ class ReportedIP_Hive_API {
 	 * @return array|false Quota data or false on failure
 	 */
 	public function refresh_api_quota() {
-		if ( ! $this->is_configured() ) {
+		if ( ! $this->can_use_api() ) {
 			return false;
 		}
 

@@ -208,5 +208,54 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$this->assertDoesNotMatchRegularExpression( '#/relay-(mail|sms|quota)#', $url );
 			}
 		}
+
+		/**
+		 * Local Shield with a stored key: the automatic paths stay silent.
+		 */
+		public function test_local_shield_with_a_stored_key_sends_nothing_on_its_own(): void {
+			$GLOBALS['wp_options']['reportedip_hive_operation_mode'] = 'local';
+			$GLOBALS['rip_transport_next']                           = array(
+				'response' => array( 'code' => 200 ),
+				'body'     => wp_json_encode( array( 'valid' => true ) ),
+				'headers'  => array(),
+			);
+			$api = \ReportedIP_Hive_API::get_instance();
+
+			$this->assertFalse( $api->refresh_api_quota() );
+			$this->assertFalse( $api->report_positive_feedback( '198.51.100.7', 'test' ) );
+			$this->assertFalse( $api->get_categories() );
+
+			$cron = ( new \ReflectionClass( \ReportedIP_Hive_Cron_Handler::class ) )->newInstanceWithoutConstructor();
+			foreach (
+				array(
+					'api_client' => $api,
+					'logger'     => \ReportedIP_Hive_Logger::get_instance(),
+					'database'   => new class() {
+						public function get_queue_size() {
+							return 0;
+						}
+					},
+				) as $name => $value
+			) {
+				$prop = new \ReflectionProperty( $cron, $name );
+				$prop->setValue( $cron, $value );
+			}
+			$cron->cron_refresh_quota();
+
+			$this->assertSame( array(), $this->urls(), 'Local Shield must not reach reportedip.com.' );
+		}
+
+		/**
+		 * The status page tests the connection only while the API is in use;
+		 * the click on "Test Connection" stays available in every mode.
+		 */
+		public function test_status_page_skips_the_connection_test_in_local_shield(): void {
+			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-admin-settings.php' );
+			$start  = strpos( $source, 'private function get_plugin_health_status()' );
+			$this->assertNotFalse( $start );
+			$body = substr( $source, $start, (int) strpos( $source, "
+	}", $start ) - $start );
+			$this->assertSame( 1, preg_match( '/is_configured\(\) && ! \$this->api_client->can_use_api\(\).*?test_connection\(\)/s', $body ) );
+		}
 	}
 }
