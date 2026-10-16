@@ -84,8 +84,11 @@ final class ReportedIP_Hive_Addon_Notice {
 			return '';
 		}
 		return sprintf(
-			/* translators: 1: plan name, 2: link to the account dashboard on reportedip.com */
-			esc_html__( 'Your reportedip.com account is on the %1$s plan. Download the ReportedIP Hive Pro add-on from %2$s to use it on this site.', 'reportedip-hive' ),
+			is_multisite()
+				/* translators: 1: plan name, 2: link to the account dashboard on reportedip.com */
+				? esc_html__( 'Your reportedip.com account is on the %1$s plan. Download the ReportedIP Hive Pro add-on from %2$s, upload it in the Network Admin and activate it network-wide.', 'reportedip-hive' )
+				/* translators: 1: plan name, 2: link to the account dashboard on reportedip.com */
+				: esc_html__( 'Your reportedip.com account is on the %1$s plan. Download the ReportedIP Hive Pro add-on from %2$s to use it on this site.', 'reportedip-hive' ),
 			esc_html( (string) ReportedIP_Hive_Mode_Manager::get_instance()->get_tier_info( $tier )['label'] ),
 			'<a href="' . esc_url( ReportedIP_Hive_Catalog::ACCOUNT_URL ) . '" target="_blank" rel="noopener noreferrer">reportedip.com/dashboard</a>'
 		);

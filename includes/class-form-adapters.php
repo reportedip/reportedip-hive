@@ -144,9 +144,98 @@ final class ReportedIP_Hive_Form_Adapters {
 		add_filter( 'reportedip_hive_reputation_form_surfaces', array( $this, 'add_surfaces' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_script' ) );
 
+		add_action( 'admin_init', array( $this, 'switch_on_new_form_plugins' ), 30 );
+
 		add_filter( 'wpcf7_form_elements', array( $this, 'cf7_anchor' ) );
 		add_filter( 'wpcf7_spam', array( $this, 'cf7_spam' ), 10, 2 );
 		add_action( 'wpcf7_before_send_mail', array( $this, 'cf7_before_send_mail' ), 10, 3 );
+	}
+
+	/**
+	 * Form plugins seen on this install, a JSON list of adapter slugs.
+	 * Runtime state, no setting.
+	 */
+	const OPTION_SEEN = 'reportedip_hive_form_plugins_seen';
+
+	/**
+	 * Settings origin of a switch turned on for a newly installed form plugin.
+	 */
+	const ORIGIN_DETECTED = 'form_detected';
+
+	/**
+	 * Switch on the protection of a form plugin installed after the setup.
+	 *
+	 * 2.1.74 switched every adapter on in the quickstart, so a form plugin
+	 * installed later was protected right away. 3.0.1 switches on only the
+	 * adapters of installed form plugins and catches up here: a form plugin
+	 * that appears after the setup gets its switch when the plan covers it
+	 * and the switch is still on its default. The first run records what is
+	 * already there and changes nothing, so a choice made in the quickstart
+	 * or on a 2.x install stays; a plugin seen once is never switched on
+	 * again, so turning its protection off sticks.
+	 *
+	 * @return void
+	 * @since  3.0.1
+	 */
+	public function switch_on_new_form_plugins() {
+		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
+		if ( ! $mode_manager->is_wizard_completed() || ! ReportedIP_Hive_Option_Routing::current_user_can_manage() ) {
+			return;
+		}
+		$adapters = self::adapters();
+		$detected = array();
+		foreach ( array_keys( $adapters ) as $slug ) {
+			if ( $this->detected( (string) $slug ) ) {
+				$detected[] = (string) $slug;
+			}
+		}
+		$stored = ReportedIP_Hive_Option_Routing::get( self::OPTION_SEEN, null );
+		if ( null !== $stored && array() === array_diff( $detected, ReportedIP_Hive_Option_Routing::to_array( $stored ) ) ) {
+			return;
+		}
+		$recommended = ReportedIP_Hive_Defaults::recommended( (string) $mode_manager->get_current_tier(), (string) $mode_manager->get_mode() );
+		$plan        = self::catch_up( $stored, $detected, $adapters, $recommended, ReportedIP_Hive_Defaults::all_option_defaults(), ReportedIP_Hive_Settings_Registry::current_values( array_keys( $recommended ) ) );
+
+		ReportedIP_Hive_Option_Routing::set( self::OPTION_SEEN, wp_json_encode( $plan['seen'] ) );
+		if ( array() !== $plan['values'] ) {
+			ReportedIP_Hive_Settings_Apply::apply( $plan['values'], self::ORIGIN_DETECTED );
+		}
+	}
+
+	/**
+	 * Which adapter switches a newly installed form plugin gets. Pure.
+	 *
+	 * @param mixed                                $stored      Stored seen list (JSON or array), null before the first run.
+	 * @param string[]                             $detected    Slugs of installed form plugins.
+	 * @param array<string, array<string, string>> $adapters    Adapter table.
+	 * @param array<string, mixed>                 $recommended Recommendation for the current plan and mode.
+	 * @param array<string, mixed>                 $defaults    Seed defaults.
+	 * @param array<string, mixed>                 $current     Stored values.
+	 * @return array{seen: string[], values: array<string, mixed>}
+	 */
+	public static function catch_up( $stored, array $detected, array $adapters, array $recommended, array $defaults, array $current ) {
+		if ( null === $stored ) {
+			return array(
+				'seen'   => array_values( $detected ),
+				'values' => array(),
+			);
+		}
+		$seen   = ReportedIP_Hive_Option_Routing::to_array( $stored );
+		$values = array();
+		foreach ( array_diff( $detected, $seen ) as $slug ) {
+			$option = isset( $adapters[ $slug ]['option'] ) ? (string) $adapters[ $slug ]['option'] : '';
+			if ( '' === $option || ! array_key_exists( $option, $recommended ) ) {
+				continue;
+			}
+			$stored_value = array_key_exists( $option, $current ) ? $current[ $option ] : ( $defaults[ $option ] ?? null );
+			if ( (int) $stored_value === (int) ( $defaults[ $option ] ?? 0 ) ) {
+				$values[ $option ] = $recommended[ $option ];
+			}
+		}
+		return array(
+			'seen'   => array_values( array_unique( array_merge( $seen, $detected ) ) ),
+			'values' => $values,
+		);
 	}
 
 	/**

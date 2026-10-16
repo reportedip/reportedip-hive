@@ -445,7 +445,7 @@ class ReportedIP_Hive_Quickstart {
 		?>
 		<div class="rip-wizard__mode-select rip-quickstart">
 			<h1 class="rip-wizard__title"><?php esc_html_e( 'Set up ReportedIP Hive', 'reportedip-hive' ); ?></h1>
-			<p class="rip-wizard__subtitle"><?php esc_html_e( 'Two decisions and your site is protected. Everything else is preconfigured and can be changed later.', 'reportedip-hive' ); ?></p>
+			<p class="rip-wizard__subtitle"><?php is_multisite() ? esc_html_e( 'Two decisions and your network is protected. Everything else is preconfigured and can be changed later.', 'reportedip-hive' ) : esc_html_e( 'Two decisions and your site is protected. Everything else is preconfigured and can be changed later.', 'reportedip-hive' ); ?></p>
 
 			<div class="rip-wizard__mode-cards" role="radiogroup" aria-label="<?php esc_attr_e( 'Operation mode', 'reportedip-hive' ); ?>">
 				<div class="rip-mode-card rip-mode-card--recommended <?php echo 'community' === $mode ? 'rip-mode-card--selected' : ''; ?>" data-mode="community" role="radio" tabindex="0" aria-checked="<?php echo 'community' === $mode ? 'true' : 'false'; ?>">

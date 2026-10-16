@@ -2470,6 +2470,10 @@ class ReportedIP_Hive {
 	 * computation check was on and no add-on takes it over, see
 	 * {@see ReportedIP_Hive_Form_Proof::split_purge_needed()}.
 	 *
+	 * Every version change also releases the hourly self-heal lock of the
+	 * pre-WordPress guard, so the next admin request on the main site writes
+	 * the guard with the rules of the new version instead of an hour later.
+	 *
 	 * @return void
 	 * @since 2.1.2
 	 */
@@ -2485,6 +2489,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Defaults::seed_missing();
 		ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_seeded_version', REPORTEDIP_HIVE_VERSION );
 		ReportedIP_Hive_Form_Proof::purge_after_split( $stored );
+		delete_site_transient( ReportedIP_Hive_WAF_Dropin_Manager::HEAL_LOCK_TRANSIENT );
 	}
 
 	/**

@@ -101,6 +101,25 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( $absent, \ReportedIP_Hive_Settings_Registry::settings_hash() );
 		}
 
+		/**
+		 * 3.0.0 changed two shipped defaults (SMS left the allowed 2FA
+		 * methods, the breached-password check became opt-in). A 2.1.74 site
+		 * that kept the old defaults then hashed them as changed, and every
+		 * dashboard showed drift after the update without a value change.
+		 * The hash keeps the 2.1.74 reference for both keys: this option set
+		 * hashed to exactly this value under 2.1.74.
+		 */
+		public function test_a_2_1_74_site_keeps_its_hash_across_the_update() {
+			$GLOBALS['wp_options']['reportedip_hive_2fa_allowed_methods']    = '["totp","email","webauthn","sms"]';
+			$GLOBALS['wp_options']['reportedip_hive_password_check_hibp']    = '1';
+			$GLOBALS['wp_options']['reportedip_hive_failed_login_threshold'] = '42';
+
+			$this->assertSame(
+				'sha256:fbcdbcff06ef4d88a42012cf9e343e455df426b0212fefaee9643fe8f73ed890',
+				\ReportedIP_Hive_Settings_Registry::settings_hash()
+			);
+		}
+
 		public function test_hash_moves_when_a_value_returns_to_its_default() {
 			$GLOBALS['wp_options']['reportedip_hive_failed_login_threshold'] = 42;
 			$changed = \ReportedIP_Hive_Settings_Registry::settings_hash();

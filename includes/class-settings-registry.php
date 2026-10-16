@@ -49,6 +49,21 @@ final class ReportedIP_Hive_Settings_Registry {
 	const SCHEMA_VERSION = 1;
 
 	/**
+	 * Hash reference for keys whose shipped default changed after 2.1.74.
+	 *
+	 * The fingerprint leaves values on their default out. 3.0.0 changed two
+	 * defaults (SMS moved into the add-on, the breached-password check
+	 * became opt-in), so every 2.1.74 site that kept the old defaults hashed
+	 * them as changed and showed drift after the update. Measured against
+	 * the 2.1.74 default the hash stays where it was. A new default change
+	 * of a remote key belongs here as well.
+	 */
+	const HASH_BASELINE = array(
+		'reportedip_hive_2fa_allowed_methods' => '["totp","email","webauthn","sms"]',
+		'reportedip_hive_password_check_hibp' => true,
+	);
+
+	/**
 	 * Ordered section definitions for schema export and form rendering.
 	 *
 	 * @return array<string, array{label:string, description:string}>
@@ -1574,12 +1589,14 @@ final class ReportedIP_Hive_Settings_Registry {
 	 * dashboard manages had changed (since 2.1.70). Leaving defaults out
 	 * loses nothing, because a change away from the default adds the key and
 	 * a change back to it removes the key, both of which move the hash.
+	 * Keys whose default changed since 2.1.74 are measured against
+	 * {@see self::HASH_BASELINE}, so an update alone never moves the hash.
 	 *
 	 * @return string `sha256:<hex>`.
 	 */
 	public static function settings_hash() {
 		$values     = self::current_values();
-		$defaults   = ReportedIP_Hive_Defaults::all_option_defaults();
+		$defaults   = array_merge( ReportedIP_Hive_Defaults::all_option_defaults(), self::HASH_BASELINE );
 		$normalized = array();
 		foreach ( $values as $key => $value ) {
 			$current = self::normalize_value( $key, $value );

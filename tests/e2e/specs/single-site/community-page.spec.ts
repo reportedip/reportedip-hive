@@ -39,7 +39,7 @@ test.describe('community page', () => {
 		await expect(page.locator('.rip-nav-tabs__tab--active')).toHaveText('Add-on');
 		const intro = page.locator('#rip-addon');
 		await expect(intro).toContainText('Download it from your account dashboard at reportedip.com');
-		await expect(intro.locator('a', { hasText: 'Open your account' })).toHaveAttribute('href', 'https://reportedip.com/login/?redirect_to=https%3A%2F%2Freportedip.com%2Fdashboard%2F&rc=hive-plugin');
+		await expect(intro.locator('a', { hasText: 'Open your account' })).toHaveAttribute('href', 'https://reportedip.com/dashboard/product-hive/?rc=hive-plugin');
 		await expect(intro.locator('a', { hasText: 'Learn more' })).toHaveAttribute('href', 'https://reportedip.com/products/wordpress-plugin/?rc=hive-plugin');
 		await expect(page.locator('.rip-addon__section tr[data-feature]')).toHaveCount(14);
 		await expect(page.locator('.rip-addon__section tr[data-feature="hardening_mode"]')).toContainText('Hardening mode during attack waves');

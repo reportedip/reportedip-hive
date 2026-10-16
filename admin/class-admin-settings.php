@@ -3326,7 +3326,9 @@ class ReportedIP_Hive_Admin_Settings {
 		$intros = array(
 			'logs'      => array(
 				__( 'Event Log', 'reportedip-hive' ),
-				__( 'Every security event Hive recorded on this site, newest first: failed logins, firewall hits, scans, spam and the blocks that followed. Narrow the list with the filters, then block or whitelist an address straight from its row.', 'reportedip-hive' ),
+				is_network_admin()
+					? __( 'Every security event Hive recorded in this network, newest first: failed logins, firewall hits, scans, spam and the blocks that followed. Narrow the list with the filters, then block or whitelist an address straight from its row.', 'reportedip-hive' )
+					: __( 'Every security event Hive recorded on this site, newest first: failed logins, firewall hits, scans, spam and the blocks that followed. Narrow the list with the filters, then block or whitelist an address straight from its row.', 'reportedip-hive' ),
 			),
 			'lookup'    => array(
 				__( 'IP Lookup', 'reportedip-hive' ),
@@ -3393,7 +3395,12 @@ class ReportedIP_Hive_Admin_Settings {
 		$database    = ReportedIP_Hive_Database::get_instance();
 		$queue_stats = $database->get_queue_statistics();
 
-		self::render_page_header( __( 'Activity', 'reportedip-hive' ), __( 'What happened on this site, which addresses are blocked or trusted, and what is on its way to the community', 'reportedip-hive' ) );
+		self::render_page_header(
+			__( 'Activity', 'reportedip-hive' ),
+			is_network_admin()
+				? __( 'What happened in this network, which addresses are blocked or trusted, and what is on its way to the community', 'reportedip-hive' )
+				: __( 'What happened on this site, which addresses are blocked or trusted, and what is on its way to the community', 'reportedip-hive' )
+		);
 		?>
 
 			<nav class="rip-nav-tabs" aria-label="<?php esc_attr_e( 'Activity sections', 'reportedip-hive' ); ?>">
@@ -5193,7 +5200,15 @@ class ReportedIP_Hive_Admin_Settings {
 						?>
 					</div>
 				<?php else : ?>
-					<p><?php esc_html_e( 'The ReportedIP Hive Pro add-on adds the features below to this plugin. Download it from your account dashboard at reportedip.com and upload it under Plugins, Add New Plugin; it works with the Community Access Key of this site.', 'reportedip-hive' ); ?></p>
+					<p>
+						<?php
+						if ( is_multisite() ) {
+							esc_html_e( 'The ReportedIP Hive Pro add-on adds the features below to this plugin. Download it from your account dashboard at reportedip.com, upload it in the Network Admin under Plugins, Add New Plugin and activate it network-wide; it works with the Community Access Key of this network.', 'reportedip-hive' );
+						} else {
+							esc_html_e( 'The ReportedIP Hive Pro add-on adds the features below to this plugin. Download it from your account dashboard at reportedip.com and upload it under Plugins, Add New Plugin; it works with the Community Access Key of this site.', 'reportedip-hive' );
+						}
+						?>
+					</p>
 					<p class="rip-flex rip-gap-2">
 						<a class="rip-button rip-button--secondary rip-button--sm" href="<?php echo esc_url( ReportedIP_Hive_Catalog::ACCOUNT_URL ); ?>" target="_blank" rel="noopener noreferrer"><?php esc_html_e( 'Open your account', 'reportedip-hive' ); ?></a>
 						<a class="rip-button rip-button--ghost rip-button--sm" href="<?php echo esc_url( ReportedIP_Hive_Catalog::PRODUCT_URL ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Learn more', 'reportedip-hive' ); ?></a>

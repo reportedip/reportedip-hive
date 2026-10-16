@@ -46,6 +46,22 @@ All changes to ReportedIP Hive are documented here.
   coloured side bars on the system status cards and the privacy notice,
   a hint that a low hardening score is normal right after setup.
 
+- **A form plugin installed after the setup is protected.** The setup
+  switches on the form protection of the form plugins it finds. A form
+  plugin that appears later gets its switch on the next admin page when
+  the plan covers it and the switch is still on its default; a switch
+  someone turned off stays off. (2.1.74 switched every adapter on
+  up front.)
+- **The pre-WordPress guard is rewritten after an update** on the next
+  admin page instead of up to an hour later.
+- **No drift after the update from 2.1.74.** Two defaults changed in 3.0
+  (SMS in the allowed 2FA methods, the HIBP check), so every site reported
+  a new settings fingerprint without a changed value. The fingerprint
+  compares against the 2.1.74 defaults of these two keys again.
+- **Multisite wording.** The add-on hint, the add-on tab, the quickstart
+  and the activity page speak of the network and the Network Admin on a
+  network.
+
 ### Changed
 
 - **Every link to reportedip.com carries its campaign tag** (`rc`), so

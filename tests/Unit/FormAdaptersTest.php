@@ -332,5 +332,37 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		/**
+		 * A form plugin installed after the setup gets its switch, the way
+		 * 2.1.74 had every switch on already; the first run only records
+		 * what is there, and a switch someone changed stays.
+		 */
+		public function test_a_form_plugin_installed_later_is_switched_on_once(): void {
+			$adapters    = array(
+				'cf7'     => array( 'option' => 'reportedip_hive_form_proof_cf7' ),
+				'gravity' => array( 'option' => 'reportedip_hive_form_proof_gravity' ),
+				'wpforms' => array( 'option' => 'reportedip_hive_form_proof_wpforms' ),
+			);
+			$recommended = array(
+				'reportedip_hive_form_proof_cf7'     => 1,
+				'reportedip_hive_form_proof_gravity' => 1,
+			);
+			$defaults    = array(
+				'reportedip_hive_form_proof_cf7'     => 0,
+				'reportedip_hive_form_proof_gravity' => 0,
+				'reportedip_hive_form_proof_wpforms' => 0,
+			);
+
+			$first = \ReportedIP_Hive_Form_Adapters::catch_up( null, array( 'cf7' ), $adapters, $recommended, $defaults, array( 'reportedip_hive_form_proof_cf7' => 0 ) );
+			$this->assertSame( array( 'cf7' ), $first['seen'] );
+			$this->assertSame( array(), $first['values'], 'the first run changes nothing' );
+
+			$later = \ReportedIP_Hive_Form_Adapters::catch_up( '["cf7"]', array( 'cf7', 'gravity', 'wpforms' ), $adapters, $recommended, $defaults, array() );
+			$this->assertSame( array( 'reportedip_hive_form_proof_gravity' => 1 ), $later['values'], 'WPForms is not in the plan, CF7 was decided before' );
+			$this->assertSame( array( 'cf7', 'gravity', 'wpforms' ), $later['seen'] );
+
+			$changed = \ReportedIP_Hive_Form_Adapters::catch_up( '[]', array( 'gravity' ), $adapters, $recommended, $defaults, array( 'reportedip_hive_form_proof_gravity' => 1 ) );
+			$this->assertSame( array(), $changed['values'], 'a switch already on is left as it is' );
+		}
 	}
 }
