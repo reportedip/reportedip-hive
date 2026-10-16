@@ -260,7 +260,8 @@ class ReportedIP_Hive_API_Queue_Table extends WP_List_Table {
 		if ( $time_diff < 60 ) {
 			return __( 'just now', 'reportedip-hive' );
 		} elseif ( $time_diff < 86400 ) {
-			return human_time_diff( $timestamp, time() ) . ' ' . __( 'ago', 'reportedip-hive' );
+			/* translators: %s = human-readable time difference, e.g. "3 hours". */
+			return sprintf( __( '%s ago', 'reportedip-hive' ), human_time_diff( $timestamp, time() ) );
 		} else {
 			return wp_date( get_option( 'date_format', 'Y-m-d' ) . ' ' . get_option( 'time_format', 'H:i:s' ), $timestamp );
 		}

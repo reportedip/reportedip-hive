@@ -2,6 +2,20 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [3.0.1] - unreleased
+
+### Fixes
+
+- **Overlapping firewall queue imports.** The import of the pre-WordPress
+  hit queue now claims a file lock before it rotates the queue. Two runs
+  starting in the same instant no longer print a rename warning or import
+  the same hits twice.
+- **Translatable source strings.** Two admin labels were German in the
+  source and are English now ("Honeypot Tier (unlimited)", "ReportedIP Hive
+  2FA data"). The time stamps on the dashboard activity list and the API
+  queue are one translatable phrase ("%s ago") instead of a glued "ago".
+  All seven bundled catalogs carry the new strings.
+
 ## [3.0.0] - 2026-10-16
 
 ### Security

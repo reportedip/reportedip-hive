@@ -1151,7 +1151,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 */
 	public function register_data_exporter( $exporters ) {
 		$exporters['reportedip-hive-2fa'] = array(
-			'exporter_friendly_name' => __( 'ReportedIP Hive 2FA-Daten', 'reportedip-hive' ),
+			'exporter_friendly_name' => __( 'ReportedIP Hive 2FA data', 'reportedip-hive' ),
 			'callback'               => array( $this, 'export_personal_data' ),
 		);
 		return $exporters;
@@ -1165,7 +1165,7 @@ class ReportedIP_Hive_Two_Factor_Admin {
 	 */
 	public function register_data_eraser( $erasers ) {
 		$erasers['reportedip-hive-2fa'] = array(
-			'eraser_friendly_name' => __( 'ReportedIP Hive 2FA-Daten', 'reportedip-hive' ),
+			'eraser_friendly_name' => __( 'ReportedIP Hive 2FA data', 'reportedip-hive' ),
 			'callback'             => array( $this, 'erase_personal_data' ),
 		);
 		return $erasers;

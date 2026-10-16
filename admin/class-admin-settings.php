@@ -3213,7 +3213,12 @@ class ReportedIP_Hive_Admin_Settings {
 											<?php echo wp_kses_post( $this->logger->format_details( $event->details ) ); ?>
 										</div>
 									</div>
-									<span class="rip-activity-item__time"><?php echo esc_html( $time_ago ); ?> <?php esc_html_e( 'ago', 'reportedip-hive' ); ?></span>
+									<span class="rip-activity-item__time">
+										<?php
+										/* translators: %s = human-readable time difference, e.g. "3 hours". */
+										echo esc_html( sprintf( __( '%s ago', 'reportedip-hive' ), $time_ago ) );
+										?>
+									</span>
 								</li>
 								<?php endforeach; ?>
 							</ul>
@@ -4957,7 +4962,7 @@ class ReportedIP_Hive_Admin_Settings {
 										<div class="rip-stat-card__label">
 											<?php
 											if ( $is_honeypot ) {
-												esc_html_e( 'Honeypot-Tier (unbegrenzt)', 'reportedip-hive' );
+												esc_html_e( 'Honeypot Tier (unlimited)', 'reportedip-hive' );
 											} else {
 												esc_html_e( 'API Tier', 'reportedip-hive' );
 											}
