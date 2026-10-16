@@ -207,15 +207,7 @@ final class ReportedIP_Hive_Attack_Surface {
 	}
 
 	/**
-	 * Remove the WordPress version fingerprints and switch PHP error display
-	 * off.
-	 *
-	 * ponytail: `display_errors` only. Errors raised before this runs
-	 * (mu-plugins, drop-ins, the core bootstrap) and the fatal-error handler's
-	 * own page are out of reach, and a developer running `WP_DEBUG` with
-	 * `WP_DEBUG_DISPLAY` keeps their error output, the wp-config constants
-	 * win on purpose. Upgrade path if that is ever not enough: an
-	 * `auto_prepend_file` directive, which the WAF drop-in already owns.
+	 * Remove the WordPress and plugin version fingerprints from the markup.
 	 *
 	 * @return void
 	 * @since  2.1.51
@@ -230,11 +222,6 @@ final class ReportedIP_Hive_Attack_Surface {
 
 		add_action( 'wp_head', array( __CLASS__, 'open_head_buffer' ), -99999 );
 		add_action( 'wp_head', array( __CLASS__, 'close_head_buffer' ), 99999 );
-
-		$debug_display = defined( 'WP_DEBUG' ) && WP_DEBUG && defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY;
-		if ( ! $debug_display && function_exists( 'ini_set' ) ) {
-			ini_set( 'display_errors', '0' ); // phpcs:ignore WordPress.PHP.IniSet.display_errors_Disallowed, Squiz.PHP.DiscouragedFunctions.Discouraged -- That is the entire point of the switch; the WP_DEBUG_DISPLAY guard above keeps a developer's error output intact.
-		}
 	}
 
 	/**

@@ -5,7 +5,7 @@
  * The REST gate runs inside `rest_authentication_errors`, which needs a live
  * WordPress request to exercise end to end. The properties that must never
  * silently change, hook priority, the error pass-through, the CLI/cron
- * carve-out, "log only, never escalate", the `display_errors` guard and the
+ * carve-out, "log only, never escalate", the absence of `ini_set` and the
  * inline option fallbacks, are anchored by source inspection instead (the
  * established pattern, see SecurityMonitorBotGuardTest).
  *
@@ -107,19 +107,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
-		public function test_display_errors_is_guarded_by_the_debug_constants(): void {
-			$source = $this->source();
-
-			$this->assertMatchesRegularExpression(
-				"/ini_set\(\s*'display_errors',\s*'0'\s*\);\s*\/\/ phpcs:ignore [^\n]*--/",
-				$source,
-				'The ini_set call needs a phpcs:ignore with a stated reason.'
-			);
-			$this->assertStringContainsString(
-				"defined( 'WP_DEBUG_DISPLAY' ) && WP_DEBUG_DISPLAY",
-				$source,
-				'A developer running WP_DEBUG with WP_DEBUG_DISPLAY must keep their error output.'
-			);
+		public function test_the_free_plugin_leaves_php_error_display_alone(): void {
+			$this->assertStringNotContainsString( 'ini_set', $this->source(), 'Switching display_errors off belongs to the add-on.' );
 		}
 
 		public function test_inline_option_fallbacks_match_the_canonical_defaults(): void {
