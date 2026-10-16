@@ -16,7 +16,10 @@
  *
  * Errors surface through the standard `user_profile_update_errors` and
  * `validate_password_reset` hooks so they appear in the admin UI / reset
- * form without any extra rendering work.
+ * form without any extra rendering work. Since 3.0.1 the same policy runs
+ * on the WooCommerce account details and registration forms and on the
+ * Ultimate Member account and registration forms, each through the error
+ * hook of that form.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -90,6 +93,98 @@ class ReportedIP_Hive_Password_Strength {
 	private function __construct() {
 		add_action( 'user_profile_update_errors', array( $this, 'on_profile_update' ), 10, 3 );
 		add_action( 'validate_password_reset', array( $this, 'on_password_reset' ), 10, 2 );
+		add_action( 'woocommerce_save_account_details_errors', array( $this, 'on_wc_account_details' ), 10, 2 );
+		add_filter( 'woocommerce_process_registration_errors', array( $this, 'on_wc_registration' ), 10, 4 );
+		add_action( 'um_submit_account_errors_hook', array( $this, 'on_um_account' ), 20 );
+		add_action( 'um_submit_form_errors_hook__registration', array( $this, 'on_um_registration' ), 20, 2 );
+	}
+
+	/**
+	 * WooCommerce My Account, account details. WooCommerce sets
+	 * `user_pass` on the user object only for a password change it is about
+	 * to save (current password correct, both new fields equal), and has
+	 * verified its own nonce before the hook fires.
+	 *
+	 * @param WP_Error $errors Errors collected so far.
+	 * @param object   $user   User data being saved.
+	 * @return void
+	 * @since  3.0.1
+	 */
+	public function on_wc_account_details( $errors, $user ): void {
+		if ( ! ( $errors instanceof WP_Error ) || ! is_object( $user ) || empty( $user->user_pass ) ) {
+			return;
+		}
+		$wp_user = isset( $user->ID ) ? get_userdata( (int) $user->ID ) : false;
+		if ( ! ( $wp_user instanceof WP_User ) ) {
+			$wp_user = wp_get_current_user();
+		}
+		$violation = $this->validate_password( (string) wp_unslash( (string) $user->user_pass ), $wp_user );
+		if ( null !== $violation ) {
+			$errors->add( 'pass', $violation );
+		}
+	}
+
+	/**
+	 * WooCommerce registration with a password the customer chose.
+	 * WooCommerce passes an empty password when it generates one itself, so
+	 * that case is left alone. The new account gets the `customer` role,
+	 * which decides the scope.
+	 *
+	 * @param WP_Error $validation_error Errors collected so far.
+	 * @param string   $username         Requested user name.
+	 * @param string   $password         Chosen password, empty when generated.
+	 * @param string   $email            Mail address.
+	 * @return WP_Error
+	 * @since  3.0.1
+	 */
+	public function on_wc_registration( $validation_error, $username, $password, $email ) {
+		unset( $username, $email );
+		if ( ! ( $validation_error instanceof WP_Error ) || ! is_string( $password ) || '' === $password ) {
+			return $validation_error;
+		}
+		$violation = $this->validate_password( (string) wp_unslash( $password ), null, array( 'customer' ) );
+		if ( null !== $violation ) {
+			$validation_error->add( 'registration-error-invalid-password', $violation );
+		}
+		return $validation_error;
+	}
+
+	/**
+	 * Ultimate Member account page, password tab. Ultimate Member has checked
+	 * its nonce and the current password in its own callback on priority 10.
+	 *
+	 * @param array $args Submitted account form data.
+	 * @return void
+	 * @since  3.0.1
+	 */
+	public function on_um_account( $args ): void {
+		if ( ! is_array( $args ) || empty( $args['user_password'] ) || ! function_exists( 'UM' ) ) {
+			return;
+		}
+		$violation = $this->validate_password( trim( (string) $args['user_password'] ), wp_get_current_user() );
+		if ( null !== $violation ) {
+			UM()->form()->add_error( 'user_password', $violation );
+		}
+	}
+
+	/**
+	 * Ultimate Member registration form. The scope follows the role the form
+	 * assigns, else the site's default role.
+	 *
+	 * @param array $submitted_data Submitted form data.
+	 * @param array $form_data      Ultimate Member form settings.
+	 * @return void
+	 * @since  3.0.1
+	 */
+	public function on_um_registration( $submitted_data, $form_data = array() ): void {
+		if ( ! is_array( $submitted_data ) || empty( $submitted_data['user_password'] ) || ! function_exists( 'UM' ) ) {
+			return;
+		}
+		$role      = is_array( $form_data ) && ! empty( $form_data['role'] ) ? (string) $form_data['role'] : (string) get_option( 'default_role', 'subscriber' );
+		$violation = $this->validate_password( trim( (string) $submitted_data['user_password'] ), null, array( $role ) );
+		if ( null !== $violation ) {
+			UM()->form()->add_error( 'user_password', $violation );
+		}
 	}
 
 	/**
@@ -149,13 +244,17 @@ class ReportedIP_Hive_Password_Strength {
 	/**
 	 * Run the configured policy checks against a candidate password.
 	 *
+	 * @param string        $password Candidate password.
+	 * @param WP_User|null  $user     Existing user, null for a new one.
+	 * @param string[]|null $roles    Roles of an account still to be created; decides the scope instead of `$user`.
 	 * @return string|null Violation message or null if the password passes.
 	 */
-	private function validate_password( string $password, ?WP_User $user ): ?string {
+	private function validate_password( string $password, ?WP_User $user, ?array $roles = null ): ?string {
 		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_policy_enabled', true ) ) {
 			return null;
 		}
-		if ( ! $this->user_subject_to_policy( $user ) ) {
+		$in_scope = null !== $roles ? $this->roles_subject_to_policy( $roles ) : $this->user_subject_to_policy( $user );
+		if ( ! $in_scope ) {
 			return null;
 		}
 
@@ -206,21 +305,34 @@ class ReportedIP_Hive_Password_Strength {
 	}
 
 	/**
-	 * Whether this user is in scope for the policy. Defaults to the same
-	 * `reportedip_hive_2fa_enforce_roles` list so admins / editors are
-	 * always covered, falling back to "all users" when the option is empty.
+	 * Whether this user is in scope for the policy. With "all users" on,
+	 * everyone is; otherwise the roles of the
+	 * `reportedip_hive_2fa_enforce_roles` list are, and an empty list covers
+	 * nobody (since 3.0.1; before, the switch only counted while the list
+	 * was empty, so it did nothing next to the default administrator role).
 	 */
 	private function user_subject_to_policy( ?WP_User $user ): bool {
 		if ( ! ( $user instanceof WP_User ) ) {
 			return true;
 		}
+		return $this->roles_subject_to_policy( (array) $user->roles );
+	}
 
-		$enforce_roles = ReportedIP_Hive_Option_Routing::resolve_2fa_enforce_roles();
-		if ( empty( $enforce_roles ) ) {
-			return (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_policy_all_users', false );
+	/**
+	 * The scope rule of {@see self::user_subject_to_policy()} for a list of
+	 * roles, so an account that does not exist yet is judged by its role.
+	 *
+	 * @param string[] $roles Role slugs.
+	 * @return bool
+	 * @since  3.0.1
+	 */
+	private function roles_subject_to_policy( array $roles ): bool {
+		if ( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_password_policy_all_users', false ) ) {
+			return true;
 		}
 
-		foreach ( (array) $user->roles as $role ) {
+		$enforce_roles = ReportedIP_Hive_Option_Routing::resolve_2fa_enforce_roles();
+		foreach ( $roles as $role ) {
 			if ( in_array( $role, $enforce_roles, true ) ) {
 				return true;
 			}
@@ -265,13 +377,25 @@ class ReportedIP_Hive_Password_Strength {
 			return null;
 		}
 
-		foreach ( explode( "\n", $cached ) as $line ) {
-			$line = trim( $line );
-			if ( '' === $line ) {
-				continue;
-			}
-			$parts = explode( ':', $line );
-			if ( strtoupper( $parts[0] ) === $suffix ) {
+		return self::range_lists_suffix( $cached, $suffix );
+	}
+
+	/**
+	 * Whether a range response lists the hash suffix with a count above 0.
+	 *
+	 * With `Add-Padding: true` the service adds several hundred made-up
+	 * suffixes with the count 0, so a line `SUFFIX:0` is padding and no hit.
+	 *
+	 * @param string $body   Response body, one `SUFFIX:COUNT` per line.
+	 * @param string $suffix The 35 hex characters after the prefix.
+	 * @return bool
+	 * @since  3.0.1
+	 */
+	public static function range_lists_suffix( string $body, string $suffix ): bool {
+		$suffix = strtoupper( $suffix );
+		foreach ( explode( "\n", $body ) as $line ) {
+			$parts = explode( ':', trim( $line ), 2 );
+			if ( strtoupper( $parts[0] ) === $suffix && isset( $parts[1] ) && (int) $parts[1] > 0 ) {
 				return true;
 			}
 		}

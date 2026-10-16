@@ -224,6 +224,8 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 = 3.0.1 =
 * Network activation on Multisite opens the quickstart in the Network Admin.
 * A plan upgrade applies the recommended settings of the new plan also without the Pro add-on.
+* The password policy and breach check also cover the WooCommerce and Ultimate Member account and registration forms; padding lines of the breach service no longer count as a hit.
+* "Apply the password policy to every role" now covers every user, also next to the roles that must use two-factor; the score item is called "Password policy".
 * The quickstart applies the same settings as version 2.1.74, and a form plugin installed later is protected on the next admin visit.
 * The pre-WordPress firewall is rewritten after every update, and the settings hash stays stable after the update from 2.1.74.
 * The firewall queue import can no longer run twice at the same time.
@@ -260,7 +262,7 @@ Verified bot detection resolves the host name of visitors that claim to be a sea
 
 **reportedip.com.** In Local Shield (the default) the plugin contacts no external service, even with a key stored; only a click on "Check" in the quickstart or on "Test Connection" sends one key check. With the Community Network switched on and a Community Access Key entered, the plugin talks to `https://reportedip.com/wp-json/reportedip/v2/`. It checks the key every six hours, looks up attacking addresses during sign-ins and on forms, reports addresses it blocked (address, event category, attempt count, site name), sends addresses you whitelist as feedback, and downloads signed firewall, bot and disposable-domain rulesets every six hours. With "Sync alert recipients" on, it also sends the alert recipient addresses. Every request carries the key, the site address and the plugin and WordPress version. The dashboard shows the reportedip.com news feed (`https://reportedip.com/feed/?post_type=news`), cached for twelve hours. If the Pro add-on is installed, it checks reportedip.com for its own updates with your key. Terms of use: https://reportedip.com/nutzungsbedingungen/. Privacy policy: https://reportedip.com/datenschutzerklaerung/.
 
-**api.pwnedpasswords.com.** Only with the breach check switched on: when a user sets a new password, the first five characters of its SHA-1 hash are sent to `https://api.pwnedpasswords.com/range/`; the password never leaves the site. Service by Have I Been Pwned, privacy: https://haveibeenpwned.com/Privacy.
+**api.pwnedpasswords.com.** Only with the breach check switched on: when a user sets a new password (also on the WooCommerce and Ultimate Member account and registration forms), the first five characters of its SHA-1 hash are sent to `https://api.pwnedpasswords.com/range/`; the password never leaves the site. Service by Have I Been Pwned, privacy: https://haveibeenpwned.com/Privacy.
 
 == Credits ==
 

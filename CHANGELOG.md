@@ -12,6 +12,24 @@ All changes to ReportedIP Hive are documented here.
   a plan upgrade, for every setting nobody changed. The rule moved from the
   add-on into the free plugin; while the add-on runs, the add-on applies it,
   so nothing is written twice and a value you chose stays.
+- **Breach check counted padding as a hit.** The breach service pads
+  every answer with several hundred made-up entries with the count 0. A
+  password whose hash suffix matched one of them could be refused although
+  it was in no breach. Only entries with a count above 0 count now.
+- **Password policy on shop and membership forms.** The length, character
+  and breach rules now also apply when a customer changes the password
+  under My Account in WooCommerce or registers with a chosen password, and
+  on the Ultimate Member account and registration forms. A new account is
+  judged by the role it gets (`customer` in WooCommerce), so with the
+  default scope (privileged roles) customers stay out unless the policy
+  covers all users.
+- **"Apply the password policy to every role" did nothing.** The switch
+  only counted while no role had to use two-factor, so next to the default
+  administrator role it had no effect. Switched on, the policy now covers
+  every user; switched off, it covers the roles that must use two-factor.
+- **Honest score label.** The security score item that checks whether the
+  password policy is on is called "Password policy" instead of "Password
+  strength & breach check"; points and item key stay the same.
 - **Update bridge of the GitHub release.** The bridge no longer records
   its result while the plan of a stored key is still unknown, and it
   retries a failed add-on install up to three times, an hour apart.
