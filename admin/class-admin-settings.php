@@ -615,7 +615,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
 				</div>
 				<div class="rip-mode-card__content">
-					<h3 class="rip-mode-card__title"><?php esc_html_e( 'Local Protection', 'reportedip-hive' ); ?></h3>
+					<h3 class="rip-mode-card__title"><?php esc_html_e( 'Local Shield', 'reportedip-hive' ); ?></h3>
 					<p class="rip-mode-card__desc"><?php esc_html_e( 'Standalone protection without API connection. Perfect for privacy-focused sites.', 'reportedip-hive' ); ?></p>
 					<ul class="rip-mode-card__features">
 						<li><?php esc_html_e( 'Works offline', 'reportedip-hive' ); ?></li>
@@ -847,7 +847,7 @@ class ReportedIP_Hive_Admin_Settings {
 		if ( empty( $items ) ) {
 			return;
 		}
-		$all_url = (string) apply_filters( 'reportedip_hive_external_url', 'https://reportedip.com/news/?rc=hive-plugin', 'news' );
+		$all_url = ReportedIP_Hive_Catalog::campaign_url( (string) apply_filters( 'reportedip_hive_external_url', 'https://reportedip.com/news/?rc=hive-plugin', 'news' ) );
 		?>
 		<div class="rip-dashboard__section rip-news">
 			<div class="rip-dashboard__section-title">
@@ -868,11 +868,11 @@ class ReportedIP_Hive_Admin_Settings {
 								<time class="rip-news__date" datetime="<?php echo esc_attr( gmdate( 'Y-m-d', $item['timestamp'] ) ); ?>"><?php echo esc_html( wp_date( (string) get_option( 'date_format' ), $item['timestamp'] ) ); ?></time>
 							<?php endif; ?>
 						</div>
-						<h3 class="rip-news__title"><a href="<?php echo esc_url( $item['link'] ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $item['title'] ); ?></a></h3>
+						<h3 class="rip-news__title"><a href="<?php echo esc_url( ReportedIP_Hive_Catalog::campaign_url( $item['link'] ) ); ?>" target="_blank" rel="noopener noreferrer"><?php echo esc_html( $item['title'] ); ?></a></h3>
 						<?php if ( '' !== $item['summary'] ) : ?>
 							<p class="rip-news__summary"><?php echo esc_html( $item['summary'] ); ?></p>
 						<?php endif; ?>
-						<a class="rip-news__more" href="<?php echo esc_url( $item['link'] ); ?>" target="_blank" rel="noopener noreferrer">
+						<a class="rip-news__more" href="<?php echo esc_url( ReportedIP_Hive_Catalog::campaign_url( $item['link'] ) ); ?>" target="_blank" rel="noopener noreferrer">
 							<?php esc_html_e( 'Read the article', 'reportedip-hive' ); ?>
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
 						</a>
@@ -1170,18 +1170,28 @@ class ReportedIP_Hive_Admin_Settings {
 			<div class="rip-secured-by__body">
 				<p class="rip-secured-by__text">
 					<?php
-					printf(
-						/* translators: 1: opening link tag to reportedip.com, 2: closing link tag */
-						esc_html__( 'This site is secured by ReportedIP Hive: part of the %1$sreportedip.com%2$s community network. Attacks detected here help protect thousands of other WordPress sites, and their reports help protect this one.', 'reportedip-hive' ),
-						'<a href="' . esc_url( REPORTEDIP_HIVE_SITE_URL ) . '" target="_blank" rel="noopener">',
-						'</a>'
-					);
+					$site_link = '<a href="' . esc_url( ReportedIP_Hive_Catalog::campaign_url( REPORTEDIP_HIVE_SITE_URL ) ) . '" target="_blank" rel="noopener">';
+					if ( ReportedIP_Hive_Mode_Manager::get_instance()->is_community_mode() ) {
+						printf(
+							/* translators: 1: opening link tag to reportedip.com, 2: closing link tag */
+							esc_html__( 'This site is secured by ReportedIP Hive: part of the %1$sreportedip.com%2$s community network. Attacks detected here help protect thousands of other WordPress sites, and their reports help protect this one.', 'reportedip-hive' ),
+							$site_link, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built above from esc_url().
+							'</a>'
+						);
+					} else {
+						printf(
+							/* translators: 1: opening link tag to reportedip.com, 2: closing link tag */
+							esc_html__( 'This site is secured by ReportedIP Hive in Local Shield mode: it works on its own and shares nothing. Joining the %1$sreportedip.com%2$s community network adds the reports of thousands of other WordPress sites.', 'reportedip-hive' ),
+							$site_link, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built above from esc_url().
+							'</a>'
+						);
+					}
 					?>
 				</p>
 				<p class="rip-secured-by__links">
-					<a href="<?php echo esc_url( REPORTEDIP_HIVE_SITE_URL ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'About the community network', 'reportedip-hive' ); ?></a>
+					<a href="<?php echo esc_url( ReportedIP_Hive_Catalog::campaign_url( REPORTEDIP_HIVE_SITE_URL ) ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'About the community network', 'reportedip-hive' ); ?></a>
 					<span aria-hidden="true">&middot;</span>
-					<a href="<?php echo esc_url( REPORTEDIP_HIVE_FAQ_URL . '?rc=hive-plugin' ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'FAQ', 'reportedip-hive' ); ?></a>
+					<a href="<?php echo esc_url( REPORTEDIP_HIVE_FAQ_URL ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'FAQ', 'reportedip-hive' ); ?></a>
 					<span aria-hidden="true">&middot;</span>
 					<a href="mailto:<?php echo esc_attr( REPORTEDIP_HIVE_CONTACT_MAIL ); ?>"><?php esc_html_e( 'Contact', 'reportedip-hive' ); ?></a>
 				</p>
@@ -1916,7 +1926,9 @@ class ReportedIP_Hive_Admin_Settings {
 				</div>
 				<div class="rip-header__actions">
 					<span class="rip-mode-badge rip-mode-badge--neutral"><?php esc_html_e( 'Site view', 'reportedip-hive' ); ?></span>
-					<a class="rip-button rip-button--secondary" href="<?php echo esc_url( network_admin_url( 'admin.php?page=reportedip-hive' ) ); ?>"><?php esc_html_e( 'Open Network Admin', 'reportedip-hive' ); ?></a>
+					<?php if ( current_user_can( 'manage_network_options' ) ) : ?>
+						<a class="rip-button rip-button--secondary" href="<?php echo esc_url( network_admin_url( 'admin.php?page=reportedip-hive' ) ); ?>"><?php esc_html_e( 'Open Network Admin', 'reportedip-hive' ); ?></a>
+					<?php endif; ?>
 				</div>
 			</div>
 		<?php
@@ -2875,6 +2887,9 @@ class ReportedIP_Hive_Admin_Settings {
 				$this->render_score_gauge( $hardening, __( 'Hardening Score', 'reportedip-hive' ) );
 				?>
 			</div>
+			<?php if ( (int) ( $hardening['score'] ?? 0 ) < 70 ) : ?>
+				<p class="rip-help-text"><?php esc_html_e( 'A low hardening score is normal right after setup. It rises with each hardening step you switch on below; the protection against attacks is already active.', 'reportedip-hive' ); ?></p>
+			<?php endif; ?>
 			<div class="rip-score-breakdowns">
 				<?php
 				$this->render_score_items( $detection, __( 'Detection sensors', 'reportedip-hive' ) );
@@ -4713,7 +4728,7 @@ class ReportedIP_Hive_Admin_Settings {
 	private function get_external_url( $key, $fallback_url ) {
 		$url = apply_filters( 'reportedip_hive_external_url', $fallback_url, $key );
 
-		return is_string( $url ) && $url !== '' ? $url : $fallback_url;
+		return ReportedIP_Hive_Catalog::campaign_url( is_string( $url ) && $url !== '' ? $url : $fallback_url );
 	}
 
 	/**
@@ -4821,15 +4836,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'reportedip_hive_refresh_quota'
 		);
 
-		$honeypot_url = add_query_arg(
-			array(
-				'utm_source'   => 'plugin',
-				'utm_medium'   => 'community-page',
-				'utm_campaign' => 'honeypot',
-				'rc'           => 'hive-plugin',
-			),
-			$this->get_external_url( 'honeypot', REPORTEDIP_HIVE_HONEYPOT_URL )
-		);
+		$honeypot_url = $this->get_external_url( 'honeypot', REPORTEDIP_HIVE_HONEYPOT_URL );
 
 		$tab = self::community_tab(
 			sanitize_key( wp_unslash( $_GET['tab'] ?? '' ) ), // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Tab selection only, changes nothing.
@@ -4907,7 +4914,7 @@ class ReportedIP_Hive_Admin_Settings {
 								<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-community&tab=settings' ) ); ?>" class="rip-button rip-button--primary">
 									<?php esc_html_e( 'Add API key', 'reportedip-hive' ); ?>
 								</a>
-								<a href="<?php echo esc_url( REPORTEDIP_HIVE_REGISTER_URL . '?rc=hive-plugin' ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--secondary">
+								<a href="<?php echo esc_url( REPORTEDIP_HIVE_REGISTER_URL ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--secondary">
 									<?php esc_html_e( 'Create account', 'reportedip-hive' ); ?>
 								</a>
 							</div>
@@ -5025,7 +5032,7 @@ class ReportedIP_Hive_Admin_Settings {
 											if ( isset( $queue_summary['age_days'] ) ) {
 												echo esc_html( sprintf( /* translators: %d: number of days */ _n( '%d day', '%d days', (int) $queue_summary['age_days'], 'reportedip-hive' ), (int) $queue_summary['age_days'] ) );
 											} else {
-												echo ', ';
+												esc_html_e( 'None', 'reportedip-hive' );
 											}
 											?>
 										</div>
@@ -5091,10 +5098,10 @@ class ReportedIP_Hive_Admin_Settings {
 					</p>
 
 					<ul>
-						<li><strong><?php esc_html_e( 'Unlimited reports', 'reportedip-hive' ); ?></strong>, <?php esc_html_e( 'No daily limits', 'reportedip-hive' ); ?></li>
-						<li><strong><?php esc_html_e( 'Higher weighting', 'reportedip-hive' ); ?></strong>, <?php esc_html_e( 'Your reports count more', 'reportedip-hive' ); ?></li>
-						<li><strong><?php esc_html_e( 'Special API keys', 'reportedip-hive' ); ?></strong>, <?php esc_html_e( 'Optimised for automated systems', 'reportedip-hive' ); ?></li>
-						<li><strong><?php esc_html_e( 'Community recognition', 'reportedip-hive' ); ?></strong>, <?php esc_html_e( 'Visible as an active contributor', 'reportedip-hive' ); ?></li>
+						<li><strong><?php esc_html_e( 'Unlimited reports', 'reportedip-hive' ); ?></strong>: <?php esc_html_e( 'No daily limits', 'reportedip-hive' ); ?></li>
+						<li><strong><?php esc_html_e( 'Higher weighting', 'reportedip-hive' ); ?></strong>: <?php esc_html_e( 'Your reports count more', 'reportedip-hive' ); ?></li>
+						<li><strong><?php esc_html_e( 'Special API keys', 'reportedip-hive' ); ?></strong>: <?php esc_html_e( 'Optimised for automated systems', 'reportedip-hive' ); ?></li>
+						<li><strong><?php esc_html_e( 'Community recognition', 'reportedip-hive' ); ?></strong>: <?php esc_html_e( 'Visible as an active contributor', 'reportedip-hive' ); ?></li>
 					</ul>
 
 					<a href="<?php echo esc_url( $honeypot_url ); ?>" target="_blank" rel="noopener" class="rip-button rip-button--primary rip-mt-3">
@@ -5355,7 +5362,7 @@ class ReportedIP_Hive_Admin_Settings {
 					'banner' => 'community',
 					'shield' => 'protect',
 				),
-				'siteUrl'      => defined( 'REPORTEDIP_HIVE_SITE_URL' ) ? REPORTEDIP_HIVE_SITE_URL : 'https://reportedip.com',
+				'badgeUrl'     => ReportedIP_Hive_Catalog::campaign_url( REPORTEDIP_HIVE_SITE_URL, ReportedIP_Hive_Catalog::RC_BADGE ),
 				'strings'      => array(
 					'copied' => __( 'Copied!', 'reportedip-hive' ),
 					'prompt' => __( 'Copy this shortcode:', 'reportedip-hive' ),
@@ -5456,17 +5463,17 @@ class ReportedIP_Hive_Admin_Settings {
 							</label>
 
 							<div class="rip-badge-attributes">
-								<p><strong><?php esc_html_e( 'Shortcodes', 'reportedip-hive' ); ?></strong>, <code>[reportedip_badge]</code>, <code>[reportedip_stat]</code>, <code>[reportedip_banner]</code>, <code>[reportedip_shield]</code></p>
-								<p><strong><?php esc_html_e( 'type', 'reportedip-hive' ); ?></strong>, <code>attacks_total</code> (lifetime), <code>attacks_30d</code>, <code>reports_total</code>, <code>api_reports_30d</code>, <code>blocked_active</code>, <code>whitelist_active</code>, <code>logins_30d</code>, <code>spam_30d</code></p>
-								<p><strong><?php esc_html_e( 'tone', 'reportedip-hive' ); ?></strong>, <code>protect</code> (default), <code>trust</code> (<em>"Secured by..."</em>), <code>community</code> (<em>"Part of the ReportedIP Hive"</em>), <code>contributor</code> (<em>"ReportedIP Contributor"</em>)</p>
+								<p><strong><?php esc_html_e( 'Shortcodes', 'reportedip-hive' ); ?></strong>: <code>[reportedip_badge]</code>, <code>[reportedip_stat]</code>, <code>[reportedip_banner]</code>, <code>[reportedip_shield]</code></p>
+								<p><strong><?php esc_html_e( 'type', 'reportedip-hive' ); ?></strong>: <code>attacks_total</code> (lifetime), <code>attacks_30d</code>, <code>reports_total</code>, <code>api_reports_30d</code>, <code>blocked_active</code>, <code>whitelist_active</code>, <code>logins_30d</code>, <code>spam_30d</code></p>
+								<p><strong><?php esc_html_e( 'tone', 'reportedip-hive' ); ?></strong>: <code>protect</code> (default), <code>trust</code> (<em>"Secured by..."</em>), <code>community</code> (<em>"Part of the ReportedIP Hive"</em>), <code>contributor</code> (<em>"ReportedIP Contributor"</em>)</p>
 								<p><strong><?php esc_html_e( 'bg', 'reportedip-hive' ); ?></strong>, Hex colour <code>#RRGGBB</code> or two stops for a gradient: <code>#FF6B00,#FFB800</code></p>
 								<p><strong><?php esc_html_e( 'color', 'reportedip-hive' ); ?></strong>, Foreground hex colour</p>
 								<p><strong><?php esc_html_e( 'border', 'reportedip-hive' ); ?></strong>, Hex colour or <code>none</code> (default)</p>
 								<p><strong><?php esc_html_e( 'intro', 'reportedip-hive' ); ?></strong>, Override the headline text (max 80 chars)</p>
 								<p><strong><?php esc_html_e( 'label', 'reportedip-hive' ); ?></strong>, Override the metric label / noun (max 80 chars)</p>
-								<p><strong><?php esc_html_e( 'live', 'reportedip-hive' ); ?></strong>, <code>true</code> (default) shows a pulsing live dot, <code>false</code> hides it</p>
-								<p><strong><?php esc_html_e( 'theme', 'reportedip-hive' ); ?></strong>, <code>dark</code> (default Indigo) or <code>light</code> (white card)</p>
-								<p><strong><?php esc_html_e( 'align', 'reportedip-hive' ); ?></strong>, <code>left</code>, <code>center</code>, <code>right</code></p>
+								<p><strong><?php esc_html_e( 'live', 'reportedip-hive' ); ?></strong>: <code>true</code> (default) shows a pulsing live dot, <code>false</code> hides it</p>
+								<p><strong><?php esc_html_e( 'theme', 'reportedip-hive' ); ?></strong>: <code>dark</code> (default Indigo) or <code>light</code> (white card)</p>
+								<p><strong><?php esc_html_e( 'align', 'reportedip-hive' ); ?></strong>: <code>left</code>, <code>center</code>, <code>right</code></p>
 							</div>
 						</details>
 					</div>
@@ -5591,9 +5598,8 @@ class ReportedIP_Hive_Admin_Settings {
 					echo $shortcodes->build_element(
 						$auto_variant,
 						array(
-							'utm_medium' => 'admin-preview',
-							'theme'      => 'dark',
-							'align'      => 'center',
+							'theme' => 'dark',
+							'align' => 'center',
 						)
 					);
 					// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
@@ -5692,7 +5698,7 @@ class ReportedIP_Hive_Admin_Settings {
 						/* translators: %s: number of reports shared in the last 30 days. */
 						? sprintf( __( '%s shared in the last 30 days', 'reportedip-hive' ), number_format_i18n( $reports_30d ) )
 						: __( 'Connected, nothing shared yet', 'reportedip-hive' ) )
-					: __( 'Local mode, not sharing', 'reportedip-hive' ),
+					: __( 'Local Shield, not sharing', 'reportedip-hive' ),
 				'action' => $reports_active ? null : array(
 					'url'   => $settings_url,
 					'label' => $is_community_mode ? __( 'Add API key', 'reportedip-hive' ) : __( 'Switch to Community', 'reportedip-hive' ),

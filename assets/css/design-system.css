@@ -2269,15 +2269,15 @@ button.rip-tier-lock--mode:hover {
 }
 
 .rip-health-card--success {
-    border-left: 4px solid var(--rip-success);
+    border-color: var(--rip-success);
 }
 
 .rip-health-card--warning {
-    border-left: 4px solid var(--rip-warning);
+    border-color: var(--rip-warning);
 }
 
 .rip-health-card--danger {
-    border-left: 4px solid var(--rip-danger);
+    border-color: var(--rip-danger);
 }
 
 .rip-health-card-icon {

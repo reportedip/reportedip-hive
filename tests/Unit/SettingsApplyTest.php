@@ -127,6 +127,21 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'mainwp', \ReportedIP_Hive_Logger::$events[1]['details']['origin'] );
 		}
 
+		/**
+		 * The quickstart, the import and the plan change write on this site;
+		 * only MainWP and the cloud fleet are remote.
+		 */
+		public function test_local_origins_are_not_logged_as_remote() {
+			$value = 1;
+			foreach ( array( 'quickstart', 'import', 'tier_upgrade', 'cloud' ) as $origin ) {
+				$value = 1 - $value;
+				\ReportedIP_Hive_Settings_Apply::apply( array( 'reportedip_hive_auto_block' => $value ), $origin );
+			}
+
+			$types = array_column( \ReportedIP_Hive_Logger::$events, 'type' );
+			$this->assertSame( array( 'settings_admin_apply', 'settings_admin_apply', 'settings_admin_apply', 'settings_remote_apply' ), $types );
+		}
+
 		public function test_apply_event_names_the_acting_user() {
 			$GLOBALS['wp_current_user_id'] = 42;
 

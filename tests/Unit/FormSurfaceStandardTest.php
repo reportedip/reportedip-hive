@@ -405,6 +405,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * @param string $feature Its plan gate.
 		 */
 		public function test_the_plan_that_covers_an_adapter_switches_it_on( string $slug, string $option, string $feature ): void {
+			add_filter( 'reportedip_hive_form_adapters', array( self::class, 'every_form_plugin_installed' ) );
 			$business = \ReportedIP_Hive_Defaults::recommended( 'business', 'community' );
 
 			$this->assertArrayHasKey( $option, $business, $slug . ' is included in Business and has to be recommended there' );
@@ -430,6 +431,20 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 *
 		 * @return array<string, array{0:string, 1:string, 2:string}>
 		 */
+		/**
+		 * Adapter table as if every form plugin ran on the site: only an
+		 * installed form plugin gets its switch recommended.
+		 *
+		 * @param array<string, array<string, string>> $adapters Adapter table.
+		 * @return array<string, array<string, string>>
+		 */
+		public static function every_form_plugin_installed( $adapters ) {
+			foreach ( $adapters as $slug => $adapter ) {
+				$adapters[ $slug ]['detect'] = \stdClass::class;
+			}
+			return $adapters;
+		}
+
 		public static function provide_adapters(): array {
 			$cases = array();
 

@@ -1561,14 +1561,14 @@ body.rip-2fa-onboarding .rip-privacy-notice {
 	padding: var(--rip-space-4, 1rem);
 	margin: 0 0 var(--rip-space-4, 1rem);
 	background: rgba(59, 130, 246, 0.08);
-	border-left: 4px solid var(--rip-info, #3B82F6);
+	border: 1px solid var(--rip-info, #3B82F6);
 	border-radius: var(--rip-radius, 6px);
 	color: var(--rip-gray-800, #1F2937);
 }
 
 body.rip-2fa-onboarding .rip-privacy-notice--warning {
 	background: rgba(245, 158, 11, 0.10);
-	border-left-color: var(--rip-warning, #F59E0B);
+	border-color: var(--rip-warning, #F59E0B);
 }
 
 body.rip-2fa-onboarding .rip-privacy-notice__icon {

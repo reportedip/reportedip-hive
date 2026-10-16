@@ -73,14 +73,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 */
 		public function test_context_check_runs_before_the_marker_is_consumed(): void {
 			$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/admin/class-quickstart.php' );
-			$start  = strpos( $source, 'public function maybe_redirect_after_activation()' );
+			$start  = strpos( $source, 'public function activation_redirect_url()' );
 			$this->assertNotFalse( $start );
 			$body = substr( $source, $start, 900 );
 
 			$guard    = strpos( $body, 'request_can_redirect' );
 			$consumed = strpos( $body, 'delete_site_transient' );
 
-			$this->assertNotFalse( $guard, 'maybe_redirect_after_activation() must check the request context.' );
+			$this->assertNotFalse( $guard, 'activation_redirect_url() must check the request context.' );
 			$this->assertNotFalse( $consumed );
 			$this->assertLessThan( $consumed, $guard, 'The context check must run before the activation marker is deleted.' );
 		}

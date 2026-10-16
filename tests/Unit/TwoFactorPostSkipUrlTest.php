@@ -82,8 +82,17 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'https://example.org/my-account/', $this->target( self::CUSTOMER ) );
 		}
 
+		/**
+		 * "Set up later" from the Hive setup leads an administrator back to
+		 * the Hive dashboard, not to the WordPress start page.
+		 */
+		public function test_an_administrator_goes_to_the_hive_dashboard() {
+			$this->assertSame( admin_url( 'admin.php?page=reportedip-hive' ), $this->target( 5 ) );
+		}
+
 		public function test_staff_and_a_missing_account_page_keep_the_dashboard() {
-			$this->assertSame( admin_url(), $this->target( 5 ), 'A user who can edit posts reaches wp-admin.' );
+			$GLOBALS['wp_user_caps']['6|manage_options'] = false;
+			$this->assertSame( admin_url(), $this->target( 6 ), 'A user who can edit posts reaches wp-admin.' );
 			$this->assertSame( admin_url(), $this->target( 0 ) );
 
 			$GLOBALS['rip_test_myaccount'] = '';

@@ -166,6 +166,10 @@ class ReportedIP_Hive_Logger {
 			return (string) wp_json_encode( $value );
 		}
 
+		if ( is_bool( $value ) ) {
+			return $value ? __( 'Yes', 'reportedip-hive' ) : __( 'No', 'reportedip-hive' );
+		}
+
 		if ( 'time_window' === $key && '' !== (string) $value ) {
 			return ReportedIP_Hive_Security_Monitor::describe_time_window( (string) $value );
 		}
@@ -219,9 +223,7 @@ class ReportedIP_Hive_Logger {
 		if ( is_array( $details ) ) {
 			$formatted = array();
 			foreach ( $details as $key => $value ) {
-				if ( is_array( $value ) || is_object( $value ) ) {
-					$value = wp_json_encode( $value );
-				}
+				$value       = self::format_detail_value( $key, $value );
 				$formatted[] = '<strong>' . esc_html( ucfirst( str_replace( '_', ' ', $key ) ) ) . ':</strong> ' . esc_html( $value );
 			}
 			return implode( '<br>', $formatted );

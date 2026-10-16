@@ -150,22 +150,42 @@ class ReportedIP_Hive_Quickstart {
 	 * @return void
 	 */
 	public function maybe_redirect_after_activation() {
-		if ( ! $this->request_can_redirect() ) {
+		$url = $this->activation_redirect_url();
+		if ( '' === $url ) {
 			return;
 		}
+		wp_safe_redirect( $url );
+		exit;
+	}
+
+	/**
+	 * Where the activation marker sends this request, empty to stay.
+	 *
+	 * On Multisite the quickstart lives in the network admin, so a network
+	 * activation leads there too. A user who cannot open the quickstart
+	 * (a sub-site administrator) leaves the network-wide marker for the
+	 * super admin instead of spending it on a 403. A bulk activation stays
+	 * on the plugin list.
+	 *
+	 * @return string
+	 * @since  3.0.1
+	 */
+	public function activation_redirect_url() {
+		if ( ! $this->request_can_redirect() || ! $this->user_can_run_quickstart() ) {
+			return '';
+		}
 		if ( ! get_site_transient( 'reportedip_hive_activation_redirect' ) ) {
-			return;
+			return '';
 		}
 		delete_site_transient( 'reportedip_hive_activation_redirect' );
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only routing.
-		if ( is_network_admin() || isset( $_GET['activate-multi'] ) ) {
-			return;
+		if ( isset( $_GET['activate-multi'] ) ) {
+			return '';
 		}
 		if ( $this->mode_manager->is_wizard_completed() ) {
-			return;
+			return '';
 		}
-		wp_safe_redirect( self::get_url() );
-		exit;
+		return self::get_url();
 	}
 
 	/**
@@ -202,9 +222,10 @@ class ReportedIP_Hive_Quickstart {
 	 * `addon`, so the page lists them apart as what the add-on brings), then
 	 * whatever `reportedip_hive_quickstart_feature_rows` adds. A row with a
 	 * `rank` (0 free, 1 Professional, 2 Business) is greyed out while the
-	 * checked key ranks lower, the way the add-on lists its own features.
+	 * checked key ranks lower, the way the add-on lists its own features. A
+	 * row marked `community` needs the network and is hidden in Local Shield.
 	 *
-	 * @return array<int, array{label:string, tier:string, addon?:bool, rank?:int}>
+	 * @return array<int, array{label:string, tier:string, addon?:bool, rank?:int, community?:bool}>
 	 */
 	public static function feature_rows() {
 		$rows = array_merge(
@@ -218,8 +239,9 @@ class ReportedIP_Hive_Quickstart {
 					'tier'  => 'free',
 				),
 				array(
-					'label' => __( 'Community reputation, block from 75 % confidence', 'reportedip-hive' ),
-					'tier'  => 'free',
+					'label'     => __( 'Community reputation, block from 75 % confidence', 'reportedip-hive' ),
+					'tier'      => 'free',
+					'community' => true,
 				),
 				array(
 					'label' => __( 'Bot verification, spam and registration protection', 'reportedip-hive' ),
@@ -415,10 +437,7 @@ class ReportedIP_Hive_Quickstart {
 		$tier         = $this->mode_manager->get_current_tier();
 		$register_url = add_query_arg(
 			array(
-				'site'       => wp_parse_url( home_url(), PHP_URL_HOST ),
-				'utm_source' => 'hive',
-				'utm_medium' => 'quickstart',
-				'rc'         => 'hive-plugin',
+				'site' => wp_parse_url( home_url(), PHP_URL_HOST ),
 			),
 			REPORTEDIP_HIVE_REGISTER_URL
 		);
@@ -428,14 +447,14 @@ class ReportedIP_Hive_Quickstart {
 			<h1 class="rip-wizard__title"><?php esc_html_e( 'Set up ReportedIP Hive', 'reportedip-hive' ); ?></h1>
 			<p class="rip-wizard__subtitle"><?php esc_html_e( 'Two decisions and your site is protected. Everything else is preconfigured and can be changed later.', 'reportedip-hive' ); ?></p>
 
-			<div class="rip-wizard__mode-cards">
-				<div class="rip-mode-card rip-mode-card--recommended <?php echo 'community' === $mode ? 'rip-mode-card--selected' : ''; ?>" data-mode="community">
+			<div class="rip-wizard__mode-cards" role="radiogroup" aria-label="<?php esc_attr_e( 'Operation mode', 'reportedip-hive' ); ?>">
+				<div class="rip-mode-card rip-mode-card--recommended <?php echo 'community' === $mode ? 'rip-mode-card--selected' : ''; ?>" data-mode="community" role="radio" tabindex="0" aria-checked="<?php echo 'community' === $mode ? 'true' : 'false'; ?>">
 					<span class="rip-mode-card__check"></span>
 					<div class="rip-mode-card__ribbon"><?php esc_html_e( 'Recommended', 'reportedip-hive' ); ?></div>
 					<h3 class="rip-mode-card__title"><?php esc_html_e( 'Community Network', 'reportedip-hive' ); ?></h3>
 					<p class="rip-mode-card__description"><?php esc_html_e( 'Reputation data from thousands of sites in real time. Free key.', 'reportedip-hive' ); ?></p>
 				</div>
-				<div class="rip-mode-card <?php echo 'local' === $mode ? 'rip-mode-card--selected' : ''; ?>" data-mode="local">
+				<div class="rip-mode-card <?php echo 'local' === $mode ? 'rip-mode-card--selected' : ''; ?>" data-mode="local" role="radio" tabindex="0" aria-checked="<?php echo 'local' === $mode ? 'true' : 'false'; ?>">
 					<span class="rip-mode-card__check"></span>
 					<h3 class="rip-mode-card__title"><?php esc_html_e( 'Local Shield', 'reportedip-hive' ); ?></h3>
 					<p class="rip-mode-card__description"><?php esc_html_e( 'No external connection. Local detection only, no reputation.', 'reportedip-hive' ); ?></p>
@@ -481,7 +500,8 @@ class ReportedIP_Hive_Quickstart {
 					<ul class="rip-quickstart__features" id="rip-quickstart-features" data-rank="<?php echo esc_attr( (string) $rank ); ?>">
 						<?php foreach ( array_diff_key( $rows, $addon ) as $row ) : ?>
 							<?php $row_rank = isset( $row['rank'] ) ? (int) $row['rank'] : null; ?>
-							<li class="rip-quickstart__feature<?php echo null !== $row_rank && $row_rank > $rank ? ' rip-quickstart__feature--locked' : ''; ?>"<?php echo null !== $row_rank ? ' data-rank="' . esc_attr( (string) $row_rank ) . '"' : ''; ?>>
+							<?php $row_community = ! empty( $row['community'] ); ?>
+							<li class="rip-quickstart__feature<?php echo null !== $row_rank && $row_rank > $rank ? ' rip-quickstart__feature--locked' : ''; ?><?php echo $row_community && 'community' !== $mode ? ' rip-is-hidden' : ''; ?>"<?php echo null !== $row_rank ? ' data-rank="' . esc_attr( (string) $row_rank ) . '"' : ''; ?><?php echo $row_community ? ' data-community="1"' : ''; ?>>
 								<?php echo $check_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Static inline SVG. ?>
 								<span><?php echo esc_html( $row['label'] ); ?></span>
 								<?php if ( 'free' !== $row['tier'] ) : ?>
@@ -533,7 +553,7 @@ class ReportedIP_Hive_Quickstart {
 			/**
 			 * Print a card between the switches and the actions of the
 			 * quickstart. The quickstart script removes `#rip-quickstart-teaser`
-			 * once a checked key reports a paid plan.
+			 * once a key has been checked.
 			 *
 			 * @param string $tier Tier key of the account.
 			 * @since 3.0.0
@@ -655,18 +675,39 @@ class ReportedIP_Hive_Quickstart {
 			'rank'            => ReportedIP_Hive_Defaults::recommendation_rank( (string) $tier ),
 			'domains_used'    => $domains ? (int) $domains['used'] : null,
 			'domains_limit'   => $domains ? (int) $domains['limit'] : null,
+			'addon_hint_html' => self::addon_hint_html( (string) $tier, ReportedIP_Hive_Addon_Notice::addon_running() ),
 		);
 
 		/**
 		 * Answer of the quickstart key check, as sent to the page. A result
 		 * that is not an array is ignored.
 		 *
-		 * @param array<string, mixed> $response Answer (`valid`, `key_name`, `tier`, `tier_label`, `tier_badge_html`, `rank`, `domains_used`, `domains_limit`).
+		 * @param array<string, mixed> $response Answer (`valid`, `key_name`, `tier`, `tier_label`, `tier_badge_html`, `rank`, `domains_used`, `domains_limit`, `addon_hint_html`).
 		 * @param array<string, mixed> $result   Key-check result of the API.
 		 * @since 3.0.0
 		 */
 		$filtered = apply_filters( 'reportedip_hive_quickstart_key_result', $response, $result );
 		wp_send_json_success( is_array( $filtered ) ? $filtered : $response );
+	}
+
+	/**
+	 * Hint under a checked key whose plan includes the add-on while the
+	 * add-on is not running: where to download it. Empty otherwise.
+	 *
+	 * @param string $tier    Tier slug of the checked key.
+	 * @param bool   $running Whether the add-on runs.
+	 * @return string HTML, safe to print.
+	 * @since  3.0.1
+	 */
+	public static function addon_hint_html( $tier, $running ) {
+		if ( $running || ! in_array( (string) $tier, ReportedIP_Hive_Addon_Notice::PAID_TIERS, true ) ) {
+			return '';
+		}
+		return '<p class="rip-quickstart__addon-hint">'
+			. esc_html__( 'Your plan includes ReportedIP Hive Pro.', 'reportedip-hive' )
+			. ' <a href="' . esc_url( ReportedIP_Hive_Catalog::ACCOUNT_URL ) . '" target="_blank" rel="noopener noreferrer">'
+			. esc_html__( 'Download the add-on', 'reportedip-hive' )
+			. '</a></p>';
 	}
 
 	/**

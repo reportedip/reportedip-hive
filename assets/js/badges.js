@@ -124,7 +124,7 @@
 			var sample = (data.sampleValues || {})[state.type] || 0;
 			var hasValue = sample > 0;
 			var metricText = hasValue ? Number(sample).toLocaleString() + ' ' + hn.noun : hn.fallback;
-			var href = (data.siteUrl || 'https://reportedip.com') + '/?utm_source=hive&utm_medium=admin-customizer&utm_campaign=protected&utm_content=' + state.variant;
+			var href = data.badgeUrl || 'https://reportedip.com/?rc=hive-badge';
 
 			var banner = document.createElement('rip-hive-banner');
 			banner.setAttribute('data-variant', state.variant);

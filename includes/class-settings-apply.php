@@ -25,6 +25,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class ReportedIP_Hive_Settings_Apply {
 
 	/**
+	 * Origins that write from outside the site.
+	 *
+	 * @var string[]
+	 */
+	const REMOTE_ORIGINS = array( 'mainwp', 'cloud' );
+
+	/**
+	 * Origin of the batch being written right now, '' outside apply().
+	 *
+	 * @var string
+	 */
+	private static $writing = '';
+
+	/**
+	 * Origin of the batch being written right now, so an option listener
+	 * (the audit trail of the add-on) can tell a plan change or a fleet
+	 * push from a person saving a form. '' outside a write.
+	 *
+	 * @return string
+	 * @since  3.0.1
+	 */
+	public static function current_origin() {
+		return self::$writing;
+	}
+
+	/**
 	 * Per-key result status: value written.
 	 */
 	const STATUS_APPLIED = 'applied';
@@ -143,19 +169,24 @@ final class ReportedIP_Hive_Settings_Apply {
 
 		$applied = 0;
 
-		foreach ( self::write_order( $sanitized ) as $key => $value ) {
-			$same = ReportedIP_Hive_Settings_Registry::normalize_value( $key, $value )
-				=== ReportedIP_Hive_Settings_Registry::normalize_value( $key, $current[ $key ] );
+		self::$writing = (string) $origin;
+		try {
+			foreach ( self::write_order( $sanitized ) as $key => $value ) {
+				$same = ReportedIP_Hive_Settings_Registry::normalize_value( $key, $value )
+					=== ReportedIP_Hive_Settings_Registry::normalize_value( $key, $current[ $key ] );
 
-			if ( $same ) {
-				$results[ $key ] = array( 'status' => self::STATUS_UNCHANGED );
-				++$unchanged;
-				continue;
+				if ( $same ) {
+					$results[ $key ] = array( 'status' => self::STATUS_UNCHANGED );
+					++$unchanged;
+					continue;
+				}
+
+				ReportedIP_Hive_Option_Routing::set( $key, $value );
+				$results[ $key ] = array( 'status' => self::STATUS_APPLIED );
+				++$applied;
 			}
-
-			ReportedIP_Hive_Option_Routing::set( $key, $value );
-			$results[ $key ] = array( 'status' => self::STATUS_APPLIED );
-			++$applied;
+		} finally {
+			self::$writing = '';
 		}
 
 		$failed = 0;
@@ -202,10 +233,11 @@ final class ReportedIP_Hive_Settings_Apply {
 	/**
 	 * Write one security-log event for an apply batch that changed values.
 	 *
-	 * Saves made by an administrator on the plugin's own pages (origin
-	 * `admin`) are logged as `settings_admin_apply`; every transport that
-	 * writes from outside the site (MainWP, cloud, import) keeps
-	 * `settings_remote_apply`, so the two cannot be confused in the log.
+	 * Writes made on this site (the plugin's pages, the quickstart, a file
+	 * import, a plan change) are logged as `settings_admin_apply` with their
+	 * origin; the transports that write from outside the site (MainWP, the
+	 * cloud fleet) keep `settings_remote_apply`, so the two cannot be
+	 * confused in the log.
 	 * The acting user id is recorded for every origin so the trail names
 	 * the administrator (or the MainWP connection user) behind the change.
 	 *
@@ -222,7 +254,7 @@ final class ReportedIP_Hive_Settings_Apply {
 
 		$remote_ip = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : '';
 		ReportedIP_Hive_Logger::get_instance()->log_security_event(
-			'admin' === $origin ? 'settings_admin_apply' : 'settings_remote_apply',
+			in_array( $origin, self::REMOTE_ORIGINS, true ) ? 'settings_remote_apply' : 'settings_admin_apply',
 			$remote_ip,
 			array(
 				'origin'    => $origin,

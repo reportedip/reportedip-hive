@@ -520,7 +520,7 @@
 	$(document).on('click', '#rip-2fa-recovery-continue', function () {
 		var methods = $qs('#rip-2fa-summary-methods');
 		var recovery = $qs('#rip-2fa-summary-recovery');
-		if (methods) { methods.textContent = state.confirmedMethods.join(', ').toUpperCase() || ', '; }
+		if (methods) { methods.textContent = state.confirmedMethods.join(', ').toUpperCase(); }
 		if (recovery) { recovery.textContent = state.recoveryCodes.length + ' Codes'; }
 		goToStep(5);
 	});

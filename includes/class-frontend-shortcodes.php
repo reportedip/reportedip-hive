@@ -119,31 +119,27 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 	private $stats_memo = null;
 
 	/**
-	 * Map of shortcode tag → variant + UTM medium + default tone. Drives the
+	 * Map of shortcode tag → variant + default tone. Drives the
 	 * single `render_shortcode()` handler so all four shortcodes share one
 	 * code path.
 	 *
-	 * @var array<string, array{variant:string, medium:string, tone:string}>
+	 * @var array<string, array{variant:string, tone:string}>
 	 */
 	private static $tag_map = array(
 		'reportedip_badge'  => array(
 			'variant' => 'badge',
-			'medium'  => 'banner',
 			'tone'    => 'protect',
 		),
 		'reportedip_stat'   => array(
 			'variant' => 'stat',
-			'medium'  => 'stat',
 			'tone'    => 'trust',
 		),
 		'reportedip_banner' => array(
 			'variant' => 'banner',
-			'medium'  => 'banner',
 			'tone'    => 'community',
 		),
 		'reportedip_shield' => array(
 			'variant' => 'shield',
-			'medium'  => 'shield',
 			'tone'    => 'protect',
 		),
 	);
@@ -398,26 +394,17 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 	}
 
 	/**
-	 * Build the canonical backlink URL with UTM parameters.
+	 * Build the canonical backlink URL of a badge or banner.
 	 *
-	 * @param string $medium  UTM medium (banner|footer|stat|shield).
-	 * @param string $variant Banner variant for utm_content.
-	 * @param string $tone    Tone for utm_term.
-	 * @return string Fully escaped URL.
+	 * A deep link to the front page with the campaign source `hive-badge`,
+	 * no redirect in between, so the backlink stays clean.
+	 *
+	 * @return string Unescaped URL.
 	 * @since  1.3.0
 	 */
-	private function build_backlink_url( $medium, $variant, $tone ) {
+	private function build_backlink_url() {
 		$base = defined( 'REPORTEDIP_HIVE_SITE_URL' ) ? REPORTEDIP_HIVE_SITE_URL : 'https://reportedip.com';
-		return add_query_arg(
-			array(
-				'utm_source'   => 'hive',
-				'utm_medium'   => $medium,
-				'utm_campaign' => 'protected',
-				'utm_content'  => $variant,
-				'utm_term'     => $tone,
-			),
-			$base
-		);
+		return ReportedIP_Hive_Catalog::campaign_url( $base, ReportedIP_Hive_Catalog::RC_BADGE );
 	}
 
 	/**
@@ -487,7 +474,7 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 	 * and crawlable for search engines.
 	 *
 	 * @param string $variant Banner variant: badge|stat|banner|shield.
-	 * @param array  $args    Optional overrides: type, theme, align, tone, bg, color, border, label, intro, live, utm_medium.
+	 * @param array  $args    Optional overrides: type, theme, align, tone, bg, color, border, label, intro, live.
 	 * @return string Rendered HTML.
 	 * @since  1.3.0
 	 */
@@ -497,17 +484,16 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 		$tag_def = self::$tag_map[ $tag_key ] ?? self::$tag_map['reportedip_badge'];
 
 		$defaults = array(
-			'type'       => self::DEFAULT_STAT,
-			'theme'      => 'dark',
-			'align'      => 'left',
-			'tone'       => $tag_def['tone'],
-			'bg'         => '',
-			'color'      => '',
-			'border'     => '',
-			'label'      => '',
-			'intro'      => '',
-			'live'       => 'true',
-			'utm_medium' => $tag_def['medium'],
+			'type'   => self::DEFAULT_STAT,
+			'theme'  => 'dark',
+			'align'  => 'left',
+			'tone'   => $tag_def['tone'],
+			'bg'     => '',
+			'color'  => '',
+			'border' => '',
+			'label'  => '',
+			'intro'  => '',
+			'live'   => 'true',
 		);
 		$args     = wp_parse_args( $args, $defaults );
 
@@ -527,7 +513,7 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		$mode         = $mode_manager->is_community_mode() ? 'community' : 'local';
 
-		$href = $this->build_backlink_url( (string) $args['utm_medium'], $variant, $args['tone'] );
+		$href = $this->build_backlink_url();
 
 		$show_value = $stat['value'] > 0;
 		$value_attr = $show_value ? (string) $stat['value'] : '';
@@ -577,7 +563,7 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 	 * Single shortcode handler for all four tags.
 	 *
 	 * WordPress passes the shortcode tag as the third argument; we use it to
-	 * look up the variant and default UTM medium / tone from `$tag_map` so
+	 * look up the variant and default tone from `$tag_map` so
 	 * the four `[reportedip_*]` shortcodes share one code path.
 	 *
 	 * @param array|string $atts    Shortcode attributes.
@@ -610,17 +596,16 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 		return $this->build_element(
 			$variant,
 			array(
-				'type'       => sanitize_key( (string) $atts['type'] ),
-				'theme'      => sanitize_key( (string) $atts['theme'] ),
-				'align'      => sanitize_key( (string) $atts['align'] ),
-				'tone'       => sanitize_key( (string) $atts['tone'] ),
-				'live'       => sanitize_key( (string) $atts['live'] ),
-				'bg'         => (string) $atts['bg'],
-				'color'      => (string) $atts['color'],
-				'border'     => (string) $atts['border'],
-				'label'      => (string) $atts['label'],
-				'intro'      => (string) $atts['intro'],
-				'utm_medium' => $map['medium'],
+				'type'   => sanitize_key( (string) $atts['type'] ),
+				'theme'  => sanitize_key( (string) $atts['theme'] ),
+				'align'  => sanitize_key( (string) $atts['align'] ),
+				'tone'   => sanitize_key( (string) $atts['tone'] ),
+				'live'   => sanitize_key( (string) $atts['live'] ),
+				'bg'     => (string) $atts['bg'],
+				'color'  => (string) $atts['color'],
+				'border' => (string) $atts['border'],
+				'label'  => (string) $atts['label'],
+				'intro'  => (string) $atts['intro'],
 			)
 		);
 	}
@@ -713,9 +698,8 @@ class ReportedIP_Hive_Frontend_Shortcodes {
 		echo $this->build_element( // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- build_element() escapes its own attributes and text nodes; a custom-element wrapper cannot pass through wp_kses without losing the tag.
 			$variant,
 			array(
-				'utm_medium' => 'footer',
-				'theme'      => 'dark',
-				'align'      => esc_attr( $element_align ),
+				'theme' => 'dark',
+				'align' => esc_attr( $element_align ),
 			)
 		);
 		echo '</div>';

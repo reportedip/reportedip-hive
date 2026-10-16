@@ -90,6 +90,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'multiple', $this->render( 'ip', 'multiple' ) );
 		}
 
+		public function test_booleans_read_yes_or_no_instead_of_nothing() {
+			$this->assertSame( 'No', $this->render( 'skip_counted', false ) );
+			$this->assertSame( 'Yes', $this->render( 'in_grace', true ) );
+		}
+
 		public function test_arrays_are_json_encoded() {
 			$this->assertSame( '{"attempts":6}', $this->render( 'threshold_details', array( 'attempts' => 6 ) ) );
 		}

@@ -21,6 +21,7 @@ namespace {
 		define( 'REPORTEDIP_HIVE_SITE_URL', 'https://reportedip.com' );
 	}
 
+	require_once dirname( __DIR__, 2 ) . '/includes/class-catalog.php';
 	require_once dirname( __DIR__, 2 ) . '/admin/class-ip-cell.php';
 }
 
@@ -84,7 +85,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'reportedip_hive_external_url',
 				function ( $url, $context ) use ( &$seen_context ) {
 					$seen_context = $context;
-					return $url . '?filtered=1';
+					return $url . '&filtered=1';
 				},
 				10,
 				2
@@ -95,7 +96,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'ip_detail', $seen_context );
 			$this->assertStringContainsString( '/ip/2001%3Adb8%3A%3A1/', $url );
 			$this->assertStringContainsString( 'https://reportedip.com/ip/', $url );
-			$this->assertStringEndsWith( '?filtered=1', $url );
+			$this->assertStringContainsString( 'filtered=1', $url );
+			$this->assertStringEndsWith( 'rc=hive-plugin', $url, 'A filtered link to reportedip.com keeps its campaign tag.' );
 		}
 
 		/**

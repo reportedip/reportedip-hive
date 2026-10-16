@@ -512,7 +512,7 @@ class ReportedIP_Hive_Event_Taxonomy {
 				'group' => 'ops_system',
 			),
 			'settings_admin_apply'              => array(
-				'label' => __( 'Settings Saved (admin)', 'reportedip-hive' ),
+				'label' => __( 'Settings Saved (this site)', 'reportedip-hive' ),
 				'group' => 'ops_system',
 			),
 			'settings_remote_apply'             => array(

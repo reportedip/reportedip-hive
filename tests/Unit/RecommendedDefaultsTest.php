@@ -74,6 +74,21 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertArrayNotHasKey( 'reportedip_hive_audit_enabled', $pro );
 		}
 
+		/**
+		 * A plan change turned on the switch of every form plugin, also of
+		 * the ones the site does not run, and the audit trail listed each.
+		 */
+		public function test_a_form_plugin_that_is_not_installed_gets_no_switch(): void {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-form-proof.php';
+			require_once dirname( __DIR__, 2 ) . '/includes/class-form-adapters.php';
+			$this->assertFalse( class_exists( 'WPCF7_Submission' ) );
+
+			$values = \ReportedIP_Hive_Defaults::recommended( 'business' );
+
+			$this->assertArrayNotHasKey( 'reportedip_hive_form_proof_cf7', $values );
+			$this->assertArrayHasKey( 'reportedip_hive_headers_enabled', $values );
+		}
+
 		public function test_rank_orders_the_three_levels(): void {
 			$this->assertSame( 0, \ReportedIP_Hive_Defaults::recommendation_rank( 'free' ) );
 			$this->assertSame( 0, \ReportedIP_Hive_Defaults::recommendation_rank( 'contributor' ) );

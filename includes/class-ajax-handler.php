@@ -310,7 +310,7 @@ class ReportedIP_Hive_Ajax_Handler {
 		$main_html .= '<tr><td style="padding:10px 16px;font-size:12px;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;width:40%;">' . esc_html__( 'Test type', 'reportedip-hive' ) . '</td>';
 		$main_html .= '<td style="padding:10px 16px;font-size:13px;color:#111827;">' . esc_html__( 'Brand template + provider verification', 'reportedip-hive' ) . '</td></tr>';
 		$main_html .= '<tr><td style="padding:10px 16px;font-size:12px;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;width:40%;">' . esc_html__( 'Triggered by', 'reportedip-hive' ) . '</td>';
-		$main_html .= '<td style="padding:10px 16px;font-size:13px;color:#111827;">' . esc_html( $current_user->display_name ?? ', ' ) . '</td></tr>';
+		$main_html .= '<td style="padding:10px 16px;font-size:13px;color:#111827;">' . esc_html( $current_user->display_name ? $current_user->display_name : $current_user->user_login ) . '</td></tr>';
 		$main_html .= '<tr><td style="padding:10px 16px;font-size:12px;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;width:40%;">' . esc_html__( 'Time', 'reportedip-hive' ) . '</td>';
 		$main_html .= '<td style="padding:10px 16px;font-size:13px;color:#111827;">' . esc_html( $timestamp ) . '</td></tr>';
 		$main_html .= '</table>';
@@ -346,7 +346,7 @@ class ReportedIP_Hive_Ajax_Handler {
 					__( 'Test type', 'reportedip-hive' ),
 					__( 'Brand template + provider verification', 'reportedip-hive' ),
 					__( 'Triggered by', 'reportedip-hive' ),
-					$current_user->display_name ?? ', ',
+					$current_user->display_name ? $current_user->display_name : $current_user->user_login,
 					__( 'Time', 'reportedip-hive' ),
 					$timestamp
 				),

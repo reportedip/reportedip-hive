@@ -419,7 +419,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 			array(
 				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
 				'nonce'         => wp_create_nonce( 'reportedip_hive_nonce' ),
-				'dashboardUrl'  => is_network_admin() ? network_admin_url() : admin_url(),
+				'dashboardUrl'  => self::default_post_skip_url( get_current_user_id() ),
 				'userId'        => $user->ID,
 				'userEmail'     => $user->user_email,
 				'maskedEmail'   => ReportedIP_Hive_Two_Factor::mask_email( $user->user_email ),
@@ -562,7 +562,11 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 	private static function default_post_skip_url( $user_id ) {
 		$user_id = (int) $user_id;
 		$default = is_network_admin() ? network_admin_url() : admin_url();
-		if ( $user_id > 0
+		if ( $user_id > 0 && is_multisite() && user_can( $user_id, 'manage_network_options' ) ) {
+			$default = network_admin_url( 'admin.php?page=reportedip-hive' );
+		} elseif ( $user_id > 0 && ! is_multisite() && user_can( $user_id, 'manage_options' ) ) {
+			$default = admin_url( 'admin.php?page=reportedip-hive' );
+		} elseif ( $user_id > 0
 			&& ! user_can( $user_id, 'manage_options' )
 			&& ! user_can( $user_id, 'edit_posts' )
 			&& function_exists( 'wc_get_page_permalink' ) ) {
@@ -575,7 +579,7 @@ class ReportedIP_Hive_Two_Factor_Onboarding {
 		/**
 		 * Target after a skipped enrolment.
 		 *
-		 * @param string $url     Dashboard URL, My Account for a customer on a WooCommerce site.
+		 * @param string $url     Hive dashboard for an administrator, My Account for a customer on a WooCommerce site, the WordPress dashboard otherwise.
 		 * @param int    $user_id User who skipped.
 		 * @since 3.0.0
 		 */

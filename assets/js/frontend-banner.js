@@ -240,7 +240,7 @@
 			const headline = this.getAttribute( 'data-headline' ) || 'Protected by ReportedIP Hive';
 			const noun = this.getAttribute( 'data-noun' ) || '';
 			const metricText = this.getAttribute( 'data-metric-text' ) || headline;
-			const href = this.getAttribute( 'data-href' ) || 'https://reportedip.com/';
+			const href = this.getAttribute( 'data-href' ) || 'https://reportedip.com/?rc=hive-badge';
 			const live = this.getAttribute( 'data-live' ) !== 'false';
 
 			this.applyCustomTheme();

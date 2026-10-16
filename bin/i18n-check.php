@@ -32,12 +32,15 @@ final class I18nCheck {
 	 * German variants that must ship complete, per text domain. The free plugin
 	 * carries du and Sie for Germany plus Austria and Switzerland (owner rule
 	 * 2026-10-16); de_AT and both de_CH catalogs are derived by
-	 * `./run.sh glotpress derive`. Other domains only need de_DE.
+	 * `./run.sh glotpress derive`. The add-on ships the same five plus French
+	 * and Spanish, all bundled (it has no wordpress.org language packs), built
+	 * with `./run.sh glotpress <cmd> --plugin pro`. Other domains only need de_DE.
 	 *
 	 * @var array<string,string[]>
 	 */
 	private const REQUIRED_LOCALES = array(
-		'reportedip-hive' => array( 'de_DE', 'de_DE_formal', 'de_AT', 'de_CH', 'de_CH_informal' ),
+		'reportedip-hive'     => array( 'de_DE', 'de_DE_formal', 'de_AT', 'de_CH', 'de_CH_informal' ),
+		'reportedip-hive-pro' => array( 'de_DE', 'de_DE_formal', 'de_AT', 'de_CH', 'de_CH_informal', 'fr_FR', 'es_ES' ),
 	);
 
 	/**

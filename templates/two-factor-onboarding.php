@@ -481,7 +481,7 @@ if ( $grace_deadline > 0 ) {
 					printf(
 						/* translators: 1: opening link tag, 2: closing link tag */
 						esc_html__( 'This page is protected by %1$sReportedIP%2$s, Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' ),
-						'<a href="https://reportedip.com/" target="_blank" rel="noopener">',
+						'<a href="https://reportedip.com/?rc=hive-plugin" target="_blank" rel="noopener">',
 						'</a>'
 					);
 					?>

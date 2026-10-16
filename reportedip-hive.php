@@ -1,12 +1,12 @@
 <?php
 /**
  * Plugin Name: ReportedIP Hive: Firewall, Login Security, Brute Force Protection and 2FA
- * Plugin URI: https://reportedip.com
+ * Plugin URI: https://reportedip.com/products/wordpress-plugin/?rc=hive-plugin
  * Description: Community-powered WordPress security, real-time threat intelligence
  * with 6-layer defense and 4-method 2FA. Be part of the hive.
  * Version: 3.0.0
  * Author: Patrick Schlesinger, ReportedIP
- * Author URI: https://reportedip.com
+ * Author URI: https://reportedip.com/?rc=hive-plugin
  * License: GPL-2.0-or-later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: reportedip-hive
@@ -61,9 +61,9 @@ define( 'REPORTEDIP_MAX_SETTINGS_UPLOAD_SIZE', 524288 );
  */
 define( 'REPORTEDIP_HIVE_SITE_URL', 'https://reportedip.com' );
 define( 'REPORTEDIP_HIVE_CONTACT_MAIL', '1@reportedip.com' );
-define( 'REPORTEDIP_HIVE_HONEYPOT_URL', 'https://reportedip.com/docs/integrations/honeypot-server/' );
-define( 'REPORTEDIP_HIVE_FAQ_URL', 'https://reportedip.com/docs/support/faq/' );
-define( 'REPORTEDIP_HIVE_REGISTER_URL', 'https://reportedip.com/register/' );
+define( 'REPORTEDIP_HIVE_HONEYPOT_URL', 'https://reportedip.com/docs/integrations/honeypot-server/?rc=hive-plugin' );
+define( 'REPORTEDIP_HIVE_FAQ_URL', 'https://reportedip.com/docs/support/faq/?rc=hive-plugin' );
+define( 'REPORTEDIP_HIVE_REGISTER_URL', 'https://reportedip.com/register/?rc=hive-plugin' );
 
 /**
  * Main ReportedIP Hive Class
@@ -749,10 +749,61 @@ class ReportedIP_Hive {
 	}
 
 	/**
+	 * Load the bundled catalog ahead of a wordpress.org language pack.
+	 *
+	 * WordPress loads a pack from `wp-content/languages/plugins/` instead of
+	 * the catalog in the plugin, and a pack from translate.wordpress.org may
+	 * carry only a few dozen strings, which turned most of the admin English.
+	 * Hooked on `load_textdomain`, so it covers the just-in-time load and
+	 * every locale switch: before the pack is read, the bundled catalog of
+	 * the same locale is loaded. The first loaded file wins a lookup, so the
+	 * bundled catalog is the base and the pack only fills strings it lacks.
+	 *
+	 * @param string $domain Text domain being loaded.
+	 * @param string $mofile Path of the file WordPress is about to load.
+	 * @return void
+	 * @since  3.0.1
+	 */
+	public static function load_bundled_translations_first( $domain, $mofile ) {
+		if ( 'reportedip-hive' !== $domain ) {
+			return;
+		}
+		$dir = trailingslashit( wp_normalize_path( REPORTEDIP_HIVE_LANGUAGES_DIR ) );
+		if ( 0 === strpos( wp_normalize_path( (string) $mofile ), $dir ) ) {
+			return;
+		}
+		$bundled = $dir . basename( (string) $mofile );
+		if ( is_readable( $bundled ) ) {
+			load_textdomain( $domain, $bundled );
+		}
+	}
+
+	/**
+	 * Add a "Settings" link next to "Deactivate" in the plugin list. On a
+	 * network the plugin is managed from the Network Admin, so only that
+	 * list gets the link there.
+	 *
+	 * @param string[] $links Action links.
+	 * @return string[]
+	 * @since  3.0.1
+	 */
+	public static function plugin_action_links( $links ) {
+		if ( is_multisite() && ! is_network_admin() ) {
+			return $links;
+		}
+		$url = is_network_admin()
+			? network_admin_url( 'admin.php?page=reportedip-hive-protection' )
+			: admin_url( 'admin.php?page=reportedip-hive-protection' );
+		array_unshift( $links, '<a href="' . esc_url( $url ) . '">' . esc_html__( 'Settings', 'reportedip-hive' ) . '</a>' );
+		return $links;
+	}
+
+	/**
 	 * Initialize plugin
 	 *
-	 * Translations are loaded automatically by WordPress 4.6+ via the
-	 * `Text Domain` plugin header, so no explicit `load_plugin_textdomain()` call is needed.
+	 * Translations are loaded by WordPress via the `Text Domain` plugin
+	 * header; {@see self::load_bundled_translations_first()} keeps the
+	 * bundled catalog ahead of a language pack.
 	 */
 	public function init() {
 		$this->check_ip_access();
@@ -2446,6 +2497,9 @@ class ReportedIP_Hive {
 	}
 }
 
+add_action( 'load_textdomain', array( 'ReportedIP_Hive', 'load_bundled_translations_first' ), 10, 2 );
+add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( 'ReportedIP_Hive', 'plugin_action_links' ) );
+add_filter( 'network_admin_plugin_action_links_' . plugin_basename( __FILE__ ), array( 'ReportedIP_Hive', 'plugin_action_links' ) );
 register_activation_hook( __FILE__, array( 'ReportedIP_Hive', 'activate_plugin' ) );
 register_deactivation_hook( __FILE__, array( 'ReportedIP_Hive', 'deactivate_plugin' ) );
 register_uninstall_hook( __FILE__, array( 'ReportedIP_Hive', 'uninstall' ) );

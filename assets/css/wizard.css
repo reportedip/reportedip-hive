@@ -169,6 +169,7 @@ body.rip-wizard-page [hidden] {
     gap: 0.15rem;
     margin-bottom: 3rem;
     overflow-x: auto;
+    overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
 }
@@ -289,6 +290,11 @@ body.rip-wizard-page [hidden] {
     grid-template-columns: repeat(2, 1fr);
     gap: 1.5rem;
     margin: 2rem 0;
+}
+
+.rip-mode-card:focus-visible {
+    outline: 2px solid var(--rip-primary);
+    outline-offset: 2px;
 }
 
 .rip-mode-card {

@@ -32,11 +32,86 @@ final class ReportedIP_Hive_Catalog {
 	const PRODUCT_URL = 'https://reportedip.com/products/wordpress-plugin/?rc=hive-plugin';
 
 	/**
-	 * The account dashboard on reportedip.com, where the add-on is
-	 * downloaded. Linked through the login page, which leads a signed-out
-	 * visitor straight on to the dashboard.
+	 * The add-on page of the account dashboard on reportedip.com, where the
+	 * add-on is downloaded. A signed-out visitor is sent through the login
+	 * and lands there afterwards.
 	 */
-	const ACCOUNT_URL = 'https://reportedip.com/login/?redirect_to=https%3A%2F%2Freportedip.com%2Fdashboard%2F&rc=hive-plugin';
+	const ACCOUNT_URL = 'https://reportedip.com/dashboard/product-hive/?rc=hive-plugin';
+
+	/**
+	 * Price list of the plans.
+	 */
+	const PRICING_URL = 'https://reportedip.com/pricing/?rc=hive-plugin';
+
+	/**
+	 * Campaign source of every link inside the plugin.
+	 */
+	const RC_PLUGIN = 'hive-plugin';
+
+	/**
+	 * Campaign source of the badges and banners on visitors' pages.
+	 */
+	const RC_BADGE = 'hive-badge';
+
+	/**
+	 * Paths on reportedip.com that never carry a campaign tag: the REST
+	 * API, feeds, legal pages and the GDPR request page.
+	 */
+	const CAMPAIGN_EXEMPT = '#^/(?:wp-json/|feed/|(?:[a-z]{2}/)?feed/|datenschutzerklaerung/|impressum/|nutzungsbedingungen/|agb/|privacy|terms|dashboard/dsgvo)#i';
+
+	/**
+	 * Tag a reportedip.com link with its campaign source.
+	 *
+	 * reportedip.com counts clicks, sign-ups and revenue per source from the
+	 * `rc` argument. The tag goes in front of an anchor, replaces an older
+	 * tag and any `utm_*` argument, and stays off the API, feeds and legal
+	 * pages. Links to other hosts come back unchanged. Plain PHP, so it
+	 * works before WordPress has loaded its URL helpers.
+	 *
+	 * @param string $url    Link.
+	 * @param string $source Campaign source.
+	 * @return string
+	 * @since  3.0.1
+	 */
+	public static function campaign_url( $url, $source = self::RC_PLUGIN ) {
+		$url  = (string) $url;
+		$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+		if ( 'reportedip.com' !== $host && 'www.reportedip.com' !== $host ) {
+			return $url;
+		}
+		$path = (string) wp_parse_url( $url, PHP_URL_PATH );
+		if ( preg_match( self::CAMPAIGN_EXEMPT, '' === $path ? '/' : $path ) ) {
+			return $url;
+		}
+
+		$fragment = '';
+		$hash     = strpos( $url, '#' );
+		if ( false !== $hash ) {
+			$fragment = substr( $url, $hash );
+			$url      = substr( $url, 0, $hash );
+		}
+		$query = '';
+		$mark  = strpos( $url, '?' );
+		if ( false !== $mark ) {
+			$query = substr( $url, $mark + 1 );
+			$url   = substr( $url, 0, $mark );
+		}
+		if ( '' === $path ) {
+			$url .= '/';
+		}
+
+		$args = array();
+		foreach ( '' === $query ? array() : explode( '&', $query ) as $pair ) {
+			$name = strtolower( rawurldecode( (string) strtok( $pair, '=' ) ) );
+			if ( 'rc' === $name || 0 === strpos( $name, 'utm_' ) ) {
+				continue;
+			}
+			$args[] = $pair;
+		}
+		$args[] = 'rc=' . rawurlencode( $source );
+
+		return $url . '?' . implode( '&', $args ) . $fragment;
+	}
 
 	/**
 	 * One row per add-on feature. Keys equal the feature keys the add-on

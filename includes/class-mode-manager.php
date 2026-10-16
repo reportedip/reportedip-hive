@@ -2,7 +2,7 @@
 /**
  * Mode Manager Class for ReportedIP Hive.
  *
- * Manages the dual-mode system (Local Protection vs Community Network).
+ * Manages the dual-mode system (Local Shield vs Community Network).
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>

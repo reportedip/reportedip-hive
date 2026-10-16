@@ -15,6 +15,40 @@ All changes to ReportedIP Hive are documented here.
   2FA data"). The time stamps on the dashboard activity list and the API
   queue are one translatable phrase ("%s ago") instead of a glued "ago".
   All seven bundled catalogs carry the new strings.
+- **German admin stayed mostly English.** WordPress loaded an incomplete
+  language pack from translate.wordpress.org instead of the bundled
+  catalog. The bundled catalog is now loaded first, and a language pack
+  only fills strings it lacks.
+- **Empty values showed a lone comma** ("Oldest report: ,"). They read
+  "None", the user name or stay empty now; a test keeps the pattern out.
+- **Automatic settings of a plan change** no longer switch on the form
+  protection of form plugins the site does not run (2.1.74 did the same),
+  and they are logged with their origin instead of as an admin save. The
+  activity log calls these saves "Settings Saved (this site)"; only MainWP
+  and the cloud fleet count as remote. A boolean detail reads Yes or No
+  instead of nothing ("Skip counted:").
+- **Quickstart in Local Shield** no longer lists the community reputation
+  as switched on. A checked key whose plan includes the add-on shows where
+  to download it, and the mode cards work with the keyboard.
+- **"Set up later" in the 2FA setup** leads an administrator to the Hive
+  dashboard instead of the WordPress dashboard.
+- **Wording and layout.** "Local Shield" everywhere, a Local Shield
+  variant of the footer note, no vertical scroll bar in the step bar, no
+  coloured side bars on the system status cards and the privacy notice,
+  a hint that a low hardening score is normal right after setup.
+
+### Changed
+
+- **Every link to reportedip.com carries its campaign tag** (`rc`), so
+  reportedip.com can count clicks per source: `hive-plugin` inside the
+  plugin, `hive-badge` on the frontend badges and banners, `hive-wporg` in
+  readme.txt, `hive-github` in the repository documents. `utm_*`
+  parameters are gone. API endpoints, feeds and legal pages carry no tag.
+  News items and links changed through `reportedip_hive_external_url` are
+  tagged when they are rendered. A test fails on any untagged link.
+- **Add-on download link** goes to the add-on page of the account
+  dashboard.
+- **"Settings" link** next to "Deactivate" in the plugin list.
 
 ## [3.0.0] - 2026-10-16
 

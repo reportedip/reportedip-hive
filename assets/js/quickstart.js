@@ -19,6 +19,9 @@
 
 		init: function () {
 			$(document).on('click', '.rip-mode-card', this.onModeClick.bind(this));
+			$(document).on('keydown', '.rip-mode-card', function (e) {
+				if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $(this).trigger('click'); }
+			});
 			$(document).on('click', '#rip-validate-key', this.onValidateKey.bind(this));
 			$(document).on('keypress', '#rip-api-key', function (e) {
 				if (e.which === 13) { e.preventDefault(); $('#rip-validate-key').trigger('click'); }
@@ -54,8 +57,8 @@
 
 		onModeClick: function (e) {
 			var $card = $(e.currentTarget);
-			$('.rip-mode-card').removeClass('rip-mode-card--selected');
-			$card.addClass('rip-mode-card--selected');
+			$('.rip-mode-card').removeClass('rip-mode-card--selected').attr('aria-checked', 'false');
+			$card.addClass('rip-mode-card--selected').attr('aria-checked', 'true');
 			$('#rip-selected-mode').val($card.data('mode'));
 			$('#rip-api-key-card').toggleClass('rip-is-hidden', $card.data('mode') !== 'community');
 			this.renderFeatureLocks();
@@ -68,6 +71,7 @@
 		 */
 		renderFeatureLocks: function () {
 			var rank = this.mode() === 'community' ? this.rank : 0;
+			$('#rip-quickstart-features li[data-community]').toggleClass('rip-is-hidden', this.mode() !== 'community');
 			$('#rip-quickstart-features li[data-rank]').each(function () {
 				$(this).toggleClass('rip-quickstart__feature--locked', (parseInt($(this).attr('data-rank'), 10) || 0) > rank);
 			});
@@ -100,8 +104,9 @@
 						$status.html(Quickstart.statusHtml('success', text));
 						$input.addClass('rip-input--valid').removeClass('rip-input--invalid');
 						if (r.data.tier_badge_html) { $('#rip-quickstart-tier-badge').html(r.data.tier_badge_html); }
+						if (r.data.addon_hint_html) { $status.append(r.data.addon_hint_html); }
 						Quickstart.renderFeatureLocks();
-						if (Quickstart.rank >= 1) { $('#rip-quickstart-teaser').remove(); }
+						$('#rip-quickstart-teaser').remove();
 					} else {
 						var msg = (r && r.data && r.data.message) ? r.data.message : s.invalid;
 						$status.html(Quickstart.statusHtml('error', $('<span>').text(msg).html()));

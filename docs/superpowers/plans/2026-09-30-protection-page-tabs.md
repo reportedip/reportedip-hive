@@ -526,7 +526,7 @@ In `test_field_markup_carries_the_registry_name_and_the_lock()` replace the firs
 					'reason'     => 'tier',
 					'label'      => 'Tor',
 					'plan_label' => 'Professional',
-					'plan_url'   => 'https://reportedip.com/pricing/#tor_blocking',
+					'plan_url'   => 'https://reportedip.com/pricing/?rc=hive-github#tor_blocking',
 				)
 			);
 			$this->assertStringNotContainsString( 'name="reportedip_hive_block_tor"', $html, 'a plan-locked switch posts nothing' );
@@ -534,7 +534,7 @@ In `test_field_markup_carries_the_registry_name_and_the_lock()` replace the firs
 			$this->assertStringContainsString( 'data-search="', $html );
 			$this->assertStringContainsString( 'rip-protection__field--locked', $html );
 			$this->assertStringContainsString( 'rip-protection__plan', $html );
-			$this->assertStringContainsString( 'href="https://reportedip.com/pricing/#tor_blocking"', $html );
+			$this->assertStringContainsString( 'href="https://reportedip.com/pricing/?rc=hive-github#tor_blocking"', $html );
 			$this->assertStringContainsString( 'Learn more', $html );
 			$this->assertStringNotContainsString( 'rip-protection__state', $html, 'no on/off text without a switch' );
 ```

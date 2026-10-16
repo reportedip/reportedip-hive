@@ -672,6 +672,33 @@ final class ReportedIP_Hive_Defaults {
 		 * @param string               $mode   `community` or `local`.
 		 * @since 3.0.0
 		 */
-		return apply_filters( 'reportedip_hive_recommended_values', $values, $tier, $mode );
+		$values = apply_filters( 'reportedip_hive_recommended_values', $values, $tier, $mode );
+
+		return self::without_absent_form_plugins( is_array( $values ) ? $values : array() );
+	}
+
+	/**
+	 * Drop the adapter switches of form plugins that are not installed.
+	 *
+	 * A switch for a form plugin the site does not run protects nothing,
+	 * and turning it on in a plan change or the quickstart wrote a row per
+	 * plugin into the audit trail for nothing. Detection is the same one the
+	 * protection page uses.
+	 *
+	 * @param array<string, mixed> $values Recommendation.
+	 * @return array<string, mixed>
+	 * @since  3.0.1
+	 */
+	public static function without_absent_form_plugins( array $values ) {
+		if ( ! class_exists( 'ReportedIP_Hive_Form_Adapters' ) ) {
+			return $values;
+		}
+		$adapters = ReportedIP_Hive_Form_Adapters::get_instance();
+		foreach ( ReportedIP_Hive_Form_Adapters::adapters() as $slug => $adapter ) {
+			if ( isset( $adapter['option'] ) && array_key_exists( $adapter['option'], $values ) && ! $adapters->detected( (string) $slug ) ) {
+				unset( $values[ $adapter['option'] ] );
+			}
+		}
+		return $values;
 	}
 }

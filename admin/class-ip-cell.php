@@ -33,10 +33,12 @@ final class ReportedIP_Hive_IP_Cell {
 	 * @since  2.1.41
 	 */
 	public static function external_url( $ip ) {
-		return apply_filters(
-			'reportedip_hive_external_url',
-			REPORTEDIP_HIVE_SITE_URL . '/ip/' . rawurlencode( $ip ) . '/?rc=hive-plugin',
-			'ip_detail'
+		return ReportedIP_Hive_Catalog::campaign_url(
+			(string) apply_filters(
+				'reportedip_hive_external_url',
+				REPORTEDIP_HIVE_SITE_URL . '/ip/' . rawurlencode( $ip ) . '/?rc=hive-plugin',
+				'ip_detail'
+			)
 		);
 	}
 
