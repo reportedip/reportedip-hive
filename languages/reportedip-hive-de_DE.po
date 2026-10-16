@@ -6828,7 +6828,7 @@ msgstr "Wie viele Versuche diese Adressen zusammen ergeben müssen, damit sie al
 
 #: includes/class-settings-registry.php:466
 msgid "Automatic blocking"
-msgstr "Automatische Sperren"
+msgstr "Automatisches Sperren"
 
 #: includes/class-settings-registry.php:467
 msgid "Actually refuse an address once a sensor threshold is passed. Off, the sensors only record."
