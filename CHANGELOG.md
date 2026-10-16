@@ -6,6 +6,15 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixes
 
+- **Network activation opens the quickstart.** On Multisite the plugin
+  list stayed put after a network activation, and the quickstart, which
+  exists only in the Network Admin, was reachable from System Status
+  alone. A network activation now leads there, also when the Pro add-on
+  installs the plugin. A sub-site administrator no longer spends the
+  one-time redirect on a page he cannot open.
+- **No dead link for sub-site administrators.** The site pages show the
+  "Open Network Admin" button only to users who may open the Network
+  Admin; everyone else got the 403 page of WordPress.
 - **Overlapping firewall queue imports.** The import of the pre-WordPress
   hit queue now claims a file lock before it rotates the queue. Two runs
   starting in the same instant no longer print a rename warning or import
