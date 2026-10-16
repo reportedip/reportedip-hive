@@ -27,10 +27,6 @@ msgid "Use a recovery code, or run <code>wp reportedip 2fa reset &lt;user_id&gt;
 msgstr "Usa un código de recuperación o ejecuta <code>wp reportedip 2fa reset &lt;user_id&gt;</code> y <code>wp reportedip unblock &lt;ip&gt;</code> con WP-CLI. Si añades tu propia dirección a la lista blanca, evitas los bloqueos desde el principio."
 
 #. Found in faq paragraph.
-msgid "ReportedIP Hive replaces ReportedIP Hive Light under the same name in the plugin directory, so the update arrives like any other. Your whitelist, blocks, counters and settings are carried over, including ranges, permanent whitelist entries and the True-Client-IP or X-Cluster-Client-IP proxy header. On a multisite network where Light ran site by site, the data of every site moves into the network tables. Open the quickstart afterwards to pick Local Shield or the Community Network."
-msgstr ""
-
-#. Found in faq paragraph.
 msgid "Usually not. The invisible form check stops scripted submissions on comments, registrations, password resets and Contact Form 7 without a puzzle for your visitors."
 msgstr "Normalmente no. La comprobación invisible del formulario detiene los envíos automatizados en comentarios, registros, restablecimientos de contraseña y Contact Form 7 sin ningún acertijo para tus visitantes."
 
@@ -77,10 +73,6 @@ msgstr "Sí, el plugin es gratuito bajo la GPL y funciona sin cuenta. Una cuenta
 #. Found in faq header.
 msgid "What if I lock myself out?"
 msgstr "¿Qué pasa si me bloqueo a mí mismo?"
-
-#. Found in faq header.
-msgid "I use ReportedIP Hive Light. What happens on the update?"
-msgstr ""
 
 #. Found in faq header.
 msgid "Do I still need a CAPTCHA?"
@@ -467,14 +459,6 @@ msgid "Database schema 25."
 msgstr "Esquema de base de datos 25."
 
 #. Found in changelog list item.
-msgid "Networks that ran ReportedIP Hive Light per site keep the blocks, whitelist entries, counters and pending reports of every site."
-msgstr ""
-
-#. Found in changelog list item.
-msgid "Update path from ReportedIP Hive Light 1.3.9: permanent and range whitelist entries, attempt counters and the proxy header are kept."
-msgstr ""
-
-#. Found in changelog list item.
 msgid "Notices can be closed and return after an hour or a day; a critical queue or readiness problem stays until it is fixed."
 msgstr "Los avisos se pueden cerrar y vuelven al cabo de una hora o de un día; un problema crítico de la cola o de preparación se mantiene hasta que se soluciona."
 
@@ -501,3 +485,19 @@ msgstr "Las funciones de pago se han trasladado al complemento independiente Rep
 #. Found in changelog list item.
 msgid "The plugin now comes from the WordPress plugin directory. The former GitHub update checker is gone."
 msgstr "El plugin ahora se distribuye desde el directorio de plugins de WordPress. El antiguo comprobador de actualizaciones de GitHub ya no existe."
+
+#. Found in faq paragraph.
+msgid "Version 3.0.0 arrives like any other update from the plugin directory. Your whitelist, blocks, counters and settings are carried over, including ranges, permanent whitelist entries and the True-Client-IP or X-Cluster-Client-IP proxy header. On a multisite network where the plugin ran site by site, the data of every site moves into the network tables. Open the quickstart afterwards to pick Local Shield or the Community Network."
+msgstr "La versión 3.0.0 llega como cualquier otra actualización del directorio de plugins. Tu lista blanca, bloqueos, contadores y ajustes se conservan, incluidos los rangos, las entradas permanentes de la lista blanca y la cabecera de proxy True-Client-IP o X-Cluster-Client-IP. En una red multisitio donde el plugin funcionaba sitio por sitio, los datos de cada sitio pasan a las tablas de la red. Después, abre el inicio rápido para elegir Local Shield o la Community Network."
+
+#. Found in faq header.
+msgid "I still run version 1.3 of this plugin. What happens on the update?"
+msgstr "Todavía uso la versión 1.3 de este plugin. ¿Qué pasa al actualizar?"
+
+#. Found in changelog list item.
+msgid "Networks that ran version 1.3.9 per site keep the blocks, whitelist entries, counters and pending reports of every site."
+msgstr "Las redes que usaban la versión 1.3.9 sitio por sitio conservan los bloqueos, las entradas de la lista blanca, los contadores y los informes pendientes de cada sitio."
+
+#. Found in changelog list item.
+msgid "Update path from version 1.3.9: permanent and range whitelist entries, attempt counters and the proxy header are kept."
+msgstr "Actualización desde la versión 1.3.9: se conservan las entradas permanentes y de rango de la lista blanca, los contadores de intentos y la cabecera de proxy."
