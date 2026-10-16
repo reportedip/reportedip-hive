@@ -4,7 +4,7 @@
  * Plugin URI: https://reportedip.com
  * Description: Community-powered WordPress security, real-time threat intelligence
  * with 6-layer defense and 4-method 2FA. Be part of the hive.
- * Version: 2.1.74
+ * Version: 3.0.0
  * Author: Patrick Schlesinger, ReportedIP
  * Author URI: https://reportedip.com
  * License: GPL-2.0-or-later
@@ -44,7 +44,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'REPORTEDIP_HIVE_VERSION', '2.1.74' );
+define( 'REPORTEDIP_HIVE_VERSION', '3.0.0' );
 define( 'REPORTEDIP_HIVE_API_VERSION', '1' );
 define( 'REPORTEDIP_HIVE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'REPORTEDIP_HIVE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );

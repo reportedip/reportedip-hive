@@ -2,7 +2,7 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [3.0.0] - unreleased
+## [3.0.0] - 2026-10-16
 
 ### Security
 
@@ -77,6 +77,13 @@ All changes to ReportedIP Hive are documented here.
   positive feedback and the quota refresh stay local until the Community
   Network is switched on. System Status reads "Local Shield mode active".
 - **The news card loads its feed only in Community Network mode.**
+- **The footer badge is opt-in.** The quickstart leaves the "Protected by
+  ReportedIP" badge off until the operator ticks it, and the dashboard no
+  longer lists the badge as a next step. A site that shows the badge keeps
+  it.
+- **Hiding the software version no longer touches PHP error display.** The
+  switch removes the WordPress and plugin version fingerprints; turning
+  `display_errors` off along with it moved to the Pro add-on.
 - **Notices can be closed.** Every notice carries a fixed id. The
   rate-limit notice returns after an hour; the 2FA reminder, the missing
   key, the domain limit and the queue warning after a day. A critical

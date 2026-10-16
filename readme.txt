@@ -4,7 +4,7 @@ Tags: security, firewall, brute-force, 2fa, spam-protection
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 2.1.74
+Stable tag: 3.0.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -165,6 +165,7 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 * The breach check for new passwords is off until you switch it on.
 * .htaccess blocks are written after an operator action (quickstart, saving the switch, import, WP-CLI), never at activation. A site updating from 2.x with a completed quickstart keeps its blocks.
 * Local Shield sends no request to reportedip.com, even with a key stored. The news feed loads only in Community Network mode.
+* The footer badge stays off until you tick it in the quickstart; the dashboard no longer suggests it.
 * Notices can be closed and return after an hour or a day; a critical queue or readiness problem stays until it is fixed.
 * Update path from ReportedIP Hive Light 1.3.9: permanent and range whitelist entries, attempt counters and the proxy header are kept.
 * Networks that ran ReportedIP Hive Light per site keep the blocks, whitelist entries, counters and pending reports of every site.
