@@ -1,6 +1,6 @@
-=== ReportedIP Hive: Firewall, Login Security, Brute Force Protection and 2FA ===
+=== ReportedIP Hive: Firewall, Brute Force Protection, 2FA and Anti-Spam ===
 Contributors: reportedip
-Tags: security, firewall, brute-force, 2fa, spam-protection
+Tags: security, firewall, brute-force, 2fa, anti-spam
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
@@ -8,78 +8,124 @@ Stable tag: 3.0.0
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Firewall, brute force protection, 2FA with passkeys and spam protection for forms. Optional community IP blocklist. GDPR-first, made in Germany.
+Firewall, limit login attempts, 2FA with passkeys and anti-spam for comments and forms without CAPTCHA. Optional IP blocklist. GDPR-first.
 
 == Description ==
 
-ReportedIP Hive is a WordPress security plugin that combines a web application firewall (WAF), login security with limited login attempts, two-factor authentication with passkeys, and spam protection for comments, registrations and contact forms. It blocks malicious IPs on your own server, works without an account, and can optionally share and check attacking addresses through a community IP blocklist.
+ReportedIP Hive is a free WordPress security plugin with a web application firewall (WAF), brute force protection, two-factor authentication (2FA) and anti-spam protection for comments, registrations and contact forms. It is built for site owners, agencies and WooCommerce shops that want login security and spam protection in one plugin, without a CAPTCHA and without sending data anywhere by default.
 
-Sixteen sensors watch the sign-in form, XML-RPC, the REST API, the comment, registration and password-reset forms and the request itself. Four two-factor methods keep accounts safe when a password leaks.
+The plugin blocks attacking IP addresses on your own server. It needs no account. Sixteen sensors watch the sign-in form, XML-RPC, the REST API, the comment, registration and password-reset forms and every request. An optional community IP blocklist shares and checks attacking addresses with other sites.
 
-Everything in this plugin is free and complete: no trial, no locked switch, no account requirement. The Community Network and the separate Pro add-on are optional.
+Everything described here up to the add-on section is free and complete: no trial, no locked switch, no time limit.
+
+= Web application firewall (WAF) =
+
+* **Request inspection** with a bundled ruleset against SQL injection, cross-site scripting (XSS), path traversal, command injection and vulnerability scanners.
+* **Pre-WordPress firewall.** An optional layer (`auto_prepend_file`) applies the same rules, exceptions, whitelist and IP blocks before WordPress loads. A blocked request costs almost nothing.
+* **404 and scanner detection.** Requests for bait paths such as `.env`, `.git/config` or `wp-config.php.bak` block the address at once.
+* **Verified bot detection.** Googlebot, Bingbot and other large crawlers are confirmed through their published address ranges or reverse DNS. A fake Googlebot is treated like any other visitor.
+* **REST API rate limit**, firewall exceptions per rule, path or IP, and a report-only mode for testing.
+* **IP blocking and whitelist** for single addresses and CIDR ranges, with incident reference codes on the block page.
 
 = Login security and brute force protection =
 
-* **Limit login attempts.** Failed sign-ins are counted per IP address. The default locks an address after 5 failures in 15 minutes.
-* **Password spraying detection.** Many usernames tried from one address are caught separately.
+* **Limit login attempts.** Failed sign-ins are counted per IP address. The default blocks an address after 5 failures in 15 minutes.
 * **Progressive IP blocking.** Six steps from 5 minutes to 7 days. The ladder resets after 30 quiet days, so a typo never costs a day.
+* **Password spraying detection.** Many usernames tried from one address are caught separately.
+* **Application password protection.** Failed Basic Auth sign-ins count like failed logins, so the REST API is no way around the limit.
 * **Hide Login.** Move wp-login.php to a custom login URL.
 * **User enumeration protection.** Author archives, the users REST route, the user sitemap and login error messages no longer reveal usernames.
-* **XML-RPC and pingback protection,** with a switch to turn XML-RPC off.
-* **Login anomaly detection.** A sign-in from a new country asks for the second factor again.
-* **WooCommerce login protection.** The My Account sign-in and registration forms are counted like wp-login.php.
-* **Password policy** with an optional breach check (off by default).
+* **Login anomaly detection.** A sign-in from a new country is logged and asks for the second factor again.
+* **WooCommerce login protection.** My Account sign-in and registration are counted like wp-login.php.
+* **Password policy** with minimum length, character classes and an optional breach check (off by default).
 
 = Two-factor authentication (2FA) =
 
-* **Authenticator apps (TOTP)** such as Google Authenticator, Authy or 1Password.
+* **Authenticator apps (TOTP)** such as Google Authenticator, Microsoft Authenticator, Authy or 1Password.
 * **Passkeys and hardware security keys (WebAuthn, FIDO2),** for example a YubiKey, Face ID, Touch ID or Windows Hello. One key per account.
 * **E-mail codes.**
 * **Recovery codes,** ten single-use codes per user.
-* Trusted devices, an enrolment wizard, 2FA enforcement per user role and a password-reset gate that a stolen mailbox cannot bypass.
+* **2FA enforcement per user role,** an enrolment wizard, trusted devices for 30 days and a password-reset gate that a stolen mailbox cannot bypass.
+* **WP-CLI commands** to enable, reset and audit 2FA per user.
 
-= Web application firewall =
+= Anti-spam and form protection without CAPTCHA =
 
-* **Request inspection** with a bundled baseline ruleset against SQL injection, XSS, path traversal and scanner traffic.
-* **Pre-WordPress guard.** An optional firewall layer that applies the same rules, exceptions, whitelist and IP blocks before WordPress loads.
-* **404 and scanner detection.** Requests for bait paths such as .env or .git/config block the address at once.
-* **Verified bot detection.** Googlebot, Bingbot and other large crawlers are confirmed through their published address ranges or reverse DNS. A fake Googlebot gains nothing.
-* **Firewall exceptions** and a report-only mode for testing.
+ReportedIP Hive replaces a CAPTCHA with checks the visitor never sees. No puzzle, no checkbox, no Google reCAPTCHA or other third-party script.
 
-= Spam protection for forms and comments =
-
-* **Invisible form check instead of a CAPTCHA.** A cache-safe execution proof on the comment, registration and password-reset forms. Visitors see no puzzle, and no third-party CAPTCHA service is loaded.
-* **Contact Form 7 spam protection** through the same check.
-* **Comment spam filter** that scores links, link density, disposable addresses and other signals.
+* **Invisible execution proof.** A hidden decoy field and a short script prove that a real browser filled in the form. A bot that fills the decoy is blocked on the first try and, in the Community Network, reported. The check carries nothing request-specific, so cached pages keep working.
+* **Comment spam filter.** Scores links in the text and the website field, link density, the number of domains, disposable addresses, throwaway top-level domains, a domain in the author name, foreign script and text without content. Spam goes to the spam folder or is rejected.
 * **Comment honeypot.**
+* **Registration spam protection** for WordPress, WooCommerce and multisite sign-ups: prohibited usernames, e-mail allow and block rules, a sign-up rate limit and an optional block for sign-ins with unknown usernames. Ten entries per list.
 * **Disposable e-mail blocking** on registrations and forms.
-* **Registration rules:** prohibited usernames, e-mail allow and block rules and a sign-up rate limit.
+* **Password reset spam protection.** The lost-password form carries the same proof.
+* **Contact Form 7 spam protection** with the same invisible check.
+* **IP reputation on forms.** In the Community Network, comment, registration and password-reset submissions from known attacking addresses are refused.
 
-= Access lockdown =
+= Hardening and attack surface =
 
-* REST API for signed-in users or chosen roles.
-* Feeds, wp-admin for guests, PHP execution in uploads and software version fingerprints, each a switch.
-* Basic security headers.
+* XML-RPC and pingbacks off with one switch.
+* REST API for signed-in users or chosen roles only.
+* Feeds, wp-admin for guests, PHP execution in the uploads folder and software version fingerprints, each a switch.
+* Security headers: X-Content-Type-Options, X-Frame-Options and Referrer-Policy.
+* Protection score and a readiness check that lists what still needs attention.
 
-= Operations =
+= Activity log and operations =
 
-* Activity log, protection score, CSV and JSON exports, settings import and export.
-* WP-CLI commands for blocks, the whitelist, 2FA and status.
-* WordPress multisite: network-activated, one set of tables, per-site logs.
+* Security activity log with filters by event type, severity and date, CSV and JSON export.
+* E-mail alerts for blocks and critical events.
+* Settings import and export.
+* WP-CLI: `wp reportedip block`, `unblock`, `whitelist`, `lookup`, `status` and `2fa`.
 * Works behind Cloudflare and other reverse proxies with a trusted proxy list.
+* Compatible with WP Rocket, W3 Total Cache, WP Super Cache and LiteSpeed Cache.
 
-= Two ways to run it =
+= WordPress multisite and MainWP =
+
+* Network-activated, one set of tables, IP blocks and whitelist shared by every site.
+* Site admins see the activity of their own site; protection is managed by the network admin.
+* MainWP dashboards read status counts and push settings through the MainWP Child plugin, with no extra child plugin.
+
+= Community threat intelligence (optional) =
 
 * **Local Shield** is the default. The plugin makes no outbound request.
-* **Community Network** is optional. With a free Community Access Key from [reportedip.com](https://reportedip.com/?rc=hive-wporg) the plugin checks the IP reputation of attacking addresses during sign-in and on forms, shares the addresses it blocks with the community blocklist, and receives updated firewall rulesets. Every request is listed under External Services below.
+* **Community Network** is opt-in. With a free Community Access Key from [reportedip.com](https://reportedip.com/?rc=hive-wporg) the plugin checks the IP reputation of attacking addresses during sign-in and on forms, shares the addresses it blocks with the community IP blocklist and receives signed firewall, bot and disposable-domain rulesets.
+
+= Privacy and GDPR =
+
+* Minimal logging, retention of 30 days by default, addresses anonymised after 7 days.
+* Usernames, passwords and form content never leave the site.
+* A suggested text for your privacy policy is added under Settings, Privacy.
+* Made in Germany.
 
 = What it does not do =
 
-ReportedIP Hive does not scan files for malware and does not monitor file integrity. Run a scanner next to it if your site needs one.
+ReportedIP Hive does not scan files for malware and does not monitor file integrity. Run a malware scanner next to it if your site needs one.
 
-= ReportedIP Hive Pro =
+= ReportedIP Hive Pro add-on =
 
-A separate add-on, ReportedIP Hive Pro, extends this plugin with a managed EU relay for 2FA mails and SMS codes, two-factor authentication on the WooCommerce storefront, adaptive per-role 2FA policies, a hardening mode during attack waves, advanced security headers, a computation check on forms, form protection for further form plugins, Tor exit node blocking, an audit trail, user account control and fleet management. It is not hosted on wordpress.org and is described on the [product page](https://reportedip.com/products/wordpress-plugin/?rc=hive-wporg).
+ReportedIP Hive Pro is a separate add-on for paid plans. It is not hosted on wordpress.org and adds new features on top of this plugin; nothing in the free plugin is held back for it.
+
+Professional plan:
+
+* **Managed 2FA mail relay** (500 mails per month) and **SMS two-factor authentication** through an EU SMS gateway (25 SMS per month).
+* **WooCommerce two-factor authentication** on My Account, the classic checkout and the WooCommerce Blocks login, inside the shop theme.
+* **Adaptive 2FA policies per role:** ask again on a new device, IP address, network or country, every N days or sign-ins, or above a session limit.
+* **Hardening mode** that tightens thresholds for one hour during a coordinated attack.
+* **Advanced security headers:** Content Security Policy (CSP) builder, HSTS with preload, Permissions-Policy and Cross-Origin headers.
+* **Computation proof on forms,** a proof of work the browser solves in the background, as a CAPTCHA alternative that a script cannot copy.
+* **Tor exit node blocking.**
+* **Unlimited registration rules** with regular expressions and sign-ups restricted to allowlisted IP addresses.
+* **Group ban lists:** one block list and whitelist shared by all sites of a group.
+
+Business plan, in addition:
+
+* **Spam protection for further form plugins:** WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator and Ultimate Member.
+* **Audit trail (activity log for changes):** who changed which setting, plugin, theme, page, menu, file or user account, with old and new values and export.
+* **User account blocking and session management:** block accounts, end sessions and review active sessions.
+* **Multiple security keys per account** with model detection.
+* **Cloud fleet management** of many sites from the reportedip.com dashboard.
+* Higher mail and SMS quotas (2,500 mails and 75 SMS per month).
+
+Paid plans also receive fresher and deeper rulesets through the Community Network. Plans and prices: [reportedip.com pricing](https://reportedip.com/pricing/?rc=hive-wporg).
 
 Documentation: [ReportedIP Hive guide](https://reportedip.com/docs/integrations/wordpress-hive/?rc=hive-wporg).
 
@@ -93,13 +139,45 @@ The plugin writes its two optional .htaccess blocks (bait-path responses and PHP
 
 == Frequently Asked Questions ==
 
+= What is ReportedIP Hive? =
+
+ReportedIP Hive is a WordPress security plugin that combines a firewall, brute force protection with limited login attempts, two-factor authentication with passkeys and anti-spam protection for comments and forms. It runs on your own server and works without an account.
+
 = Is ReportedIP Hive free, and do I need an account? =
 
-Yes, the plugin is free under the GPL and works without any account. A free account at reportedip.com adds the community IP reputation check and the synced firewall rulesets.
+Yes, the plugin is free under the GPL and works without any account. A free account at reportedip.com adds the community IP reputation check and synced firewall rulesets.
+
+= Does ReportedIP Hive replace a CAPTCHA or reCAPTCHA? =
+
+For most sites, yes. The invisible execution proof stops scripted submissions on comments, registrations, password resets and Contact Form 7 without a puzzle for your visitors and without loading a third-party service.
+
+= How does it stop comment spam? =
+
+Three layers: the invisible execution proof refuses bots that do not run a browser, the honeypot catches bots that fill every field, and the comment spam filter scores links, domains, disposable addresses and text without content. Spam goes to the spam folder or is rejected.
+
+= Is it GDPR compliant? =
+
+The plugin is built for GDPR compliance: logging is minimal, retention is configurable (30 days by default), addresses are anonymised after 7 days and the Community Network is opt-in. In Local Shield mode no data leaves the site.
+
+= Which data leaves my site in the Community Network? =
+
+Only the attacking IP address, the event category, the time, your site name and address, the attempt count and the plugin version. Usernames, passwords and form content never leave the site.
+
+= Does it work with WooCommerce? =
+
+Yes. The WooCommerce sign-in and registration forms get the same login attempt limits, registration rules and disposable e-mail blocking. Two-factor authentication on the storefront is part of the Pro add-on.
+
+= Does it support passkeys and YubiKeys? =
+
+Yes. Any FIDO2 or WebAuthn authenticator works as a second factor, including YubiKey hardware keys and platform passkeys such as Face ID, Touch ID and Windows Hello.
 
 = Will it slow down my site? =
 
-No. A blocked address is refused at the very start of the request, before themes and most plugins load, and community reports are sent in the background by WP-Cron.
+On an anonymous page view the plugin runs five database queries of its own. A request from a blocked address is refused by the pre-WordPress firewall in about 1.5 ms. Both figures come from a test site with 500,000 log entries and 5,000 blocked addresses. Community reports are sent in the background by WP-Cron.
+
+= How is it different from Wordfence? =
+
+Wordfence includes a malware scanner and file integrity checks; ReportedIP Hive does not. ReportedIP Hive focuses on the firewall, login security, two-factor authentication and form spam protection without CAPTCHA, sends no data in its default mode and offers an optional community IP blocklist. Many sites run a scanner next to it.
 
 = Can I use it together with another security plugin? =
 
@@ -109,33 +187,17 @@ Yes, but switch off overlapping features. Two plugins that both limit login atte
 
 A cloud firewall filters traffic before it reaches your server, while ReportedIP Hive runs inside WordPress and sees what a cloud firewall cannot: failed sign-ins, usernames tried, form submissions and user roles. Both work well together; set the proxy header so the plugin sees the real visitor address.
 
-= Does it work with WooCommerce? =
-
-Yes. The WooCommerce sign-in and registration forms are protected by the same login attempt limits, the registration rules and disposable e-mail blocking.
-
-= Is it GDPR compliant? =
-
-The plugin is built for GDPR compliance: logging is minimal, retention is configurable (30 days by default), addresses are anonymised after 7 days and the Community Network is opt-in. A suggested text for your privacy policy is added under Settings, Privacy.
-
-= Which data leaves my site in the Community Network? =
-
-Only the attacking IP address, the event category, the time, your site name and address, the attempt count and the plugin version. Usernames, passwords and form content never leave the site.
-
 = Does it work behind Cloudflare or a reverse proxy? =
 
 Yes. Choose the header that carries the visitor address (CF-Connecting-IP, X-Forwarded-For, X-Real-IP, Client-IP, True-Client-IP or X-Cluster-Client-IP) and list the trusted proxy ranges.
 
-= Does it work with caching plugins? =
+= Does it work on WordPress multisite? =
 
-Yes. The block page sends no-cache headers that WP Rocket, W3 Total Cache, WP Super Cache and LiteSpeed Cache respect, and the form check contains nothing request-specific, so cached pages keep working.
+Yes. The plugin is activated network-wide and keeps one set of tables for the whole network. Blocks and the whitelist apply to every site, and each site admin sees the activity of their own site.
 
-= Does it support passkeys and YubiKeys? =
+= What is in the Pro add-on? =
 
-Yes. Any FIDO2 or WebAuthn authenticator works as a second factor, including YubiKey hardware keys and platform passkeys such as Face ID, Touch ID and Windows Hello.
-
-= Do I still need a CAPTCHA? =
-
-Usually not. The invisible form check stops scripted submissions on comments, registrations, password resets and Contact Form 7 without a puzzle for your visitors.
+The add-on adds SMS 2FA and a managed mail relay, WooCommerce storefront 2FA, adaptive 2FA policies, hardening mode, advanced security headers, a computation proof on forms, Tor blocking, group ban lists, protection for further form plugins, an audit trail, account blocking and fleet management. The list per plan is in the description above.
 
 = I still run version 1.3 of this plugin. What happens on the update? =
 
@@ -152,8 +214,8 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 3. Activity log with filters.
 4. Two-factor enrolment wizard.
 5. Sign-in challenge with authenticator, passkey and e-mail options.
-6. Firewall rules and the pre-WordPress guard on the Tools page.
-7. Community page with the connection card.
+6. Tools page with the pre-WordPress firewall and the server rules.
+7. Community page: Local Shield or Community Network.
 8. System status and readiness check.
 9. Site view on a multisite network: local activity, protection managed centrally by the network admin.
 
@@ -184,26 +246,9 @@ Verified bot detection resolves the host name of visitors that claim to be a sea
 
 == External Services ==
 
-In Local Shield (the default) the plugin contacts no external service on its own, even with a key stored. Only a click on "Check" in the quickstart or on "Test Connection" sends one `verify-key` request.
+**reportedip.com.** In Local Shield (the default) the plugin contacts no external service, even with a key stored; only a click on "Check" in the quickstart or on "Test Connection" sends one key check. With the Community Network switched on and a Community Access Key entered, the plugin talks to `https://reportedip.com/wp-json/reportedip/v2/`. It checks the key every six hours, looks up attacking addresses during sign-ins and on forms, reports addresses it blocked (address, event category, attempt count, site name), sends addresses you whitelist as feedback, and downloads signed firewall, bot and disposable-domain rulesets every six hours. With "Sync alert recipients" on, it also sends the alert recipient addresses. Every request carries the key, the site address and the plugin and WordPress version. The dashboard shows the reportedip.com news feed (`https://reportedip.com/feed/?post_type=news`), cached for twelve hours. If the Pro add-on is installed, it checks reportedip.com for its own updates with your key. Terms of use: https://reportedip.com/nutzungsbedingungen/. Privacy policy: https://reportedip.com/datenschutzerklaerung/.
 
-**reportedip.com (Community Network on, only with a Community Access Key you enter)**
-
-Endpoint base: `https://reportedip.com/wp-json/reportedip/v2/`. Every request carries the key, the site address (`X-Rip-Site`) and a user agent with the plugin and WordPress version.
-
-* `verify-key`: validates the key when you check it and, while the Community Network is on, every six hours; receives the plan and quotas of your account.
-* `check`: looks up an attacking address during sign-in attempts and on the comment, registration and password-reset forms; sends the address.
-* `report`: shares an address the plugin blocked; sends the address, the event category and a one-line description with the site name, site address and attempt count. Queued and sent in batches.
-* `whitelist`: sends an address marked as legitimate, as positive feedback.
-* `categories`: receives the report category list.
-* `notification-config`: only with the switch "Sync alert recipients" on; sends the alert recipient addresses of this site to your account.
-* `rules/<ruleset>`: receives signed firewall, bot, bait-path and disposable-domain rulesets every six hours. Signatures are verified before use; the bundled baseline is used when the service is unreachable.
-* `https://reportedip.com/feed/?post_type=news` (or the localised feed for German, Spanish and French): the dashboard shows the latest reportedip.com news, cached for twelve hours.
-
-Terms of use: https://reportedip.com/nutzungsbedingungen/ and privacy policy: https://reportedip.com/datenschutzerklaerung/.
-
-**api.pwnedpasswords.com (only with the breach check switched on)**
-
-When a user sets a new password, the first five characters of its SHA-1 hash are sent to `https://api.pwnedpasswords.com/range/`; the password itself never leaves the site. Service by Have I Been Pwned: https://haveibeenpwned.com/Privacy.
+**api.pwnedpasswords.com.** Only with the breach check switched on: when a user sets a new password, the first five characters of its SHA-1 hash are sent to `https://api.pwnedpasswords.com/range/`; the password never leaves the site. Service by Have I Been Pwned, privacy: https://haveibeenpwned.com/Privacy.
 
 == Credits ==
 
