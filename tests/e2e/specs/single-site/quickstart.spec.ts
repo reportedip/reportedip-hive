@@ -119,6 +119,7 @@ test.describe('quickstart', () => {
 		await page.locator('.rip-mode-card[data-mode="local"]').click();
 		await expect(page.locator('#rip-api-key-card')).toHaveClass(/rip-is-hidden/);
 
+		await expect(page.locator('#rip-quickstart-badge'), 'the footer credit is opt-in').not.toBeChecked();
 		await page.locator('label.rip-toggle:has(#rip-quickstart-2fa)').click();
 		await page.locator('#rip-quickstart-activate').click();
 		await page.waitForURL(/page=reportedip-hive(&|$)/);
@@ -129,7 +130,7 @@ test.describe('quickstart', () => {
 		expect(wpOption('reportedip_hive_bot_action')).toBe('flag');
 		expect(wpOption('reportedip_hive_block_tor'), 'the Tor switch comes with the add-on').not.toBe('1');
 		expect(wpOption('reportedip_hive_2fa_enabled_global')).toBe('0');
-		expect(wpOption('reportedip_hive_auto_footer_enabled')).toBe('1');
+		expect(wpOption('reportedip_hive_auto_footer_enabled')).toBe('0');
 		expect(wpOption('reportedip_hive_notify_admin')).toBe('1');
 	});
 

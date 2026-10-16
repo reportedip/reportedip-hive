@@ -511,7 +511,7 @@ class ReportedIP_Hive_Quickstart {
 						<span class="rip-toggle__label"><strong><?php esc_html_e( '2FA for administrators', 'reportedip-hive' ); ?></strong> · <?php esc_html_e( '7-day grace period; code via app, e-mail, passkey or SMS. Your own setup starts right after this.', 'reportedip-hive' ); ?></span>
 					</label>
 					<label class="rip-toggle">
-						<input type="checkbox" id="rip-quickstart-badge" checked>
+						<input type="checkbox" id="rip-quickstart-badge">
 						<span class="rip-toggle__slider"></span>
 						<span class="rip-toggle__label"><strong><?php esc_html_e( '"Protected by ReportedIP" badge in the footer', 'reportedip-hive' ); ?></strong> · <?php esc_html_e( 'shows visitors the protection and helps the network grow.', 'reportedip-hive' ); ?></span>
 					</label>
