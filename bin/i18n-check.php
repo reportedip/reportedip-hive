@@ -1,7 +1,7 @@
 <?php
 /**
- * Translation freshness gate: verifies that the POT is current, the German PO is
- * fully translated and the compiled MO/JSON artifacts are in sync with the PO.
+ * Translation freshness gate: verifies that the POT is current, every bundled PO
+ * (German required) is fully translated and the compiled MO/JSON artifacts are in sync with the PO.
  *
  * Exit code 0 when everything is consistent, 1 otherwise. Runs file-based only
  * (no WordPress install, no database) so it works in CI, GrumPHP and locally on
@@ -85,7 +85,7 @@ final class I18nCheck {
 		$this->check_artifact_sync();
 
 		if ( empty( $this->failures ) ) {
-			fwrite( STDOUT, "[i18n] OK, POT fresh, German translation complete, MO/JSON in sync.\n" );
+			fwrite( STDOUT, "[i18n] OK, POT fresh, translations complete, MO/JSON in sync.\n" );
 			return 0;
 		}
 
@@ -140,53 +140,72 @@ final class I18nCheck {
 	}
 
 	/**
-	 * Counts untranslated and fuzzy entries in the German PO.
+	 * Counts untranslated and fuzzy entries in every bundled PO; the German PO
+	 * must exist.
 	 *
 	 * @return void
 	 */
 	private function check_translation_completeness(): void {
-		$po = $this->path( $this->po_de );
-		if ( ! is_file( $po ) ) {
+		if ( ! is_file( $this->path( $this->po_de ) ) ) {
 			$this->failures[] = $this->po_de . ' is missing, German translation not initialised.';
 			return;
 		}
 
-		$mojibake = $this->double_encoded_lines( $po );
-		if ( array() !== $mojibake ) {
-			$this->failures[] = sprintf(
-				'%s carries double-encoded UTF-8 on line(s) %s (an umlaut written as two Latin-1 characters). Re-enter those translations.',
-				$this->po_de,
-				implode( ', ', $mojibake )
-			);
-		}
+		foreach ( $this->po_files() as $relative ) {
+			$po       = $this->path( $relative );
+			$mojibake = $this->double_encoded_lines( $po );
+			if ( array() !== $mojibake ) {
+				$this->failures[] = sprintf(
+					'%s carries double-encoded UTF-8 on line(s) %s (an umlaut written as two Latin-1 characters). Re-enter those translations.',
+					$relative,
+					implode( ', ', $mojibake )
+				);
+			}
 
-		$stats = $this->po_stats( $po );
-		if ( $stats['untranslated'] > 0 || $stats['fuzzy'] > 0 ) {
-			$this->failures[] = sprintf(
-				'%s has %d untranslated and %d fuzzy entries.',
-				$this->po_de,
-				$stats['untranslated'],
-				$stats['fuzzy']
-			);
+			$stats = $this->po_stats( $po );
+			if ( $stats['untranslated'] > 0 || $stats['fuzzy'] > 0 ) {
+				$this->failures[] = sprintf(
+					'%s has %d untranslated and %d fuzzy entries.',
+					$relative,
+					$stats['untranslated'],
+					$stats['fuzzy']
+				);
+			}
 		}
 	}
 
 	/**
-	 * Rebuilds MO/JSON from the committed PO into a temp directory and compares
+	 * Relative paths of every bundled PO of this text domain.
+	 *
+	 * @return string[]
+	 */
+	private function po_files(): array {
+		$files = glob( $this->path( self::LANG_DIR . '/' . $this->slug . '-*.po' ) ) ?: array();
+		sort( $files );
+		return array_map(
+			fn( string $file ): string => self::LANG_DIR . '/' . basename( $file ),
+			$files
+		);
+	}
+
+	/**
+	 * Rebuilds MO/JSON from the committed POs into a temp directory and compares
 	 * them byte-for-byte against the committed artifacts.
 	 *
 	 * @return void
 	 */
 	private function check_artifact_sync(): void {
-		$po = $this->path( $this->po_de );
-		if ( ! is_file( $po ) ) {
+		$pos = $this->po_files();
+		if ( array() === $pos ) {
 			return;
 		}
 
 		$committed = $this->collect_artifacts( $this->path( self::LANG_DIR ) );
 
 		$tmp_dir = $this->temp_dir();
-		copy( $po, $tmp_dir . '/' . basename( $this->po_de ) );
+		foreach ( $pos as $relative ) {
+			copy( $this->path( $relative ), $tmp_dir . '/' . basename( $relative ) );
+		}
 		$this->wp( 'i18n make-mo ' . escapeshellarg( $tmp_dir ) . ' ' . escapeshellarg( $tmp_dir ) );
 		$this->wp( 'i18n make-json ' . escapeshellarg( $tmp_dir ) . ' ' . escapeshellarg( $tmp_dir ) );
 		$fresh = $this->collect_artifacts( $tmp_dir );

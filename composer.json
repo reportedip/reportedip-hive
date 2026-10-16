@@ -62,7 +62,7 @@
         "i18n:pot": "@make-pot",
         "i18n:update": [
             "@i18n:pot",
-            "wp i18n update-po languages/reportedip-hive.pot languages/reportedip-hive-de_DE.po"
+            "wp i18n update-po languages/reportedip-hive.pot languages/"
         ],
         "i18n:build": [
             "wp i18n make-mo languages/ languages/",
@@ -98,10 +98,10 @@
         "analyse:baseline": "Generate PHPStan baseline for existing issues",
         "make-pot": "Extract translatable strings into languages/reportedip-hive.pot",
         "i18n:pot": "Regenerate the POT template (alias of make-pot)",
-        "i18n:update": "Regenerate POT and merge new/changed strings into the German PO (msgmerge)",
+        "i18n:update": "Regenerate POT and merge new/changed strings into every bundled PO (msgmerge)",
         "i18n:build": "Compile every PO into MO plus per-handle JS JSON files",
         "i18n": "Full translation refresh: update PO from source, then compile MO/JSON",
-        "i18n:check": "Fail if the POT is stale, the German PO has untranslated/fuzzy entries, or MO/JSON are out of sync",
+        "i18n:check": "Fail if the POT is stale, a bundled PO has untranslated/fuzzy entries, or MO/JSON are out of sync",
         "check-all": "Run all quality checks (lint, analyse, i18n:check, test)",
         "grumphp": "Run GrumPHP checks manually"
     }
