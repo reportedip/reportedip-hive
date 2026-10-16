@@ -98,7 +98,7 @@ Install ReportedIP Hive from the WordPress plugin directory: [wordpress.org/plug
 
 The two optional `.htaccess` blocks (bait-path responses and PHP execution in uploads) are written only after an operator action: the quickstart, saving either switch, a settings import or WP-CLI. Activation writes nothing. A site updating from 2.x with a completed quickstart keeps its blocks.
 
-ReportedIP Hive Light used the same plugin slug, so a Light 1.3.9 site receives this plugin as a normal update. Its whitelist (including ranges and permanent entries), blocks, attempt counters, proxy header and settings are carried over.
+A site on version 1.3.9 of this plugin receives 3.0.0 as a normal update. Its whitelist (including ranges and permanent entries), blocks, attempt counters, proxy header and settings are carried over.
 
 ## Requirements
 

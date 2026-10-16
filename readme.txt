@@ -137,9 +137,9 @@ Yes. Any FIDO2 or WebAuthn authenticator works as a second factor, including Yub
 
 Usually not. The invisible form check stops scripted submissions on comments, registrations, password resets and Contact Form 7 without a puzzle for your visitors.
 
-= I use ReportedIP Hive Light. What happens on the update? =
+= I still run version 1.3 of this plugin. What happens on the update? =
 
-ReportedIP Hive replaces ReportedIP Hive Light under the same name in the plugin directory, so the update arrives like any other. Your whitelist, blocks, counters and settings are carried over, including ranges, permanent whitelist entries and the True-Client-IP or X-Cluster-Client-IP proxy header. On a multisite network where Light ran site by site, the data of every site moves into the network tables. Open the quickstart afterwards to pick Local Shield or the Community Network.
+Version 3.0.0 arrives like any other update from the plugin directory. Your whitelist, blocks, counters and settings are carried over, including ranges, permanent whitelist entries and the True-Client-IP or X-Cluster-Client-IP proxy header. On a multisite network where the plugin ran site by site, the data of every site moves into the network tables. Open the quickstart afterwards to pick Local Shield or the Community Network.
 
 = What if I lock myself out? =
 
@@ -167,14 +167,14 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 * Local Shield sends no request to reportedip.com, even with a key stored. The news feed loads only in Community Network mode.
 * The footer badge stays off until you tick it in the quickstart; the dashboard no longer suggests it.
 * Notices can be closed and return after an hour or a day; a critical queue or readiness problem stays until it is fixed.
-* Update path from ReportedIP Hive Light 1.3.9: permanent and range whitelist entries, attempt counters and the proxy header are kept.
-* Networks that ran ReportedIP Hive Light per site keep the blocks, whitelist entries, counters and pending reports of every site.
+* Update path from version 1.3.9: permanent and range whitelist entries, attempt counters and the proxy header are kept.
+* Networks that ran version 1.3.9 per site keep the blocks, whitelist entries, counters and pending reports of every site.
 * Database schema 25.
 
 == Upgrade Notice ==
 
 = 3.0.0 =
-Updates now come from wordpress.org. Sites with a paid plan install the Pro add-on from their reportedip.com account. Sites on ReportedIP Hive Light 1.3.9 keep their whitelist, blocks and settings.
+Updates now come from wordpress.org. Sites with a paid plan install the Pro add-on from their reportedip.com account. Sites on version 1.3.9 keep their whitelist, blocks and settings.
 
 == Privacy Policy ==
 
