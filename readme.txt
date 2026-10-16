@@ -206,4 +206,7 @@ When a user sets a new password, the first five characters of its SHA-1 hash are
 
 == Credits ==
 
-Chart.js (MIT) renders the dashboard charts; qrcode-generator (MIT) draws the TOTP QR code. Both ship inside the plugin, nothing is loaded from a CDN.
+* Chart.js 4.4.1 (MIT) renders the dashboard charts. Source: https://github.com/chartjs/Chart.js
+* qrcode-generator 1.4.4 (MIT) draws the TOTP QR code. Source: https://github.com/kazuhikoarase/qrcode-generator
+
+Both libraries ship inside the plugin, nothing is loaded from a CDN.
