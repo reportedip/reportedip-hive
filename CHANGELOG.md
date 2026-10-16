@@ -74,6 +74,8 @@ All changes to ReportedIP Hive are documented here.
 - **Add-on download link** goes to the add-on page of the account
   dashboard.
 - **"Settings" link** next to "Deactivate" in the plugin list.
+- **Plugin name** follows the directory listing: "ReportedIP Hive:
+  Firewall, Brute Force Protection, 2FA and Anti-Spam".
 
 ## [3.0.0] - 2026-10-16
 

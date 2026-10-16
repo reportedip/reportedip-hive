@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name: ReportedIP Hive: Firewall, Login Security, Brute Force Protection and 2FA
+ * Plugin Name: ReportedIP Hive: Firewall, Brute Force Protection, 2FA and Anti-Spam
  * Plugin URI: https://reportedip.com/products/wordpress-plugin/?rc=hive-plugin
  * Description: Community-powered WordPress security, real-time threat intelligence
  * with 6-layer defense and 4-method 2FA. Be part of the hive.

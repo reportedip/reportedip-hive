@@ -14,11 +14,6 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
 "X-Domain: reportedip-hive\n"
 
-#. Plugin Name of the plugin
-#: reportedip-hive.php:3
-msgid "ReportedIP Hive: Firewall, Login Security, Brute Force Protection and 2FA"
-msgstr "ReportedIP Hive : pare-feu, sécurité de connexion, protection contre la force brute et 2FA"
-
 #. Description of the plugin
 #: reportedip-hive.php:5
 msgid "Community-powered WordPress security, real-time threat intelligence"
@@ -9419,3 +9414,8 @@ msgstr "Deux choix et votre réseau est protégé. Tout le reste est préconfigu
 #, php-format
 msgid "Your reportedip.com account is on the %1$s plan. Download the ReportedIP Hive Pro add-on from %2$s, upload it in the Network Admin and activate it network-wide."
 msgstr "Votre compte reportedip.com dispose de l'offre %1$s. Téléchargez le module ReportedIP Hive Pro depuis %2$s, téléversez-le dans l’administration du réseau et activez-le sur tout le réseau."
+
+#. Plugin Name of the plugin
+#: reportedip-hive.php:3
+msgid "ReportedIP Hive: Firewall, Brute Force Protection, 2FA and Anti-Spam"
+msgstr "ReportedIP Hive : pare-feu, protection contre la force brute, 2FA et anti-spam"
