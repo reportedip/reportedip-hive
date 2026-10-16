@@ -110,7 +110,7 @@ msgstr "Gesamte Engine: nur auf vertrauenswürdigem Pfad/IP"
 
 #: admin/class-admin-firewall.php:228
 msgid "How broadly the exception applies. Start with \"Single rule\", it is the narrowest and the right choice for almost every false positive."
-msgstr "Wie breit die Ausnahme gilt. Beginne mit „Einzelne Regel\", das ist am engsten und für fast jeden Fehlalarm die richtige Wahl."
+msgstr "Wie breit die Ausnahme gilt. Beginnen Sie mit „Einzelne Regel\", das ist am engsten und für fast jeden Fehlalarm die richtige Wahl."
 
 #: admin/class-admin-firewall.php:230
 msgid "Rule ID"
@@ -208,8 +208,7 @@ msgstr "Schwächt das meine Sicherheit, und gilt es auch für den Erweiterten Sc
 msgid "Only within the scope you pick, a rule-on-path exception leaves every other rule and every other path fully protected, which is why tight scoping matters. Exceptions apply everywhere the engine runs: they are also baked into the pre-WordPress guard, so the in-WordPress engine and the Extended-Protection layer honour the same allowlist."
 msgstr "Nur im gewählten Geltungsbereich, eine Regel-auf-Pfad-Ausnahme lässt jede andere Regel und jeden anderen Pfad voll geschützt, weshalb enges Scoping wichtig ist. Ausnahmen gelten überall, wo die Engine läuft: Sie werden auch in den Pre-WordPress-Guard eingebacken, sodass die WordPress-Engine und der Erweiterte-Schutz-Layer dieselbe Ausnahmeliste berücksichtigen."
 
-#. translators: 1: human-readable group name, 2: raw group token shown in the
-#. log.
+#. translators: 1: human-readable group name, 2: raw group token shown in the log.
 #: admin/class-admin-firewall.php:316
 #, php-format
 msgid "%1$s (%2$s)"
@@ -339,7 +338,7 @@ msgstr "Option A, php.ini / PHP-FPM-Pool / Hosting-Panel (empfohlen)"
 
 #: admin/class-admin-firewall.php:467
 msgid "Most managed hosts (ISPConfig, Plesk, cPanel) offer a \"custom php.ini settings\" field, paste this single line there and reload PHP-FPM. In a PHP-FPM pool config the equivalent line is php_admin_value[auto_prepend_file] = <the same path>. This is usually the easiest route on nginx."
-msgstr "Die meisten Managed-Hoster (ISPConfig, Plesk, cPanel) bieten ein Feld „eigene php.ini-Einstellungen\", füge diese eine Zeile dort ein und lade PHP-FPM neu. In einer PHP-FPM-Pool-Konfiguration lautet die entsprechende Zeile php_admin_value[auto_prepend_file] = <derselbe Pfad>. Auf nginx ist das meist der einfachste Weg."
+msgstr "Die meisten Managed-Hoster (ISPConfig, Plesk, cPanel) bieten ein Feld „eigene php.ini-Einstellungen\", fügen Sie diese eine Zeile dort ein und laden Sie PHP-FPM neu. In einer PHP-FPM-Pool-Konfiguration lautet die entsprechende Zeile php_admin_value[auto_prepend_file] = <derselbe Pfad>. Auf nginx ist das meist der einfachste Weg."
 
 #: admin/class-admin-firewall.php:472
 msgid "Option B: nginx server block"
@@ -389,7 +388,7 @@ msgstr "Auf Apache wird dieser Block automatisch in der .htaccess verwaltet, das
 
 #: admin/class-admin-firewall.php:533
 msgid "This web server does not read .htaccess, so the auto-managed block does not apply here. Pick one of the nginx snippets below to cover bait files that exist on disk."
-msgstr "Dieser Webserver liest keine .htaccess, der automatisch verwaltete Block greift hier also nicht. Nimm eines der nginx-Snippets unten, um Köderdateien abzudecken, die auf der Platte liegen."
+msgstr "Dieser Webserver liest keine .htaccess, der automatisch verwaltete Block greift hier also nicht. Nehmen Sie eines der nginx-Snippets unten, um Köderdateien abzudecken, die auf der Platte liegen."
 
 #: admin/class-admin-firewall.php:538
 msgid "Apache (.htaccess), auto-managed"
@@ -825,8 +824,7 @@ msgstr "Die Adresse dieser Website steht in der Community-Datenbank"
 msgid "ReportedIP Hive - Domain limit:"
 msgstr "ReportedIP Hive - Domain-Limit:"
 
-#. translators: 1: domains in use, 2: domain limit of the account, 3: link to
-#. the reportedip.com dashboard
+#. translators: 1: domains in use, 2: domain limit of the account, 3: link to the reportedip.com dashboard
 #: admin/class-admin-settings.php:1360
 #, php-format
 msgid "Your Community Access Key is used on %1$d domains, but your account includes %2$d. See your account in the %3$s."
@@ -1931,7 +1929,7 @@ msgstr "Unbegrenzt"
 
 #: admin/class-admin-settings.php:4852
 msgid "Join the hive, share threats, set a badge, and help every member stay protected"
-msgstr "Werde Teil der Hive, teile Bedrohungen, setze ein Badge und hilf jedem Mitglied, geschützt zu bleiben"
+msgstr "Werden Sie Teil der Hive, teilen Sie Bedrohungen, setzen Sie ein Badge und helfen Sie jedem Mitglied, geschützt zu bleiben"
 
 #: admin/class-admin-settings.php:4855
 msgid "Community sections"
@@ -2847,8 +2845,7 @@ msgstr "Abgelehnt."
 msgid "Done."
 msgstr "Erledigt."
 
-#. translators: %s: operation-mode label, e.g. "Community Network" or "Local
-#. Shield".
+#. translators: %s: operation-mode label, e.g. "Community Network" or "Local Shield".
 #: admin/class-dashboard-widget.php:131
 #, php-format
 msgid "%s mode"
@@ -3354,8 +3351,7 @@ msgstr "Grundlegende Security-Header"
 msgid "Logs for 30 days, IP addresses anonymised after 7 days"
 msgstr "Protokolle für 30 Tage, IP-Adressen nach 7 Tagen anonymisiert"
 
-#. translators: %s: names of the form plugins found on this site, comma
-#. separated.
+#. translators: %s: names of the form plugins found on this site, comma separated.
 #: admin/class-quickstart.php:303
 #, php-format
 msgid "Form protection for %s, active on this site"
@@ -3948,7 +3944,7 @@ msgstr "Dieser Browser unterstützt keine Sicherheitsschlüssel."
 
 #: admin/class-two-factor-admin.php:456
 msgid "Waiting for your security key. Insert and touch it now."
-msgstr "Warte auf Ihren Sicherheitsschlüssel. Jetzt einstecken und berühren."
+msgstr "Warten auf Ihren Sicherheitsschlüssel. Jetzt einstecken und berühren."
 
 #: admin/class-two-factor-admin.php:457
 msgid "This key is already registered on this account."
@@ -4312,7 +4308,7 @@ msgstr "Filtern"
 
 #: admin/class-waf-exceptions-table.php:250
 msgid "No WAF exceptions yet. Add one from a blocked request in the Activity log, or with the form above."
-msgstr "Noch keine WAF-Ausnahmen. Füge eine aus einer blockierten Anfrage im Aktivitätsprotokoll oder über das Formular oben hinzu."
+msgstr "Noch keine WAF-Ausnahmen. Fügen Sie eine aus einer blockierten Anfrage im Aktivitätsprotokoll oder über das Formular oben hinzu."
 
 #: admin/class-whitelist-table.php:36
 msgid "Whitelisted IP"
@@ -4406,8 +4402,7 @@ msgstr "WP-CLI"
 msgid "Password reset blocked"
 msgstr "Passwort-Zurücksetzung blockiert"
 
-#. translators: 1: plan name, 2: link to the account dashboard on
-#. reportedip.com
+#. translators: 1: plan name, 2: link to the account dashboard on reportedip.com
 #: includes/class-addon-notice.php:88
 #, php-format
 msgid "Your reportedip.com account is on the %1$s plan. Download the ReportedIP Hive Pro add-on from %2$s to use it on this site."
@@ -4519,8 +4514,7 @@ msgstr "WAF-Ausnahme entfernt."
 msgid "Could not remove the exception."
 msgstr "Ausnahme konnte nicht entfernt werden."
 
-#. translators: 1: number of old log entries removed, 2: number of expired IP
-#. entries removed
+#. translators: 1: number of old log entries removed, 2: number of expired IP entries removed
 #: includes/class-ajax-handler.php:798
 #, php-format
 msgid "Cleanup completed. Removed %1$d old log entries and %2$d expired IP entries."
@@ -4542,15 +4536,13 @@ msgstr "Aus CSV importiert"
 msgid "Line %1$d: Invalid IP \"%2$s\""
 msgstr "Zeile %1$d: Ungültige IP \"%2$s\""
 
-#. translators: 1: line number in CSV file, 2: IP address, 3: error message
-#. returned by the blocker
+#. translators: 1: line number in CSV file, 2: IP address, 3: error message returned by the blocker
 #: includes/class-ajax-handler.php:884
 #, php-format
 msgid "Line %1$d: Failed to block \"%2$s\" - %3$s"
 msgstr "Zeile %1$d: \"%2$s\" konnte nicht gesperrt werden - %3$s"
 
-#. translators: 1: number of imported IPs, 2: number of skipped IPs, 3: number
-#. of errors
+#. translators: 1: number of imported IPs, 2: number of skipped IPs, 3: number of errors
 #: includes/class-ajax-handler.php:907
 #, php-format
 msgid "%1$d IPs imported, %2$d skipped (already blocked), %3$d errors."
@@ -4602,15 +4594,13 @@ msgstr "Test der automatischen Sperrfunktion erfolgreich! Test-IP wurde gesperrt
 msgid "Auto-block function test completed. IP was not blocked. Reason: %s"
 msgstr "Test der automatischen Sperrfunktion abgeschlossen. IP wurde nicht gesperrt. Grund: %s"
 
-#. translators: 1: number of attempts recorded, 2: configured threshold, 3:
-#. "Yes" or "No" indicating threshold exceeded
+#. translators: 1: number of attempts recorded, 2: configured threshold, 3: "Yes" or "No" indicating threshold exceeded
 #: includes/class-ajax-handler.php:1208
 #, php-format
 msgid "Failed login threshold simulation completed. %1$d attempts recorded, threshold is %2$d. Threshold exceeded: %3$s"
 msgstr "Simulation des Schwellenwerts für fehlgeschlagene Anmeldungen abgeschlossen. %1$d Versuche erfasst, der Schwellenwert beträgt %2$d. Schwellenwert überschritten: %3$s"
 
-#. translators: 1: number of attempts that were actually recorded, 2: number
-#. of attempts that were expected
+#. translators: 1: number of attempts that were actually recorded, 2: number of attempts that were expected
 #: includes/class-ajax-handler.php:1225
 #, php-format
 msgid "Simulation failed. Only %1$d attempts recorded, but %2$d were expected."
@@ -5692,8 +5682,7 @@ msgstr "Zeile %1$d: Ungültige IP-Adresse \"%2$s\""
 msgid "Line %1$d: Invalid expiration date \"%2$s\""
 msgstr "Zeile %1$d: Ungültiges Ablaufdatum \"%2$s\""
 
-#. translators: 1: line number in CSV file, 2: IP address that failed to
-#. import
+#. translators: 1: line number in CSV file, 2: IP address that failed to import
 #: includes/class-ip-manager.php:354
 #, php-format
 msgid "Line %1$d: Failed to import IP \"%2$s\""
@@ -6154,8 +6143,7 @@ msgstr "Der Client-IP-Header wird derzeit von jeder Quelle akzeptiert. Wer diese
 msgid "Database schema is out of date"
 msgstr "Datenbankschema ist veraltet"
 
-#. translators: 1: stored schema version, 2: schema version this build
-#. expects.
+#. translators: 1: stored schema version, 2: schema version this build expects.
 #: includes/class-readiness.php:857
 #, php-format
 msgid "The plugin tables are at schema version %1$d but this build expects %2$d. Sensors that rely on the newer columns or indexes can behave incorrectly. Open the System Status page to let the migration run again."
@@ -6165,8 +6153,7 @@ msgstr "Die Plugin-Tabellen stehen auf Schemaversion %1$d, dieser Build erwartet
 msgid "Community threat checks are failing"
 msgstr "Community-Bedrohungsabfragen schlagen fehl"
 
-#. translators: 1: success rate in percent, 2: number of calls in the rolling
-#. window.
+#. translators: 1: success rate in percent, 2: number of calls in the rolling window.
 #: includes/class-readiness.php:884
 #, php-format
 msgid "Only %1$s%% of the last %2$d calls to the community network succeeded. Local protection is unaffected; reputation lookups and report submissions are unreliable until the connection recovers."
@@ -6176,8 +6163,7 @@ msgstr "Nur %1$s%% der letzten %2$d Aufrufe an das Community-Netzwerk waren erfo
 msgid "Outgoing mail is failing"
 msgstr "Ausgehende E-Mails schlagen fehl"
 
-#. translators: 1: number of failed mails, 2: last error message reported by
-#. wp_mail().
+#. translators: 1: number of failed mails, 2: last error message reported by wp_mail().
 #: includes/class-readiness.php:909
 #, php-format
 msgid "%1$d outgoing mails failed in the last 24 hours. Two-factor codes, lockout alerts and quota warnings may not arrive. Last error: %2$s"
@@ -6371,8 +6357,7 @@ msgstr "Die IP-Adresse wurde automatisch für %d Stunden gesperrt."
 msgid "Burst suppression"
 msgstr "Burst-Unterdrückung"
 
-#. translators: 1: number of suppressed alerts, 2: number of unique IPs, 3:
-#. ISO timestamp
+#. translators: 1: number of suppressed alerts, 2: number of unique IPs, 3: ISO timestamp
 #: includes/class-security-monitor.php:1623
 #, php-format
 msgid "%1$d additional alert of this type was suppressed since %3$s (from %2$d distinct IP)."
@@ -6406,8 +6391,7 @@ msgstr "Es ist keine weitere Aktion erforderlich, wenn die obige automatische Sp
 msgid "Action: IP has been automatically blocked for %d hours."
 msgstr "Maßnahme: Die IP wurde automatisch für %d Stunden gesperrt."
 
-#. translators: 1: number of suppressed alerts, 2: number of unique IPs, 3:
-#. ISO timestamp
+#. translators: 1: number of suppressed alerts, 2: number of unique IPs, 3: ISO timestamp
 #: includes/class-security-monitor.php:1668
 #, php-format
 msgid "Burst suppression: %1$d additional alert of this type was suppressed since %3$s (from %2$d distinct IP)."
@@ -6415,8 +6399,7 @@ msgid_plural "Burst suppression: %1$d additional alerts of this type were suppre
 msgstr[0] "Burst-Unterdrückung: %1$d weitere Benachrichtigung dieses Typs wurde seit %3$s unterdrückt (von %2$d eindeutigen IP)."
 msgstr[1] "Burst-Unterdrückung: %1$d weitere Benachrichtigungen dieses Typs wurden seit %3$s unterdrückt (von %2$d eindeutigen IPs)."
 
-#. translators: 1: window start datetime, 2: window end time, 3: window length
-#. in minutes
+#. translators: 1: window start datetime, 2: window end time, 3: window length in minutes
 #: includes/class-security-monitor.php:2023
 #, php-format
 msgid "%1$s to %2$s (%3$d min rolling window)"
@@ -7260,7 +7243,7 @@ msgstr "Erlaubte 2FA-Methoden"
 
 #: includes/class-settings-registry.php:906
 msgid "The methods users may set up. Leave at least one that works without a phone, or a lost device locks the account out."
-msgstr "Die Methoden, die Benutzer einrichten dürfen. Lass mindestens eine übrig, die ohne Telefon funktioniert, sonst sperrt ein verlorenes Gerät das Konto aus."
+msgstr "Die Methoden, die Benutzer einrichten dürfen. Lassen Sie mindestens eine übrig, die ohne Telefon funktioniert, sonst sperrt ein verlorenes Gerät das Konto aus."
 
 #: includes/class-settings-registry.php:912
 msgid "Subject of the e-mail code"
@@ -8424,7 +8407,7 @@ msgstr "Bitte geben Sie zuerst den Bestätigungscode ein."
 
 #: includes/class-two-factor.php:2280
 msgid "Waiting for your security key. Insert and touch it now, or approve the passkey prompt."
-msgstr "Warte auf Ihren Sicherheitsschlüssel. Jetzt einstecken und berühren oder die Passkey-Abfrage bestätigen."
+msgstr "Warten auf Ihren Sicherheitsschlüssel. Jetzt einstecken und berühren oder die Passkey-Abfrage bestätigen."
 
 #: includes/class-two-factor.php:2281
 msgid "The request timed out or was cancelled. Insert your key and touch it (on a phone, hold the key flat against the back for NFC), then try again."
@@ -8894,8 +8877,7 @@ msgstr "Alle erneut versuchen"
 msgid "ReportedIP Hive - Queue Critical:"
 msgstr "ReportedIP Hive - Warteschlange kritisch:"
 
-#. translators: %1$d: number of pending reports, %2$s: link to community page,
-#. %3$s: link to queue page
+#. translators: %1$d: number of pending reports, %2$s: link to community page, %3$s: link to queue page
 #: reportedip-hive.php:1744
 #, php-format
 msgid "%1$d reports pending processing. Your API quota may not be sufficient. %2$s or %3$s."

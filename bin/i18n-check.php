@@ -29,6 +29,18 @@ final class I18nCheck {
 	private const LANG_DIR = 'languages';
 
 	/**
+	 * German variants that must ship complete, per text domain. The free plugin
+	 * carries du and Sie for Germany plus Austria and Switzerland (owner rule
+	 * 2026-10-16); de_AT and both de_CH catalogs are derived by
+	 * `./run.sh glotpress derive`. Other domains only need de_DE.
+	 *
+	 * @var array<string,string[]>
+	 */
+	private const REQUIRED_LOCALES = array(
+		'reportedip-hive' => array( 'de_DE', 'de_DE_formal', 'de_AT', 'de_CH', 'de_CH_informal' ),
+	);
+
+	/**
 	 * Absolute path to the plugin root (parent of bin/).
 	 *
 	 * @var string
@@ -50,13 +62,6 @@ final class I18nCheck {
 	private string $pot;
 
 	/**
-	 * Relative path of the German PO.
-	 *
-	 * @var string
-	 */
-	private string $po_de;
-
-	/**
 	 * Collected failure messages.
 	 *
 	 * @var string[]
@@ -68,10 +73,9 @@ final class I18nCheck {
 	 * @param string $slug Plugin slug and text domain; the add-on passes its own.
 	 */
 	public function __construct( string $root, string $slug = 'reportedip-hive' ) {
-		$this->root  = rtrim( $root, '/\\' );
-		$this->slug  = $slug;
-		$this->pot   = self::LANG_DIR . '/' . $slug . '.pot';
-		$this->po_de = self::LANG_DIR . '/' . $slug . '-de_DE.po';
+		$this->root = rtrim( $root, '/\\' );
+		$this->slug = $slug;
+		$this->pot  = self::LANG_DIR . '/' . $slug . '.pot';
 	}
 
 	/**
@@ -140,18 +144,31 @@ final class I18nCheck {
 	}
 
 	/**
-	 * Counts untranslated and fuzzy entries in every bundled PO; the German PO
-	 * must exist.
+	 * Counts untranslated and fuzzy entries in every bundled PO and in the readme
+	 * catalogs of the required locales; every required locale must exist.
 	 *
 	 * @return void
 	 */
 	private function check_translation_completeness(): void {
-		if ( ! is_file( $this->path( $this->po_de ) ) ) {
-			$this->failures[] = $this->po_de . ' is missing, German translation not initialised.';
-			return;
+		$required = self::REQUIRED_LOCALES[ $this->slug ] ?? array( 'de_DE' );
+		$readme   = self::LANG_DIR . '/readme/' . $this->slug . '-readme-%s.po';
+		$check    = $this->po_files();
+		foreach ( $required as $locale ) {
+			$po = self::LANG_DIR . '/' . $this->slug . '-' . $locale . '.po';
+			if ( ! is_file( $this->path( $po ) ) ) {
+				$this->failures[] = $po . ' is missing, required locale ' . $locale . ' not initialised.';
+			}
+			if ( is_dir( $this->path( self::LANG_DIR . '/readme' ) ) ) {
+				$readme_po = sprintf( $readme, $locale );
+				if ( is_file( $this->path( $readme_po ) ) ) {
+					$check[] = $readme_po;
+				} else {
+					$this->failures[] = $readme_po . ' is missing, required locale ' . $locale . ' has no readme catalog.';
+				}
+			}
 		}
 
-		foreach ( $this->po_files() as $relative ) {
+		foreach ( $check as $relative ) {
 			$po       = $this->path( $relative );
 			$mojibake = $this->double_encoded_lines( $po );
 			if ( array() !== $mojibake ) {
