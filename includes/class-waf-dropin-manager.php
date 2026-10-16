@@ -1638,6 +1638,21 @@ PHP;
 		if ( get_site_transient( self::DRAIN_LOCK_TRANSIENT ) ) {
 			return 0;
 		}
+
+		/*
+		 * The transient is read and then written, so two runs starting in the
+		 * same instant both pass it; the loser then renamed a source the winner
+		 * had already rotated away (a PHP warning) or imported the same
+		 * rotation twice. The non-blocking file lock is the atomic claim.
+		 */
+		$lock = @fopen( $queue . '.lock', 'c' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen, WordPress.PHP.NoSilencedErrors.Discouraged -- Same-host lock file next to the queue; WP_Filesystem has no locking. Silenced: an unwritable path must degrade fail-open, never print a warning into the response.
+		if ( false === $lock ) {
+			return 0;
+		}
+		if ( ! flock( $lock, LOCK_EX | LOCK_NB ) ) {
+			fclose( $lock ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Closing the lock handle opened above.
+			return 0;
+		}
 		set_site_transient( self::DRAIN_LOCK_TRANSIENT, 1, 5 * MINUTE_IN_SECONDS );
 
 		$work = $queue . '.processing';
@@ -1655,6 +1670,8 @@ PHP;
 			return $this->import_queue_file( $work );
 		} finally {
 			delete_site_transient( self::DRAIN_LOCK_TRANSIENT );
+			flock( $lock, LOCK_UN );
+			fclose( $lock ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Closing the lock handle opened above.
 		}
 	}
 

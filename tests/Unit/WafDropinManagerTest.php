@@ -529,7 +529,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 */
 		private function reset_queue(): void {
 			$queue = $this->mgr()->queue_path();
-			foreach ( array( $queue, $queue . '.processing' ) as $file ) {
+			foreach ( array( $queue, $queue . '.processing', $queue . '.lock' ) as $file ) {
 				if ( '' !== $queue && file_exists( $file ) ) {
 					unlink( $file );
 				}
@@ -959,6 +959,41 @@ namespace ReportedIP\Hive\Tests\Unit {
 			delete_site_transient( \ReportedIP_Hive_WAF_Dropin_Manager::DRAIN_LOCK_TRANSIENT );
 			$this->mgr()->drain_queue();
 			$this->assertFileDoesNotExist( $queue, 'Once the lock clears the queue is drained normally.' );
+
+			$this->reset_queue();
+		}
+
+		/**
+		 * The transient lock is read and then written, so two overlapping runs
+		 * can both pass it; the loser's rotation then hit a vanished source and
+		 * printed a rename warning, or both imported the same rotation. The
+		 * file lock is the atomic claim: a run that cannot take it backs off
+		 * without touching the queue.
+		 */
+		public function test_a_drain_backs_off_while_another_process_holds_the_file_lock(): void {
+			$this->reset_queue();
+			$queue = $this->mgr()->queue_path();
+			file_put_contents( $queue, wp_json_encode( array( 'time' => time(), 'ip' => '198.51.100.36', 'rule' => 'waf_traversal' ) ) . "
+" );
+
+			$held = fopen( $queue . '.lock', 'c' );
+			$this->assertTrue( flock( $held, LOCK_EX | LOCK_NB ) );
+
+			$this->assertSame( 0, $this->mgr()->drain_queue() );
+			$this->assertFileExists( $queue, 'A drain without the file lock must leave the queue to the running one.' );
+			$this->assertFileDoesNotExist( $queue . '.processing', 'A drain without the file lock must not rotate.' );
+
+			flock( $held, LOCK_UN );
+			fclose( $held );
+
+			$this->mgr()->drain_queue();
+			$this->assertFileDoesNotExist( $queue, 'Once the file lock is free the queue is drained normally.' );
+			$this->assertFileDoesNotExist( $queue . '.processing' );
+
+			$probe = fopen( $queue . '.lock', 'c' );
+			$this->assertTrue( flock( $probe, LOCK_EX | LOCK_NB ), 'A finished drain must release the file lock.' );
+			flock( $probe, LOCK_UN );
+			fclose( $probe );
 
 			$this->reset_queue();
 		}
