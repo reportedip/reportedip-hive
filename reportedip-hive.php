@@ -183,6 +183,7 @@ class ReportedIP_Hive {
 		}
 
 		add_action( 'init', array( 'ReportedIP_Hive_Settings_Effects', 'init' ), 0 );
+		add_action( 'reportedip_hive_tier_changed', array( 'ReportedIP_Hive_Defaults', 'on_tier_changed' ), 20, 2 );
 
 		$flush_routing_cache = array( 'ReportedIP_Hive_Option_Routing', 'flush_resolve_cache' );
 		add_action( 'update_option_reportedip_hive_2fa_enforce_roles', $flush_routing_cache );

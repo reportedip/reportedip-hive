@@ -6,6 +6,15 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixes
 
+- **Plan upgrades apply the recommended settings without the add-on.**
+  A site that runs the free plugin alone with a paid key now receives the
+  recommendation of the new plan (for example the longer log retention) on
+  a plan upgrade, for every setting nobody changed. The rule moved from the
+  add-on into the free plugin; while the add-on runs, the add-on applies it,
+  so nothing is written twice and a value you chose stays.
+- **Update bridge of the GitHub release.** The bridge no longer records
+  its result while the plan of a stored key is still unknown, and it
+  retries a failed add-on install up to three times, an hour apart.
 - **Network activation opens the quickstart.** On Multisite the plugin
   list stayed put after a network activation, and the quickstart, which
   exists only in the Network Admin, was reachable from System Status

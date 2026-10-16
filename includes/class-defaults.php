@@ -678,6 +678,108 @@ final class ReportedIP_Hive_Defaults {
 	}
 
 	/**
+	 * Which of the new tier's recommended values may be written.
+	 *
+	 * A key is selected when the new recommendation differs from the old one
+	 * and the stored value still equals either the seed default or the old
+	 * recommendation. Anything the admin changed deliberately is left alone.
+	 * Pure: no option reads, so the rule is unit-testable.
+	 *
+	 * @param array<string, mixed> $previous Recommendation of the previous tier.
+	 * @param array<string, mixed> $next     Recommendation of the new tier.
+	 * @param array<string, mixed> $seed     `Defaults::all_option_defaults()`.
+	 * @param array<string, mixed> $current  Stored values, key => value; a missing key counts as untouched.
+	 * @return array<string, mixed> Subset of `$next` to apply, sorted by key.
+	 * @since  3.0.1
+	 */
+	public static function select_upgrade_values( array $previous, array $next, array $seed, array $current ) {
+		$selected = array();
+		foreach ( $next as $key => $value ) {
+			if ( array_key_exists( $key, $previous ) && self::same_value( $key, $previous[ $key ], $value ) ) {
+				continue;
+			}
+			if ( ! array_key_exists( $key, $current ) ) {
+				$selected[ $key ] = $value;
+				continue;
+			}
+			$stored    = $current[ $key ];
+			$untouched = ( array_key_exists( $key, $seed ) && self::same_value( $key, $seed[ $key ], $stored ) )
+				|| ( array_key_exists( $key, $previous ) && self::same_value( $key, $previous[ $key ], $stored ) );
+			if ( $untouched ) {
+				$selected[ $key ] = $value;
+			}
+		}
+		ksort( $selected );
+		return $selected;
+	}
+
+	/**
+	 * Registry-normalised equality, so `true`, `1` and `'1'` compare equal.
+	 *
+	 * @param string $key Option key.
+	 * @param mixed  $a   First value.
+	 * @param mixed  $b   Second value.
+	 * @return bool
+	 */
+	private static function same_value( $key, $a, $b ) {
+		return ReportedIP_Hive_Settings_Registry::normalize_value( $key, $a )
+			=== ReportedIP_Hive_Settings_Registry::normalize_value( $key, $b );
+	}
+
+	/**
+	 * Apply the recommendation delta between two tiers through the settings
+	 * registry. Returns the keys that were actually written.
+	 *
+	 * @param string $prev Previous tier slug.
+	 * @param string $next New tier slug.
+	 * @return string[] Applied option keys.
+	 * @since  3.0.1
+	 */
+	public static function apply_recommended_diff( $prev, $next ) {
+		$mode = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_operation_mode', 'local' );
+		$new  = self::recommended( (string) $next, $mode );
+
+		$values = self::select_upgrade_values(
+			self::recommended( (string) $prev, $mode ),
+			$new,
+			self::all_option_defaults(),
+			ReportedIP_Hive_Settings_Registry::current_values( array_keys( $new ) )
+		);
+		if ( empty( $values ) ) {
+			return array();
+		}
+
+		$result  = ReportedIP_Hive_Settings_Apply::apply( $values, 'tier_upgrade' );
+		$applied = array();
+		foreach ( $result['results'] as $key => $row ) {
+			if ( ReportedIP_Hive_Settings_Apply::STATUS_APPLIED === $row['status'] ) {
+				$applied[] = (string) $key;
+			}
+		}
+		return $applied;
+	}
+
+	/**
+	 * Listener on `reportedip_hive_tier_changed`: a rank increase applies the
+	 * recommendation delta of the new plan to untouched settings. While an
+	 * add-on runs, the add-on's own listener does this together with its
+	 * banner, so the free plugin stays out and nothing is written twice.
+	 *
+	 * @param string $prev Previous tier slug.
+	 * @param string $next New tier slug.
+	 * @return void
+	 * @since  3.0.1
+	 */
+	public static function on_tier_changed( $prev, $next ) {
+		if ( ReportedIP_Hive_Addon_Notice::addon_running() ) {
+			return;
+		}
+		if ( self::recommendation_rank( (string) $next ) > self::recommendation_rank( (string) $prev ) ) {
+			self::apply_recommended_diff( (string) $prev, (string) $next );
+		}
+	}
+
+	/**
 	 * Drop the adapter switches of form plugins that are not installed.
 	 *
 	 * A switch for a form plugin the site does not run protects nothing,

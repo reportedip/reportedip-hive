@@ -223,6 +223,7 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 
 = 3.0.1 =
 * Network activation on Multisite opens the quickstart in the Network Admin.
+* A plan upgrade applies the recommended settings of the new plan also without the Pro add-on.
 * The quickstart applies the same settings as version 2.1.74, and a form plugin installed later is protected on the next admin visit.
 * The pre-WordPress firewall is rewritten after every update, and the settings hash stays stable after the update from 2.1.74.
 * The firewall queue import can no longer run twice at the same time.
