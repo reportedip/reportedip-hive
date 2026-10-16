@@ -284,9 +284,11 @@ composer check-all      # lint, analyse, i18n check and tests
 
 - [GPL-2.0-or-later](./LICENSE), same as WordPress. Copyright 2025-2026 Patrick Schlesinger / ReportedIP.
 - The names ReportedIP and ReportedIP Hive and the logo are not covered by the GPL.
-- Bundled third-party code: [Chart.js](https://www.chartjs.org/) (MIT) for the dashboard charts and qrcode-generator (MIT) for the TOTP QR code. Nothing is loaded from a CDN.
+- Bundled third-party code: [Chart.js](https://github.com/chartjs/Chart.js) 4.4.1 (MIT) for the dashboard charts and [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) 1.4.4 (MIT) for the TOTP QR code. Nothing is loaded from a CDN.
 
 ## Contributing and support
+
+This repository mirrors the free plugin from a private repository. Report issues here; pull requests are welcome and get merged there.
 
 - Issues: <https://github.com/reportedip/reportedip-hive/issues>
 - Security disclosures (please do not open a public issue): <abuse@reportedip.com>
