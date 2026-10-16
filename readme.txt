@@ -4,7 +4,7 @@ Tags: security, firewall, brute-force, 2fa, anti-spam
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 3.0.0
+Stable tag: 3.0.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -221,6 +221,14 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 
 == Changelog ==
 
+= 3.0.1 =
+* Network activation on Multisite opens the quickstart in the Network Admin.
+* The quickstart applies the same settings as version 2.1.74, and a form plugin installed later is protected on the next admin visit.
+* The pre-WordPress firewall is rewritten after every update, and the settings hash stays stable after the update from 2.1.74.
+* The firewall queue import can no longer run twice at the same time.
+* German, Austrian and Swiss German translations are complete, in both the informal and the formal form.
+* Every link to reportedip.com carries its campaign tag.
+
 = 3.0.0 =
 * The plugin now comes from the WordPress plugin directory. The former GitHub update checker is gone.
 * Paid features moved to the separate ReportedIP Hive Pro add-on.
@@ -234,6 +242,9 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 * Database schema 25.
 
 == Upgrade Notice ==
+
+= 3.0.1 =
+Fixes the quickstart defaults, the network activation on Multisite and the firewall rewrite after an update.
 
 = 3.0.0 =
 Updates now come from wordpress.org. Sites with a paid plan install the Pro add-on from their reportedip.com account. Sites on version 1.3.9 keep their whitelist, blocks and settings.
