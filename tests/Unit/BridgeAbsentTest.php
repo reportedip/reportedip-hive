@@ -50,4 +50,36 @@ class BridgeAbsentTest extends TestCase {
 		}
 		$this->assertSame( array( 'headers' => 'raw' ), \ReportedIP_Hive_Bridge::sign( $url, array( 'headers' => 'raw' ), 'k1' ) );
 	}
+
+	public function test_bridge_waits_for_the_plan_and_retries_a_failed_install() {
+		$source = dirname( REPORTEDIP_HIVE_PLUGIN_DIR, 2 ) . '/tools/bridge/bridge.php';
+		if ( ! is_file( $source ) ) {
+			$this->markTestSkipped( 'Bridge source lives in the build tooling only.' );
+		}
+		require_once $source;
+		$now = 1000000;
+
+		$this->assertFalse( \ReportedIP_Hive_Bridge::due( false, '', 'k1', $now ), 'a key with an unknown plan waits for the key check' );
+		$this->assertTrue( \ReportedIP_Hive_Bridge::due( false, 'business', 'k1', $now ) );
+		$this->assertTrue( \ReportedIP_Hive_Bridge::due( false, '', '', $now ), 'no key: decide right away' );
+
+		$failed = array(
+			'pro'      => 'failed',
+			'tier'     => 'business',
+			'time'     => $now - 3599,
+			'attempts' => 1,
+		);
+		$this->assertFalse( \ReportedIP_Hive_Bridge::due( $failed, 'business', 'k1', $now ), 'not within the hour' );
+		$failed['time'] = $now - 3600;
+		$this->assertTrue( \ReportedIP_Hive_Bridge::due( $failed, 'business', 'k1', $now ) );
+		$failed['attempts'] = 3;
+		$this->assertFalse( \ReportedIP_Hive_Bridge::due( $failed, 'business', 'k1', $now ), 'three attempts at most' );
+		unset( $failed['attempts'] );
+		$this->assertSame( 1, \ReportedIP_Hive_Bridge::attempts( $failed ), 'a 3.0.0 failure counts as one attempt' );
+
+		$this->assertFalse( \ReportedIP_Hive_Bridge::due( array( 'pro' => 'installed', 'tier' => 'business' ), 'business', 'k1', $now ) );
+		$this->assertFalse( \ReportedIP_Hive_Bridge::due( array( 'pro' => 'running', 'tier' => '' ), 'business', 'k1', $now ) );
+		$this->assertTrue( \ReportedIP_Hive_Bridge::due( array( 'pro' => 'absent', 'tier' => '' ), 'business', 'k1', $now ), 'a record without a plan is decided again once the plan is known' );
+		$this->assertFalse( \ReportedIP_Hive_Bridge::due( array( 'pro' => 'absent', 'tier' => 'free' ), 'business', 'k1', $now ) );
+	}
 }
