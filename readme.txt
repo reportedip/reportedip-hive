@@ -131,8 +131,8 @@ Documentation: [ReportedIP Hive guide](https://reportedip.com/docs/integrations/
 
 == Installation ==
 
-1. Install the plugin from the WordPress plugin directory and activate it. On a multisite network, activate it network-wide.
-2. Open ReportedIP Hive in the admin menu. The quickstart lets you pick Local Shield or the Community Network and applies the recommended settings with one click.
+1. Install the plugin from the WordPress plugin directory and activate it. On a multisite network, install it in the Network Admin and click Network Activate.
+2. The quickstart opens after activation, on a multisite network in the Network Admin. It lets you pick Local Shield or the Community Network and applies the recommended settings with one click. You find it again under ReportedIP Hive, System Status, Open quickstart.
 3. Enrol your own second factor on your profile page.
 
 The plugin writes its two optional .htaccess blocks (bait-path responses and PHP execution in uploads) when the quickstart completes, never at activation. On nginx it shows a snippet to paste instead.

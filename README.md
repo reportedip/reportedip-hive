@@ -94,7 +94,7 @@ A separate add-on, ReportedIP Hive Pro, extends this plugin with a managed EU re
 
 ## Installation
 
-Install ReportedIP Hive from the WordPress plugin directory: [wordpress.org/plugins/reportedip-hive](https://wordpress.org/plugins/reportedip-hive/). On a multisite network, activate it network-wide. The quickstart under ReportedIP Hive lets you pick Local Shield or the Community Network and applies the recommended settings with one click. Updates arrive through the plugin directory.
+Install ReportedIP Hive from the WordPress plugin directory: [wordpress.org/plugins/reportedip-hive](https://wordpress.org/plugins/reportedip-hive/). On a multisite network, install it in the Network Admin and click Network Activate. The quickstart opens after activation (on a network in the Network Admin; later under ReportedIP Hive, System Status) and lets you pick Local Shield or the Community Network and applies the recommended settings with one click. Updates arrive through the plugin directory.
 
 The two optional `.htaccess` blocks (bait-path responses and PHP execution in uploads) are written only after an operator action: the quickstart, saving either switch, a settings import or WP-CLI. Activation writes nothing. A site updating from 2.x with a completed quickstart keeps its blocks.
 
@@ -116,6 +116,8 @@ A site on version 1.3.9 of this plugin receives 3.0.0 as a normal update. Its wh
 | Cross-site brute force | Failed sign-ins on every sub-site count into one row, and one block covers the whole network. |
 | Site admin UI | Read-only status and logs plus two per-site 2FA overrides. A site cannot drop a role the network requires. |
 | Cron | Scheduled on the main site only, with a self-heal on `admin_init`. |
+| Setup | Quickstart and Community Access Key live in the Network Admin and apply to every site. |
+| Pro add-on | Uploaded and network-activated in the Network Admin; installs and network-activates the free plugin when it is missing. One update check per network. |
 
 ---
 
