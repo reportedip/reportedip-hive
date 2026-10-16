@@ -1024,7 +1024,7 @@ class ReportedIP_Hive_Database {
 		 * assignment evaluates its own condition before it writes.
 		 */
 		return $wpdb->query(
-			$wpdb->prepare(
+			$wpdb->prepare( // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- one array_merge() argument carries all seven values plus the two $live window arguments.
 				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- Table name is base_prefix + fixed literal, $live is a fixed literal with placeholders.
 				"INSERT INTO $table_name
 					(ip_address, attempt_type, username, user_agent, attempt_count, first_attempt, last_attempt)

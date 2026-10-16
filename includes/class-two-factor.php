@@ -855,14 +855,14 @@ class ReportedIP_Hive_Two_Factor {
 		}
 		$core = array(
 			self::METHOD_TOTP     => array(
-				'meta_key'     => self::META_TOTP_ENABLED,
+				'meta_key'     => self::META_TOTP_ENABLED, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- registry entry naming a user meta key, not a query argument.
 				'label'        => __( 'Authenticator app', 'reportedip-hive' ),
 				'choice_label' => __( 'Authenticator app (TOTP)', 'reportedip-hive' ),
 				'prompt'       => __( 'Enter the 6-digit code from your authenticator app', 'reportedip-hive' ),
 				'verify'       => array( 'ReportedIP_Hive_Two_Factor_Verifier', 'verify_totp' ),
 			),
 			self::METHOD_EMAIL    => array(
-				'meta_key'        => self::META_EMAIL_ENABLED,
+				'meta_key'        => self::META_EMAIL_ENABLED, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- registry entry naming a user meta key, not a query argument.
 				'label'           => __( 'Email code', 'reportedip-hive' ),
 				'choice_label'    => __( 'E-mail code', 'reportedip-hive' ),
 				'prompt'          => __( 'Enter the 6-digit code from the email', 'reportedip-hive' ),
@@ -880,7 +880,7 @@ class ReportedIP_Hive_Two_Factor {
 				},
 			),
 			self::METHOD_WEBAUTHN => array(
-				'meta_key'     => self::META_WEBAUTHN_ENABLED,
+				'meta_key'     => self::META_WEBAUTHN_ENABLED, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- registry entry naming a user meta key, not a query argument.
 				'label'        => __( 'Passkey / security key', 'reportedip-hive' ),
 				'choice_label' => __( 'Security key / passkey', 'reportedip-hive' ),
 				'prompt'       => __( 'Confirm your passkey or security key when prompted', 'reportedip-hive' ),
