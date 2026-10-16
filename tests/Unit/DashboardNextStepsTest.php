@@ -89,10 +89,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_step_actions_map_every_advisory_key(): void {
-			foreach ( array( 'hide_login_off', 'badge_off', 'dropin_not_running', 'community_pending', 'own_2fa_missing' ) as $key ) {
+			foreach ( array( 'hide_login_off', 'dropin_not_running', 'community_pending', 'own_2fa_missing' ) as $key ) {
 				$this->assertArrayHasKey( $key, ReportedIP_Hive_Dashboard_Next_Steps::step_actions(), $key );
 			}
-			$this->assertSame( array( 'reportedip_hive_auto_footer_enabled' => 1 ), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'badge_off', array() ) );
+			$this->assertArrayNotHasKey( 'badge_off', ReportedIP_Hive_Dashboard_Next_Steps::step_actions(), 'A credit badge is no security step.' );
+			$this->assertSame( array(), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'badge_off', array() ) );
 			$this->assertArrayNotHasKey( 'frontend_2fa_available', ReportedIP_Hive_Dashboard_Next_Steps::step_actions(), 'The storefront step comes with the add-on.' );
 			$this->assertSame( array(), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'frontend_2fa_available', array() ) );
 			$this->assertSame(
@@ -120,7 +121,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 					3
 				);
 				$this->assertSame( array( 'reportedip_hive_extra' => 'x' ), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'extra_issue', array( 'slug' => 'x' ) ) );
-				$this->assertSame( array( 'reportedip_hive_auto_footer_enabled' => 1 ), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'badge_off', array() ), 'A free step never reaches the filter.' );
+				$this->assertSame(
+					array(
+						'reportedip_hive_hide_login_slug'    => 'door',
+						'reportedip_hive_hide_login_enabled' => 1,
+					),
+					ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'hide_login_off', array( 'slug' => 'door' ) ),
+					'A free step never reaches the filter.'
+				);
 
 				$GLOBALS['wp_filters']['reportedip_hive_next_step_values'] = array();
 				add_filter( 'reportedip_hive_next_step_values', static fn() => 'broken' );
@@ -156,7 +164,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 				$GLOBALS['wp_filters']['reportedip_hive_next_step_actions'] = array();
 				add_filter( 'reportedip_hive_next_step_actions', static fn() => null );
-				$this->assertArrayHasKey( 'badge_off', ReportedIP_Hive_Dashboard_Next_Steps::step_actions() );
+				$this->assertArrayHasKey( 'hide_login_off', ReportedIP_Hive_Dashboard_Next_Steps::step_actions() );
 			} finally {
 				$GLOBALS['wp_filters'] = $filters_before;
 			}

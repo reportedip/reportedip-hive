@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-05-29T06:50:26+00:00\n"
-"PO-Revision-Date: 2026-10-15T00:08:21+00:00\n"
+"PO-Revision-Date: 2026-10-16T04:34:42+00:00\n"
 "Language: de_DE\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Domain: reportedip-hive\n"
@@ -37,7 +37,7 @@ msgid "Patrick Schlesinger, ReportedIP"
 msgstr "Patrick Schlesinger, ReportedIP"
 
 #: admin/class-admin-firewall.php:113
-#: admin/class-admin-settings.php:3936
+#: admin/class-admin-settings.php:3934
 #: admin/class-admin-settings.php:5650
 #: admin/class-two-factor-admin.php:450
 msgid "Save"
@@ -156,8 +156,8 @@ msgid "Optional. Limits the exception to this client IP or range, e.g. 203.0.113
 msgstr "Optional. Beschränkt die Ausnahme auf diese Client-IP oder diesen Bereich, z. B. 203.0.113.0/24."
 
 #: admin/class-admin-firewall.php:252
-#: admin/class-admin-settings.php:3615
-#: admin/class-admin-settings.php:3690
+#: admin/class-admin-settings.php:3607
+#: admin/class-admin-settings.php:3682
 #: admin/class-blocked-ips-table.php:52
 #: admin/class-waf-exceptions-table.php:73
 #: admin/class-whitelist-table.php:53
@@ -239,8 +239,8 @@ msgid "Off"
 msgstr "Aus"
 
 #: admin/class-admin-firewall.php:349
-#: admin/class-admin-settings.php:2992
-#: admin/class-admin-settings.php:4422
+#: admin/class-admin-settings.php:2984
+#: admin/class-admin-settings.php:4420
 #: admin/class-admin-settings.php:5737
 #: admin/class-protection-page.php:456
 #: admin/class-protection-page.php:458
@@ -290,7 +290,7 @@ msgstr "Ergänzen Sie eine Zeile in Ihrer Serverkonfiguration. Wählen Sie eine 
 
 #. translators: %s: absolute path of the queue directory.
 #: admin/class-admin-firewall.php:382
-#: includes/class-readiness.php:738
+#: includes/class-readiness.php:744
 #, php-format
 msgid "The guard cannot write to %s, so blocked requests are stopped but never reach the log, the counters or the escalation ladder. Give the web-server user write access to that directory."
 msgstr "Der Guard kann nicht nach %s schreiben. Abgewiesene Anfragen werden zwar gestoppt, erreichen aber weder das Protokoll noch die Zähler oder die Eskalationsstufen. Geben Sie dem Webserver-Benutzer Schreibrechte auf dieses Verzeichnis."
@@ -553,7 +553,7 @@ msgid "Last sync:"
 msgstr "Letzter Sync:"
 
 #: admin/class-admin-firewall.php:715
-#: admin/class-admin-settings.php:4405
+#: admin/class-admin-settings.php:4403
 msgid "never (baseline only)"
 msgstr "nie (nur Baseline)"
 
@@ -574,7 +574,7 @@ msgid "Settings saved."
 msgstr "Einstellungen gespeichert."
 
 #: admin/class-admin-settings.php:368
-#: admin/class-dashboard-next-steps.php:280
+#: admin/class-dashboard-next-steps.php:274
 msgid "Open the Community page"
 msgstr "Community-Seite öffnen"
 
@@ -715,7 +715,7 @@ msgid "IP Address"
 msgstr "IP-Adresse"
 
 #: admin/class-admin-settings.php:919
-#: reportedip-hive.php:1116
+#: reportedip-hive.php:1123
 msgid "Attacks"
 msgstr "Angriffe"
 
@@ -724,9 +724,9 @@ msgid "Last Seen"
 msgstr "Zuletzt gesehen"
 
 #: admin/class-admin-settings.php:921
-#: admin/class-admin-settings.php:1581
-#: admin/class-admin-settings.php:1582
-#: admin/class-admin-settings.php:4158
+#: admin/class-admin-settings.php:1573
+#: admin/class-admin-settings.php:1574
+#: admin/class-admin-settings.php:4156
 #: admin/class-api-queue-table.php:53
 #: admin/class-api-queue-table.php:436
 #: includes/class-two-factor-dashboard.php:125
@@ -735,7 +735,7 @@ msgid "Status"
 msgstr "Status"
 
 #: admin/class-admin-settings.php:922
-#: admin/class-admin-settings.php:4067
+#: admin/class-admin-settings.php:4065
 #: admin/class-api-queue-table.php:59
 #: admin/class-blocked-ips-table.php:56
 #: admin/class-logs-table.php:56
@@ -752,11 +752,11 @@ msgid "%s ago"
 msgstr "vor %s"
 
 #: admin/class-admin-settings.php:938
-#: admin/class-admin-settings.php:3324
-#: admin/class-admin-settings.php:3444
-#: admin/class-admin-settings.php:4373
+#: admin/class-admin-settings.php:3316
+#: admin/class-admin-settings.php:3436
+#: admin/class-admin-settings.php:4371
 #: includes/class-account-block.php:148
-#: reportedip-hive.php:967
+#: reportedip-hive.php:974
 msgid "Blocked"
 msgstr "Gesperrt"
 
@@ -858,11 +858,11 @@ msgid "Made in Germany"
 msgstr "Made in Germany"
 
 #: admin/class-admin-settings.php:1225
-#: admin/class-dashboard-next-steps.php:481
+#: admin/class-dashboard-next-steps.php:475
 #: admin/class-protection-page.php:1585
 #: admin/class-protection-page.php:1646
 #: admin/class-protection-page.php:1709
-#: includes/class-readiness.php:625
+#: includes/class-readiness.php:631
 #: includes/class-two-factor-recommend.php:354
 #: includes/class-two-factor-recommend.php:381
 msgid "Permission denied."
@@ -918,20 +918,20 @@ msgstr "Ihr Community Access Key wird auf %1$d Domains genutzt, Ihr Konto umfass
 msgid "reportedip.com dashboard"
 msgstr "reportedip.com-Dashboard"
 
-#: admin/class-admin-settings.php:1389
+#: admin/class-admin-settings.php:1388
 msgid "Community threat-check rate-limited."
 msgstr "Community-Bedrohungsprüfung ratenbegrenzt."
 
-#: admin/class-admin-settings.php:1390
+#: admin/class-admin-settings.php:1389
 msgid "The local firewall (sensors, blocks, logs, queue) remains fully active. Reputation lookups for new IPs and outgoing report submissions are paused until the hourly counter resets."
 msgstr "Die lokale Firewall (Sensoren, Sperren, Logs, Warteschlange) bleibt vollständig aktiv. Reputationsabfragen für neue IPs und ausgehende Meldungen sind pausiert, bis der stündliche Zähler zurückgesetzt wird."
 
-#: admin/class-admin-settings.php:1392
+#: admin/class-admin-settings.php:1391
 msgid "The limits of your account are listed on reportedip.com."
 msgstr "Die Limits Ihres Kontos stehen auf reportedip.com."
 
 #. translators: %d: number of open readiness issues.
-#: admin/class-admin-settings.php:1464
+#: admin/class-admin-settings.php:1456
 #: admin/class-dashboard-widget.php:180
 #, php-format
 msgid "%d readiness issue needs attention"
@@ -939,663 +939,663 @@ msgid_plural "%d readiness issues need attention"
 msgstr[0] "%d Betriebsstörung ist offen"
 msgstr[1] "%d Betriebsstörungen sind offen"
 
-#: admin/class-admin-settings.php:1474
+#: admin/class-admin-settings.php:1466
 msgid "Open System Status"
 msgstr "Systemstatus öffnen"
 
-#: admin/class-admin-settings.php:1520
-#: admin/class-admin-settings.php:1521
-#: admin/class-admin-settings.php:1570
-#: admin/class-admin-settings.php:1571
-#: admin/class-admin-settings.php:1629
-#: admin/class-admin-settings.php:3018
+#: admin/class-admin-settings.php:1512
+#: admin/class-admin-settings.php:1513
+#: admin/class-admin-settings.php:1562
+#: admin/class-admin-settings.php:1563
+#: admin/class-admin-settings.php:1621
+#: admin/class-admin-settings.php:3010
 msgid "ReportedIP Hive"
 msgstr "ReportedIP Hive"
 
-#: admin/class-admin-settings.php:1528
+#: admin/class-admin-settings.php:1520
 msgid "Dashboard"
 msgstr "Dashboard"
 
-#: admin/class-admin-settings.php:1529
-#: admin/class-admin-settings.php:3384
-#: admin/class-admin-settings.php:3390
+#: admin/class-admin-settings.php:1521
+#: admin/class-admin-settings.php:3376
+#: admin/class-admin-settings.php:3382
 msgid "Activity"
 msgstr "Aktivität"
 
-#: admin/class-admin-settings.php:1530
+#: admin/class-admin-settings.php:1522
 #: admin/class-protection-page.php:1464
 msgid "Protection"
 msgstr "Schutz"
 
-#: admin/class-admin-settings.php:1532
-#: admin/class-admin-settings.php:1554
+#: admin/class-admin-settings.php:1524
+#: admin/class-admin-settings.php:1546
 #: admin/class-tools-page.php:50
 msgid "Tools"
 msgstr "Werkzeuge"
 
-#: admin/class-admin-settings.php:1536
+#: admin/class-admin-settings.php:1528
 #: admin/class-admin-settings.php:4852
 msgid "Community & Quota"
 msgstr "Community & Kontingent"
 
-#: admin/class-admin-settings.php:1536
+#: admin/class-admin-settings.php:1528
 #: admin/class-admin-settings.php:4726
 #: includes/class-mode-manager.php:603
 msgid "Community"
 msgstr "Community"
 
-#: admin/class-admin-settings.php:1537
-#: admin/class-admin-settings.php:4298
+#: admin/class-admin-settings.php:1529
+#: admin/class-admin-settings.php:4296
 msgid "System Status"
 msgstr "Systemstatus"
 
-#: admin/class-admin-settings.php:1590
+#: admin/class-admin-settings.php:1582
 msgid "Logs (this site)"
 msgstr "Logs (diese Website)"
 
-#: admin/class-admin-settings.php:1591
+#: admin/class-admin-settings.php:1583
 msgid "Logs"
 msgstr "Logs"
 
-#: admin/class-admin-settings.php:1599
-#: admin/class-admin-settings.php:1600
-#: admin/class-admin-settings.php:1792
+#: admin/class-admin-settings.php:1591
+#: admin/class-admin-settings.php:1592
+#: admin/class-admin-settings.php:1784
 msgid "2FA Site Settings"
 msgstr "2FA-Website-Einstellungen"
 
-#: admin/class-admin-settings.php:1623
-#: admin/class-admin-settings.php:1716
-#: admin/class-admin-settings.php:1782
+#: admin/class-admin-settings.php:1615
+#: admin/class-admin-settings.php:1708
+#: admin/class-admin-settings.php:1774
 msgid "You do not have permission to view this page."
 msgstr "Sie haben keine Berechtigung, diese Seite anzuzeigen."
 
-#: admin/class-admin-settings.php:1630
+#: admin/class-admin-settings.php:1622
 msgid "Site security overview"
 msgstr "Sicherheitsübersicht der Website"
 
-#: admin/class-admin-settings.php:1642
+#: admin/class-admin-settings.php:1634
 msgid "Events (24h)"
 msgstr "Ereignisse (24 Std.)"
 
-#: admin/class-admin-settings.php:1651
+#: admin/class-admin-settings.php:1643
 msgid "Failed logins (24h)"
 msgstr "Fehlgeschlagene Anmeldungen (24 Std.)"
 
-#: admin/class-admin-settings.php:1660
+#: admin/class-admin-settings.php:1652
 msgid "Active IP blocks (network-wide)"
 msgstr "Aktive IP-Sperren (netzwerkweit)"
 
-#: admin/class-admin-settings.php:1669
+#: admin/class-admin-settings.php:1661
 msgid "Whitelisted IPs (network-wide)"
 msgstr "IPs auf der Whitelist (netzwerkweit)"
 
-#: admin/class-admin-settings.php:1675
+#: admin/class-admin-settings.php:1667
 msgid "Recent activity on this site"
 msgstr "Letzte Aktivität auf dieser Website"
 
-#: admin/class-admin-settings.php:1678
-#: admin/class-admin-settings.php:1745
+#: admin/class-admin-settings.php:1670
+#: admin/class-admin-settings.php:1737
 msgid "No events recorded yet."
 msgstr "Noch keine Ereignisse aufgezeichnet."
 
-#: admin/class-admin-settings.php:1683
-#: admin/class-admin-settings.php:1750
+#: admin/class-admin-settings.php:1675
+#: admin/class-admin-settings.php:1742
 msgid "When"
 msgstr "Wann"
 
-#: admin/class-admin-settings.php:1684
-#: admin/class-admin-settings.php:1751
+#: admin/class-admin-settings.php:1676
+#: admin/class-admin-settings.php:1743
 #: includes/class-legacy-data.php:241
 #: includes/class-security-monitor.php:1564
-#: reportedip-hive.php:980
+#: reportedip-hive.php:987
 msgid "Event"
 msgstr "Ereignis"
 
-#: admin/class-admin-settings.php:1685
-#: admin/class-admin-settings.php:1752
+#: admin/class-admin-settings.php:1677
+#: admin/class-admin-settings.php:1744
 #: admin/class-waf-exceptions-table.php:72
 msgid "IP"
 msgstr "IP"
 
-#: admin/class-admin-settings.php:1686
-#: admin/class-admin-settings.php:1753
-#: admin/class-admin-settings.php:4064
+#: admin/class-admin-settings.php:1678
+#: admin/class-admin-settings.php:1745
+#: admin/class-admin-settings.php:4062
 #: admin/class-logs-table.php:54
 #: admin/class-logs-table.php:434
-#: reportedip-hive.php:981
+#: reportedip-hive.php:988
 msgid "Severity"
 msgstr "Schweregrad"
 
-#: admin/class-admin-settings.php:1701
+#: admin/class-admin-settings.php:1693
 msgid "View all logs for this site"
 msgstr "Alle Logs für diese Website anzeigen"
 
-#: admin/class-admin-settings.php:1736
+#: admin/class-admin-settings.php:1728
 msgid "Security Logs"
 msgstr "Sicherheitslogs"
 
-#: admin/class-admin-settings.php:1737
+#: admin/class-admin-settings.php:1729
 msgid "Showing security events recorded for this site only"
 msgstr "Es werden nur die für diese Website aufgezeichneten Sicherheitsereignisse angezeigt"
 
-#: admin/class-admin-settings.php:1793
+#: admin/class-admin-settings.php:1785
 msgid "Per-site two-factor overrides"
 msgstr "Zwei-Faktor-Einstellungen dieser Website"
 
-#: admin/class-admin-settings.php:1799
+#: admin/class-admin-settings.php:1791
 msgid "Saved."
 msgstr "Gespeichert."
 
-#: admin/class-admin-settings.php:1799
+#: admin/class-admin-settings.php:1791
 msgid "Site overrides updated."
 msgstr "Website-Überschreibungen aktualisiert."
 
-#: admin/class-admin-settings.php:1819
+#: admin/class-admin-settings.php:1811
 msgid "2FA enforcement, role overrides for this site"
 msgstr "2FA-Durchsetzung, Rollenüberschreibungen für diese Website"
 
-#: admin/class-admin-settings.php:1822
+#: admin/class-admin-settings.php:1814
 msgid "The Super Admin enforces 2FA on certain roles network-wide. You can add roles on top of that list for this site only, but you cannot remove network-required roles here."
 msgstr "Der Super-Admin erzwingt 2FA für bestimmte Rollen netzwerkweit. Sie können dieser Liste nur für diese Website weitere Rollen hinzufügen, aber Sie können hier keine netzwerkweit erforderlichen Rollen entfernen."
 
-#: admin/class-admin-settings.php:1826
+#: admin/class-admin-settings.php:1818
 msgid "Network-required roles (always enforced on this site)"
 msgstr "Netzwerkweit verpflichtende Rollen (auf dieser Website immer erzwungen)"
 
-#: admin/class-admin-settings.php:1828
+#: admin/class-admin-settings.php:1820
 msgid "The Super Admin has not enforced 2FA on any role network-wide."
 msgstr "Der Super-Admin hat 2FA für keine Rolle netzwerkweit erzwungen."
 
-#: admin/class-admin-settings.php:1833
+#: admin/class-admin-settings.php:1825
 msgid "network"
 msgstr "Netzwerk"
 
-#: admin/class-admin-settings.php:1844
+#: admin/class-admin-settings.php:1836
 msgid "Additional roles to enforce on THIS site"
 msgstr "Zusätzliche Rollen, die auf DIESER Website erzwungen werden"
 
-#: admin/class-admin-settings.php:1847
+#: admin/class-admin-settings.php:1839
 msgid "Pick roles that should require 2FA on this sub-site in addition to the network-required ones above. Network-required roles stay enforced regardless of the boxes here."
 msgstr "Wählen Sie Rollen aus, die auf dieser Unterwebsite zusätzlich zu den oben genannten netzwerkweit verpflichtenden Rollen 2FA erfordern sollen. Netzwerkweit verpflichtende Rollen bleiben unabhängig von den hier gesetzten Häkchen erzwungen."
 
-#: admin/class-admin-settings.php:1866
+#: admin/class-admin-settings.php:1858
 msgid "enforced by network"
 msgstr "vom Netzwerk erzwungen"
 
-#: admin/class-admin-settings.php:1887
+#: admin/class-admin-settings.php:1879
 msgid "Save site overrides"
 msgstr "Website-Überschreibungen speichern"
 
-#: admin/class-admin-settings.php:1926
+#: admin/class-admin-settings.php:1918
 msgid "Site view"
 msgstr "Website-Ansicht"
 
-#: admin/class-admin-settings.php:1927
+#: admin/class-admin-settings.php:1919
 msgid "Open Network Admin"
 msgstr "Netzwerkverwaltung öffnen"
 
-#: admin/class-admin-settings.php:2022
+#: admin/class-admin-settings.php:2014
 msgid "Centrally managed:"
 msgstr "Zentral verwaltet:"
 
-#: admin/class-admin-settings.php:2023
+#: admin/class-admin-settings.php:2015
 msgid "this site is part of a managed ReportedIP Hive network. For Whitelist or mode changes, contact your Network Admin."
 msgstr "Diese Website ist Teil eines verwalteten ReportedIP Hive-Netzwerks. Wenden Sie sich für Whitelist- oder Modus-Änderungen an Ihre Netzwerkverwaltung."
 
-#: admin/class-admin-settings.php:2043
+#: admin/class-admin-settings.php:2035
 msgid "Security check failed. Please reload and try again."
 msgstr "Sicherheitsprüfung fehlgeschlagen. Bitte laden Sie die Seite neu und versuchen Sie es erneut."
 
-#: admin/class-admin-settings.php:2741
+#: admin/class-admin-settings.php:2733
 msgid "API key must be between 32 and 64 characters."
 msgstr "Der API-Schlüssel muss zwischen 32 und 64 Zeichen lang sein."
 
-#: admin/class-admin-settings.php:2751
+#: admin/class-admin-settings.php:2743
 msgid "API key must contain only alphanumeric characters."
 msgstr "Der API-Schlüssel darf nur alphanumerische Zeichen enthalten."
 
-#: admin/class-admin-settings.php:2774
+#: admin/class-admin-settings.php:2766
 msgid "API endpoint must be a valid URL."
 msgstr "Der API-Endpunkt muss eine gültige URL sein."
 
-#: admin/class-admin-settings.php:2784
+#: admin/class-admin-settings.php:2776
 msgid "API endpoint must use HTTPS for security."
 msgstr "Der API-Endpunkt muss aus Sicherheitsgründen HTTPS verwenden."
 
 #. translators: %d: number of rejected lines.
-#: admin/class-admin-settings.php:2850
+#: admin/class-admin-settings.php:2842
 #, php-format
 msgid "%d trusted-proxy entries were not a valid IP address or CIDR range and were removed."
 msgstr "%d Trusted-Proxy-Einträge waren keine gültige IP-Adresse oder kein gültiger CIDR-Bereich und wurden entfernt."
 
-#: admin/class-admin-settings.php:2882
+#: admin/class-admin-settings.php:2874
 msgid "Detection Score"
 msgstr "Erkennungs-Score"
 
-#: admin/class-admin-settings.php:2883
+#: admin/class-admin-settings.php:2875
 msgid "Hardening Score"
 msgstr "Härtungs-Score"
 
-#: admin/class-admin-settings.php:2888
+#: admin/class-admin-settings.php:2880
 msgid "Detection sensors"
 msgstr "Erkennungs-Sensoren"
 
-#: admin/class-admin-settings.php:2889
+#: admin/class-admin-settings.php:2881
 msgid "Hardening features"
 msgstr "Härtungs-Funktionen"
 
-#: admin/class-admin-settings.php:2894
+#: admin/class-admin-settings.php:2886
 msgid "Check from outside:"
 msgstr "Von außen prüfen:"
 
-#: admin/class-admin-settings.php:2896
+#: admin/class-admin-settings.php:2888
 msgid "Security header check"
 msgstr "Security-Header-Check"
 
 #. translators: 1: score group title, 2: numeric score out of 100
-#: admin/class-admin-settings.php:2923
+#: admin/class-admin-settings.php:2915
 #, php-format
 msgid "%1$s: %2$d out of 100"
 msgstr "%1$s: %2$d von 100"
 
 #. translators: 1: earned points, 2: maximum points
-#: admin/class-admin-settings.php:2925
+#: admin/class-admin-settings.php:2917
 #, php-format
 msgid "%1$d of %2$d points"
 msgstr "%1$d von %2$d Punkten"
 
 #. translators: %d: points of features that are not available on this site
-#: admin/class-admin-settings.php:2945
+#: admin/class-admin-settings.php:2937
 #, php-format
 msgid "%d points not available here"
 msgstr "%d Punkte hier nicht verfügbar"
 
 #. translators: %d: weight of the security item in points
-#: admin/class-admin-settings.php:2977
+#: admin/class-admin-settings.php:2969
 #, php-format
 msgid "%d pts"
 msgstr "%d Pkt."
 
 #. translators: %d: points of a feature that is not available on this site
 #. translators: %d: score points the area adds once switched on
-#: admin/class-admin-settings.php:2986
-#: admin/class-dashboard-next-steps.php:454
+#: admin/class-admin-settings.php:2978
+#: admin/class-dashboard-next-steps.php:448
 #, php-format
 msgid "+%d pts"
 msgstr "+%d Pkt."
 
-#: admin/class-admin-settings.php:2997
+#: admin/class-admin-settings.php:2989
 msgid "Enable"
 msgstr "Aktivieren"
 
-#: admin/class-admin-settings.php:3018
+#: admin/class-admin-settings.php:3010
 msgid "Security Dashboard"
 msgstr "Sicherheits-Dashboard"
 
-#: admin/class-admin-settings.php:3035
+#: admin/class-admin-settings.php:3027
 msgid "Attacks blocked (30 days)"
 msgstr "Abgewehrte Angriffe (30 Tage)"
 
-#: admin/class-admin-settings.php:3045
+#: admin/class-admin-settings.php:3037
 #: admin/class-dashboard-widget.php:157
 msgid "Blocked today"
 msgstr "Heute abgewehrt"
 
-#: admin/class-admin-settings.php:3055
+#: admin/class-admin-settings.php:3047
 #: admin/class-admin-settings.php:5294
 #: admin/class-admin-settings.php:5323
 #: includes/class-frontend-shortcodes.php:363
 msgid "IPs currently blocked"
 msgstr "Aktuell gesperrte IPs"
 
-#: admin/class-admin-settings.php:3065
+#: admin/class-admin-settings.php:3057
 msgid "Protection layers active"
 msgstr "Aktive Schutzschichten"
 
-#: admin/class-admin-settings.php:3105
+#: admin/class-admin-settings.php:3097
 msgid "Security Events"
 msgstr "Sicherheitsereignisse"
 
-#: admin/class-admin-settings.php:3107
+#: admin/class-admin-settings.php:3099
 msgid "7 Days"
 msgstr "7 Tage"
 
-#: admin/class-admin-settings.php:3108
-#: admin/class-admin-settings.php:3622
-#: admin/class-admin-settings.php:3648
+#: admin/class-admin-settings.php:3100
+#: admin/class-admin-settings.php:3614
+#: admin/class-admin-settings.php:3640
 #: admin/class-logs-table.php:363
 msgid "30 Days"
 msgstr "30 Tage"
 
-#: admin/class-admin-settings.php:3109
+#: admin/class-admin-settings.php:3101
 msgid "90 Days"
 msgstr "90 Tage"
 
-#: admin/class-admin-settings.php:3120
+#: admin/class-admin-settings.php:3112
 msgid "No threats detected yet, protection is active."
 msgstr "Noch keine Bedrohungen erkannt, der Schutz ist aktiv."
 
-#: admin/class-admin-settings.php:3121
+#: admin/class-admin-settings.php:3113
 msgid "Your dashboard will fill up automatically as ReportedIP Hive blocks attempts. We watch:"
 msgstr "Ihr Dashboard füllt sich automatisch, sobald ReportedIP Hive Versuche sperrt. Wir überwachen:"
 
-#: admin/class-admin-settings.php:3123
+#: admin/class-admin-settings.php:3115
 msgid "Login brute-force, credential spray and 2FA attacks"
 msgstr "Login-Brute-Force, Credential-Spray und 2FA-Angriffe"
 
-#: admin/class-admin-settings.php:3124
+#: admin/class-admin-settings.php:3116
 msgid "Firewall (WAF) hits: SQL injection, XSS, path traversal"
 msgstr "Firewall-(WAF)-Treffer: SQL-Injection, XSS, Path-Traversal"
 
-#: admin/class-admin-settings.php:3125
+#: admin/class-admin-settings.php:3117
 msgid "Scanners, fake bots, enumeration and spam floods"
 msgstr "Scanner, gefälschte Bots, Enumeration und Spam-Fluten"
 
-#: admin/class-admin-settings.php:3134
+#: admin/class-admin-settings.php:3126
 msgid "Threat Distribution"
 msgstr "Bedrohungsverteilung"
 
-#: admin/class-admin-settings.php:3145
+#: admin/class-admin-settings.php:3137
 msgid "Firewall, Top Attack Types"
 msgstr "Firewall, Häufigste Angriffsarten"
 
-#: admin/class-admin-settings.php:3154
+#: admin/class-admin-settings.php:3146
 msgid "Severity Breakdown"
 msgstr "Schweregrad-Verteilung"
 
-#: admin/class-admin-settings.php:3169
-#: reportedip-hive.php:978
+#: admin/class-admin-settings.php:3161
+#: reportedip-hive.php:985
 msgid "Recent Activity"
 msgstr "Letzte Aktivität"
 
-#: admin/class-admin-settings.php:3172
+#: admin/class-admin-settings.php:3164
 msgid "View All"
 msgstr "Alle anzeigen"
 
-#: admin/class-admin-settings.php:3182
+#: admin/class-admin-settings.php:3174
 msgid "No critical events in the last 24 hours. Your site is secure!"
 msgstr "Keine kritischen Ereignisse in den letzten 24 Stunden. Ihre Website ist sicher!"
 
-#: admin/class-admin-settings.php:3188
-#: admin/class-admin-settings.php:4042
+#: admin/class-admin-settings.php:3180
+#: admin/class-admin-settings.php:4040
 #: admin/class-logs-table.php:440
 #: admin/class-protection-page.php:969
-#: reportedip-hive.php:1117
+#: reportedip-hive.php:1124
 msgid "Critical"
 msgstr "Kritisch"
 
-#: admin/class-admin-settings.php:3189
+#: admin/class-admin-settings.php:3181
 #: admin/class-logs-table.php:439
-#: reportedip-hive.php:1118
+#: reportedip-hive.php:1125
 msgid "High"
 msgstr "Hoch"
 
-#: admin/class-admin-settings.php:3190
+#: admin/class-admin-settings.php:3182
 #: admin/class-logs-table.php:438
-#: reportedip-hive.php:1119
+#: reportedip-hive.php:1126
 msgid "Medium"
 msgstr "Mittel"
 
-#: admin/class-admin-settings.php:3191
+#: admin/class-admin-settings.php:3183
 #: admin/class-logs-table.php:437
-#: reportedip-hive.php:1120
+#: reportedip-hive.php:1127
 msgid "Low"
 msgstr "Niedrig"
 
-#: admin/class-admin-settings.php:3224
+#: admin/class-admin-settings.php:3216
 #: admin/class-api-queue-table.php:263
 msgid "ago"
 msgstr "vor"
 
-#: admin/class-admin-settings.php:3316
-#: admin/class-admin-settings.php:3499
+#: admin/class-admin-settings.php:3308
+#: admin/class-admin-settings.php:3491
 msgid "Event Log"
 msgstr "Ereignisprotokoll"
 
-#: admin/class-admin-settings.php:3317
+#: admin/class-admin-settings.php:3309
 msgid "Every security event Hive recorded on this site, newest first: failed logins, firewall hits, scans, spam and the blocks that followed. Narrow the list with the filters, then block or whitelist an address straight from its row."
 msgstr "Jedes Sicherheitsereignis, das Hive auf dieser Website aufgezeichnet hat, das neueste zuerst: fehlgeschlagene Anmeldungen, Firewall-Treffer, Scans, Spam und die Sperren, die daraus folgten. Grenzen Sie die Liste mit den Filtern ein und sperren oder erlauben Sie eine Adresse direkt aus ihrer Zeile."
 
-#: admin/class-admin-settings.php:3320
-#: admin/class-admin-settings.php:3504
+#: admin/class-admin-settings.php:3312
+#: admin/class-admin-settings.php:3496
 msgid "IP Lookup"
 msgstr "IP-Abfrage"
 
-#: admin/class-admin-settings.php:3321
+#: admin/class-admin-settings.php:3313
 msgid "Ask the community network about a single IP address before you decide what to do with it. You see the current reputation, the reports behind it and whether the address is already blocked or whitelisted here."
 msgstr "Fragen Sie das Community-Netzwerk zu einer einzelnen IP-Adresse, bevor Sie entscheiden, was damit geschieht. Sie sehen die aktuelle Reputation, die Meldungen dahinter und ob die Adresse hier bereits gesperrt oder auf der Whitelist ist."
 
-#: admin/class-admin-settings.php:3325
+#: admin/class-admin-settings.php:3317
 msgid "Addresses that cannot reach this site right now. Automatic blocks expire on their own, manual blocks stay until you lift them. Add a single address or a CIDR range here, or import a list."
 msgstr "Adressen, die diese Website gerade nicht erreichen können. Automatische Sperren laufen von selbst ab, manuelle Sperren bleiben, bis Sie sie aufheben. Tragen Sie hier eine einzelne Adresse oder einen CIDR-Bereich ein oder importieren Sie eine Liste."
 
-#: admin/class-admin-settings.php:3328
-#: admin/class-admin-settings.php:3449
+#: admin/class-admin-settings.php:3320
+#: admin/class-admin-settings.php:3441
 msgid "Whitelist"
 msgstr "Whitelist"
 
-#: admin/class-admin-settings.php:3329
+#: admin/class-admin-settings.php:3321
 msgid "Addresses Hive never blocks, whatever they do: your office, a monitoring service, a payment provider. Use a CIDR range for a connection whose address changes."
 msgstr "Adressen, die Hive nie sperrt, egal was sie tun: Ihr Büro, ein Monitoring-Dienst, ein Zahlungsanbieter. Nutzen Sie einen CIDR-Bereich für eine Verbindung, deren Adresse wechselt."
 
-#: admin/class-admin-settings.php:3332
+#: admin/class-admin-settings.php:3324
 msgid "Report Queue"
 msgstr "Meldewarteschlange"
 
-#: admin/class-admin-settings.php:3333
+#: admin/class-admin-settings.php:3325
 msgid "Reports waiting to be shared with the community network. The queue is sent every fifteen minutes; a failed report is retried three times before it needs your attention here."
 msgstr "Meldungen, die darauf warten, mit dem Community-Netzwerk geteilt zu werden. Die Warteschlange wird alle fünfzehn Minuten gesendet; eine fehlgeschlagene Meldung wird dreimal erneut versucht, bevor sie hier Ihre Aufmerksamkeit braucht."
 
-#: admin/class-admin-settings.php:3384
+#: admin/class-admin-settings.php:3376
 msgid "What happened on this site, which addresses are blocked or trusted, and what is on its way to the community"
 msgstr "Was auf dieser Website passiert ist, welche Adressen gesperrt oder vertrauenswürdig sind und was gerade auf dem Weg zur Community ist"
 
-#: admin/class-admin-settings.php:3387
+#: admin/class-admin-settings.php:3379
 msgid "Activity sections"
 msgstr "Bereiche der Aktivität"
 
-#: admin/class-admin-settings.php:3394
+#: admin/class-admin-settings.php:3386
 msgid "IP Lists"
 msgstr "IP-Listen"
 
-#: admin/class-admin-settings.php:3399
+#: admin/class-admin-settings.php:3391
 #: admin/class-protection-page.php:183
 msgid "Advanced"
 msgstr "Erweitert"
 
-#: admin/class-admin-settings.php:3561
+#: admin/class-admin-settings.php:3553
 msgid "Export CSV"
 msgstr "CSV exportieren"
 
-#: admin/class-admin-settings.php:3564
+#: admin/class-admin-settings.php:3556
 msgid "Export JSON"
 msgstr "JSON exportieren"
 
-#: admin/class-admin-settings.php:3606
+#: admin/class-admin-settings.php:3598
 msgid "Block an IP Address"
 msgstr "Eine IP-Adresse sperren"
 
-#: admin/class-admin-settings.php:3612
-#: admin/class-admin-settings.php:3687
+#: admin/class-admin-settings.php:3604
+#: admin/class-admin-settings.php:3679
 msgid "IP Address or CIDR"
 msgstr "IP-Adresse oder CIDR"
 
-#: admin/class-admin-settings.php:3619
-#: admin/class-admin-settings.php:3645
+#: admin/class-admin-settings.php:3611
+#: admin/class-admin-settings.php:3637
 #: admin/class-logs-table.php:360
 msgid "24 Hours"
 msgstr "24 Stunden"
 
-#: admin/class-admin-settings.php:3620
-#: admin/class-admin-settings.php:3646
+#: admin/class-admin-settings.php:3612
+#: admin/class-admin-settings.php:3638
 #: admin/class-logs-table.php:361
 msgid "3 Days"
 msgstr "3 Tage"
 
-#: admin/class-admin-settings.php:3621
-#: admin/class-admin-settings.php:3647
+#: admin/class-admin-settings.php:3613
+#: admin/class-admin-settings.php:3639
 #: admin/class-logs-table.php:362
 msgid "1 Week"
 msgstr "1 Woche"
 
-#: admin/class-admin-settings.php:3623
-#: admin/class-admin-settings.php:3649
+#: admin/class-admin-settings.php:3615
+#: admin/class-admin-settings.php:3641
 #: admin/class-blocked-ips-table.php:139
 #: admin/class-logs-table.php:364
 msgid "Permanent"
 msgstr "Dauerhaft"
 
-#: admin/class-admin-settings.php:3626
+#: admin/class-admin-settings.php:3618
 #: admin/class-logs-table.php:78
 #: admin/class-logs-table.php:145
-#: reportedip-hive.php:990
+#: reportedip-hive.php:997
 msgid "Block IP"
 msgstr "IP sperren"
 
-#: admin/class-admin-settings.php:3635
+#: admin/class-admin-settings.php:3627
 msgid "Import Blocked IPs from CSV"
 msgstr "Gesperrte IPs aus CSV importieren"
 
-#: admin/class-admin-settings.php:3652
-#: admin/class-admin-settings.php:3748
+#: admin/class-admin-settings.php:3644
+#: admin/class-admin-settings.php:3740
 msgid "Import CSV"
 msgstr "CSV importieren"
 
-#: admin/class-admin-settings.php:3654
-#: admin/class-admin-settings.php:3750
+#: admin/class-admin-settings.php:3646
+#: admin/class-admin-settings.php:3742
 msgid "CSV format: One IP address per line, or columns: ip_address, reason (optional)"
 msgstr "CSV-Format: Eine IP-Adresse pro Zeile oder Spalten: ip_address, reason (optional)"
 
-#: admin/class-admin-settings.php:3681
-#: admin/class-admin-settings.php:3695
+#: admin/class-admin-settings.php:3673
+#: admin/class-admin-settings.php:3687
 msgid "Add to Whitelist"
 msgstr "Zur Whitelist hinzufügen"
 
-#: admin/class-admin-settings.php:3693
+#: admin/class-admin-settings.php:3685
 msgid "Expires (optional)"
 msgstr "Läuft ab (optional)"
 
-#: admin/class-admin-settings.php:3712
+#: admin/class-admin-settings.php:3704
 msgid "Add my IP"
 msgstr "Meine IP hinzufügen"
 
 #. translators: %s: detected client IP address
-#: admin/class-admin-settings.php:3718
+#: admin/class-admin-settings.php:3710
 #, php-format
 msgid "Detected: %s"
 msgstr "Erkannt: %s"
 
 #. translators: %s: IPv6 network in CIDR notation
-#: admin/class-admin-settings.php:3725
+#: admin/class-admin-settings.php:3717
 #, php-format
 msgid "IPv6 addresses rotate inside their network, so %s is suggested."
 msgstr "IPv6-Adressen rotieren innerhalb ihres Netzwerks, daher wird %s vorgeschlagen."
 
-#: admin/class-admin-settings.php:3740
+#: admin/class-admin-settings.php:3732
 msgid "Import Whitelist from CSV"
 msgstr "Whitelist aus CSV importieren"
 
-#: admin/class-admin-settings.php:3774
+#: admin/class-admin-settings.php:3766
 msgid "IP Address Lookup"
 msgstr "IP-Adressen-Abfrage"
 
-#: admin/class-admin-settings.php:3778
+#: admin/class-admin-settings.php:3770
 msgid "Enter an IPv4 or IPv6 address. The answer comes from the community network and uses one check from your quota."
 msgstr "Geben Sie eine IPv4- oder IPv6-Adresse ein. Die Antwort kommt aus dem Community-Netzwerk und verbraucht eine Abfrage Ihres Kontingents."
 
-#: admin/class-admin-settings.php:3782
+#: admin/class-admin-settings.php:3774
 msgid "Enter IP address..."
 msgstr "IP-Adresse eingeben..."
 
-#: admin/class-admin-settings.php:3786
+#: admin/class-admin-settings.php:3778
 msgid "Lookup"
 msgstr "Abfragen"
 
-#: admin/class-admin-settings.php:3791
+#: admin/class-admin-settings.php:3783
 msgid "Lookup Results"
 msgstr "Abfrageergebnisse"
 
-#: admin/class-admin-settings.php:3809
+#: admin/class-admin-settings.php:3801
 msgid "Operation Mode"
 msgstr "Betriebsmodus"
 
-#: admin/class-admin-settings.php:3811
+#: admin/class-admin-settings.php:3803
 msgid "Choose how ReportedIP Hive should operate. You can switch modes at any time."
 msgstr "Wählen Sie, wie ReportedIP Hive arbeiten soll. Sie können den Modus jederzeit wechseln."
 
-#: admin/class-admin-settings.php:3816
+#: admin/class-admin-settings.php:3808
 msgid "Mode changes take effect immediately after saving."
 msgstr "Moduswechsel werden unmittelbar nach dem Speichern wirksam."
 
-#: admin/class-admin-settings.php:3817
+#: admin/class-admin-settings.php:3809
 msgid "Privacy note: in Community mode every API request identifies this installation with its site address and plugin/WordPress version (wp.org-style, for licence domain counting and support). Visitor-related data stays limited to the IP address and event type of detected threats, never usernames, comment content or full user agents."
 msgstr "Datenschutzhinweis: Im Community-Modus identifiziert jede API-Anfrage diese Installation mit ihrer Website-Adresse und der Plugin-/WordPress-Version (im wp.org-Stil, für die Zählung der Lizenz-Domains und den Support). Besucherbezogene Daten bleiben auf IP-Adresse und Ereignistyp erkannter Bedrohungen beschränkt, niemals Benutzernamen, Kommentarinhalte oder vollständige User-Agents."
 
-#: admin/class-admin-settings.php:3819
+#: admin/class-admin-settings.php:3811
 msgid "Save Mode"
 msgstr "Modus speichern"
 
-#: admin/class-admin-settings.php:3828
+#: admin/class-admin-settings.php:3820
 msgid "API Configuration"
 msgstr "API-Konfiguration"
 
-#: admin/class-admin-settings.php:3830
+#: admin/class-admin-settings.php:3822
 msgid "Connect to the ReportedIP community network for enhanced protection."
 msgstr "Verbinden Sie sich mit dem ReportedIP-Community-Netzwerk für erweiterten Schutz."
 
-#: admin/class-admin-settings.php:3836
+#: admin/class-admin-settings.php:3828
 msgid "API Key"
 msgstr "API-Schlüssel"
 
-#: admin/class-admin-settings.php:3839
+#: admin/class-admin-settings.php:3831
 msgid "Your ReportedIP API key."
 msgstr "Ihr ReportedIP-API-Schlüssel."
 
-#: admin/class-admin-settings.php:3840
+#: admin/class-admin-settings.php:3832
 msgid "Get API Key"
 msgstr "API-Schlüssel beziehen"
 
-#: admin/class-admin-settings.php:3845
+#: admin/class-admin-settings.php:3837
 msgid "API Endpoint"
 msgstr "API-Endpunkt"
 
-#: admin/class-admin-settings.php:3847
+#: admin/class-admin-settings.php:3839
 msgid "The reportedip.com API endpoint URL."
 msgstr "Die URL des reportedip.com-API-Endpunkts."
 
-#: admin/class-admin-settings.php:3852
+#: admin/class-admin-settings.php:3844
 msgid "Trusted IP Header"
 msgstr "Vertrauenswürdiger IP-Header"
 
-#: admin/class-admin-settings.php:3856
+#: admin/class-admin-settings.php:3848
 msgid "None (REMOTE_ADDR only)"
 msgstr "Keiner (nur REMOTE_ADDR)"
 
-#: admin/class-admin-settings.php:3859
+#: admin/class-admin-settings.php:3851
 msgid "Cloudflare (CF-Connecting-IP)"
 msgstr "Cloudflare (CF-Connecting-IP)"
 
-#: admin/class-admin-settings.php:3862
+#: admin/class-admin-settings.php:3854
 msgid "Nginx (X-Real-IP)"
 msgstr "Nginx (X-Real-IP)"
 
-#: admin/class-admin-settings.php:3865
+#: admin/class-admin-settings.php:3857
 msgid "Generic Proxy (X-Forwarded-For)"
 msgstr "Generischer Proxy (X-Forwarded-For)"
 
-#: admin/class-admin-settings.php:3868
+#: admin/class-admin-settings.php:3860
 msgid "Client-IP Header"
 msgstr "Client-IP-Header"
 
-#: admin/class-admin-settings.php:3872
+#: admin/class-admin-settings.php:3870
 msgid "Select which HTTP header to trust for determining the client IP. Use \"None\" unless your site is behind a reverse proxy."
 msgstr "Wählen Sie, welchem HTTP-Header bei der Ermittlung der Client-IP vertraut werden soll. Verwenden Sie \"Keiner\", sofern sich Ihre Website nicht hinter einem Reverse-Proxy befindet."
 
-#: admin/class-admin-settings.php:3878
+#: admin/class-admin-settings.php:3876
 msgid "Trusted Proxy Sources"
 msgstr "Vertrauenswürdige Proxy-Quellen"
 
-#: admin/class-admin-settings.php:3880
+#: admin/class-admin-settings.php:3878
 msgid ""
 "203.0.113.10\n"
 "198.51.100.0/24\n"
@@ -1605,440 +1605,445 @@ msgstr ""
 "198.51.100.0/24\n"
 "2001:db8::/32"
 
-#: admin/class-admin-settings.php:3882
+#: admin/class-admin-settings.php:3880
 msgid "One IP address or CIDR range per line. When set, the trusted IP header above is only honored for requests that connect from one of these proxy addresses, anyone else cannot spoof the header. Leave empty to accept the header from any peer (previous behavior). Applies to both firewall layers."
 msgstr "Eine IP-Adresse oder ein CIDR-Bereich pro Zeile. Wenn gesetzt, wird der vertrauenswürdige IP-Header oben nur für Anfragen berücksichtigt, die von einer dieser Proxy-Adressen kommen, niemand sonst kann den Header fälschen. Leer lassen, um den Header von jedem Absender zu akzeptieren (bisheriges Verhalten). Gilt für beide Firewall-Ebenen."
 
-#: admin/class-admin-settings.php:3899
+#: admin/class-admin-settings.php:3897
 msgid "Test Connection"
 msgstr "Verbindung testen"
 
-#: admin/class-admin-settings.php:3901
+#: admin/class-admin-settings.php:3899
 msgid "Save Changes"
 msgstr "Änderungen speichern"
 
-#: admin/class-admin-settings.php:3923
+#: admin/class-admin-settings.php:3921
 msgid "Uninstall behaviour"
 msgstr "Verhalten bei Deinstallation"
 
-#: admin/class-admin-settings.php:3932
+#: admin/class-admin-settings.php:3930
 msgid "Delete all plugin data on uninstall (logs, settings, IP lists)"
 msgstr "Alle Plugin-Daten bei der Deinstallation löschen (Protokolle, Einstellungen, IP-Listen)"
 
-#: admin/class-admin-settings.php:3934
+#: admin/class-admin-settings.php:3932
 msgid "Off by default: uninstalling normally keeps your configuration so reinstalling restores it."
 msgstr "Standardmäßig aus: Eine Deinstallation behält Ihre Konfiguration, damit eine Neuinstallation sie wiederherstellt."
 
-#: admin/class-admin-settings.php:3954
+#: admin/class-admin-settings.php:3952
 msgid "Test the email pipeline"
 msgstr "E-Mail-Pipeline testen"
 
-#: admin/class-admin-settings.php:3956
+#: admin/class-admin-settings.php:3954
 msgid "Sends a sample mail through the unified branded template and your active mail provider. Useful before flipping notifications on, or after changing SMTP settings."
 msgstr "Sendet eine Beispiel-Mail über die einheitliche, gebrandete Vorlage und Ihren aktiven Mail-Provider. Nützlich, bevor Sie Benachrichtigungen aktivieren oder nachdem Sie SMTP-Einstellungen geändert haben."
 
-#: admin/class-admin-settings.php:3960
+#: admin/class-admin-settings.php:3958
 msgid "Send test email"
 msgstr "Test-E-Mail senden"
 
-#: admin/class-admin-settings.php:3979
+#: admin/class-admin-settings.php:3977
 msgid "Maintenance & exports"
 msgstr "Wartung & Exporte"
 
-#: admin/class-admin-settings.php:3981
+#: admin/class-admin-settings.php:3979
 msgid "These actions run immediately. Retention and anonymisation thresholds are configured on the Privacy & Logs tab."
 msgstr "Diese Aktionen werden sofort ausgeführt. Aufbewahrungs- und Anonymisierungsschwellen werden auf dem Tab Datenschutz & Protokolle konfiguriert."
 
-#: admin/class-admin-settings.php:3987
+#: admin/class-admin-settings.php:3985
 msgid "Database cleanup"
 msgstr "Datenbankbereinigung"
 
-#: admin/class-admin-settings.php:3990
+#: admin/class-admin-settings.php:3988
 msgid "Clean up logs"
 msgstr "Protokolle bereinigen"
 
 #. translators: %d: number of days after which log entries are removed
-#: admin/class-admin-settings.php:3995
+#: admin/class-admin-settings.php:3993
 #, php-format
 msgid "Removes logs older than %d days right now."
 msgstr "Entfernt Protokolle, die älter als %d Tage sind, sofort."
 
-#: admin/class-admin-settings.php:4000
+#: admin/class-admin-settings.php:3998
 msgid "Anonymise old data"
 msgstr "Alte Daten anonymisieren"
 
-#: admin/class-admin-settings.php:4003
+#: admin/class-admin-settings.php:4001
 msgid "Anonymise"
 msgstr "Anonymisieren"
 
 #. translators: %d: number of days after which personal data is anonymized
-#: admin/class-admin-settings.php:4008
+#: admin/class-admin-settings.php:4006
 #, php-format
 msgid "Strips personal data older than %d days right now."
 msgstr "Entfernt personenbezogene Daten, die älter als %d Tage sind, sofort."
 
-#: admin/class-admin-settings.php:4013
+#: admin/class-admin-settings.php:4011
 msgid "Export logs"
 msgstr "Protokolle exportieren"
 
-#: admin/class-admin-settings.php:4018
+#: admin/class-admin-settings.php:4016
 msgid "Download log entries for offline analysis."
 msgstr "Protokolleinträge zur Offline-Analyse herunterladen."
 
-#: admin/class-admin-settings.php:4043
+#: admin/class-admin-settings.php:4041
 #: admin/class-protection-page.php:967
 msgid "Warning"
 msgstr "Warnung"
 
-#: admin/class-admin-settings.php:4044
+#: admin/class-admin-settings.php:4042
 msgid "Advisory"
 msgstr "Hinweis"
 
-#: admin/class-admin-settings.php:4050
+#: admin/class-admin-settings.php:4048
 msgid "Readiness"
 msgstr "Systembereitschaft"
 
-#: admin/class-admin-settings.php:4053
+#: admin/class-admin-settings.php:4051
 msgid "Operational faults that stop a protection layer from doing its job. Warnings can be hidden for seven days; critical entries stay until the cause is gone, and every entry disappears on its own once the condition clears."
 msgstr "Betriebsstörungen, die eine Schutzschicht an ihrer Arbeit hindern. Warnungen lassen sich für sieben Tage ausblenden, kritische Einträge bleiben stehen, bis die Ursache weg ist. Jeder Eintrag verschwindet von selbst, sobald der Zustand behoben ist."
 
-#: admin/class-admin-settings.php:4059
+#: admin/class-admin-settings.php:4057
 msgid "No open readiness issues."
 msgstr "Keine offenen Störungen."
 
-#: admin/class-admin-settings.php:4065
+#: admin/class-admin-settings.php:4063
 msgid "Issue"
 msgstr "Störung"
 
-#: admin/class-admin-settings.php:4066
+#: admin/class-admin-settings.php:4064
 msgid "Since"
 msgstr "Seit"
 
-#: admin/class-admin-settings.php:4089
+#: admin/class-admin-settings.php:4087
 msgid "Manage"
 msgstr "Verwalten"
 
-#: admin/class-admin-settings.php:4090
+#: admin/class-admin-settings.php:4088
 msgid "Documentation"
 msgstr "Dokumentation"
 
-#: admin/class-admin-settings.php:4100
+#: admin/class-admin-settings.php:4098
 msgid "Dismiss for 7 days"
 msgstr "Für 7 Tage ausblenden"
 
-#: admin/class-admin-settings.php:4127
+#: admin/class-admin-settings.php:4125
 msgid "Process API queue"
 msgstr "API-Warteschlange verarbeiten"
 
-#: admin/class-admin-settings.php:4128
+#: admin/class-admin-settings.php:4126
 msgid "Refresh API & relay quota"
 msgstr "API- & Relay-Kontingent aktualisieren"
 
-#: admin/class-admin-settings.php:4129
+#: admin/class-admin-settings.php:4127
 msgid "Reputation sync"
 msgstr "Reputationssynchronisierung"
 
-#: admin/class-admin-settings.php:4130
+#: admin/class-admin-settings.php:4128
 msgid "Ruleset sync"
 msgstr "Regelsatz-Synchronisierung"
 
-#: admin/class-admin-settings.php:4131
+#: admin/class-admin-settings.php:4129
 msgid "Daily cleanup"
 msgstr "Tägliche Bereinigung"
 
-#: admin/class-admin-settings.php:4145
+#: admin/class-admin-settings.php:4143
 msgid "Cron status"
 msgstr "Cron-Status"
 
-#: admin/class-admin-settings.php:4148
+#: admin/class-admin-settings.php:4146
 msgid "WP-Cron processes the report queue and refreshes quota counters. If the next-run times below stay in the past, WP-Cron is not firing, set up a server cron (snippet below) or check your CDN/cache plugin."
 msgstr "WP-Cron verarbeitet die Meldungs-Warteschlange und aktualisiert die Kontingentzähler. Bleiben die nächsten Ausführungszeiten unten in der Vergangenheit, läuft WP-Cron nicht, richten Sie einen Server-Cron ein (Snippet unten) oder prüfen Sie Ihr CDN-/Cache-Plugin."
 
-#: admin/class-admin-settings.php:4156
+#: admin/class-admin-settings.php:4154
 msgid "Hook"
 msgstr "Hook"
 
-#: admin/class-admin-settings.php:4157
+#: admin/class-admin-settings.php:4155
 msgid "Next run"
 msgstr "Nächste Ausführung"
 
-#: admin/class-admin-settings.php:4167
+#: admin/class-admin-settings.php:4165
 msgid "Not scheduled"
 msgstr "Nicht geplant"
 
-#: admin/class-admin-settings.php:4173
+#: admin/class-admin-settings.php:4171
 msgid "Overdue"
 msgstr "Überfällig"
 
-#: admin/class-admin-settings.php:4176
+#: admin/class-admin-settings.php:4174
 #: admin/class-api-queue-table.php:510
 msgid "Pending"
 msgstr "Ausstehend"
 
-#: admin/class-admin-settings.php:4179
+#: admin/class-admin-settings.php:4177
 msgid "Scheduled"
 msgstr "Geplant"
 
-#: admin/class-admin-settings.php:4195
+#: admin/class-admin-settings.php:4193
 msgid "Queue lock"
 msgstr "Warteschlangen-Sperre"
 
-#: admin/class-admin-settings.php:4195
+#: admin/class-admin-settings.php:4193
 msgid "Prevents two queue workers from colliding (5 min TTL)."
 msgstr "Verhindert, dass zwei Warteschlangen-Worker kollidieren (5 Min. TTL)."
 
-#: admin/class-admin-settings.php:4199
+#: admin/class-admin-settings.php:4197
 msgid "Held"
 msgstr "Gehalten"
 
-#: admin/class-admin-settings.php:4201
+#: admin/class-admin-settings.php:4199
 msgid "Free"
 msgstr "Frei"
 
-#: admin/class-admin-settings.php:4210
+#: admin/class-admin-settings.php:4208
 msgid "Run queue now"
 msgstr "Warteschlange jetzt ausführen"
 
-#: admin/class-admin-settings.php:4213
+#: admin/class-admin-settings.php:4211
 msgid "Clear queue lock"
 msgstr "Warteschlangen-Sperre aufheben"
 
-#: admin/class-admin-settings.php:4257
+#: admin/class-admin-settings.php:4255
 msgid "Recommended: dedicated server cron"
 msgstr "Empfohlen: dedizierter Server-Cron"
 
-#: admin/class-admin-settings.php:4262
+#: admin/class-admin-settings.php:4260
 msgid "wp-cron.php has a per-spawn time budget (WP_CRON_LOCK_TIMEOUT, 60–90 s on most setups). When other plugins schedule heavy workers, the budget can be consumed before ReportedIP Hive's hooks are reached. A dedicated cron line that targets only our hooks via WP-CLI bypasses the shared budget completely."
 msgstr "wp-cron.php verfügt über ein Zeitbudget pro Spawn (WP_CRON_LOCK_TIMEOUT, bei den meisten Konfigurationen 60–90 Sek.). Wenn andere Plugins ressourcenintensive Worker einplanen, kann das Budget aufgebraucht werden, bevor die Hooks von ReportedIP Hive erreicht werden. Eine dedizierte Cron-Zeile, die ausschließlich unsere Hooks über WP-CLI anspricht, umgeht das gemeinsame Budget vollständig."
 
-#: admin/class-admin-settings.php:4265
+#: admin/class-admin-settings.php:4263
 msgid "Standard crontab"
 msgstr "Standard-crontab"
 
-#: admin/class-admin-settings.php:4268
+#: admin/class-admin-settings.php:4266
 msgid "ISPConfig template (uses {SITE_PHP} and {DOCROOT_CLIENT} variables)"
 msgstr "ISPConfig-Vorlage (verwendet die Variablen {SITE_PHP} und {DOCROOT_CLIENT})"
 
-#: admin/class-admin-settings.php:4272
+#: admin/class-admin-settings.php:4270
 msgid "Optional:"
 msgstr "Optional:"
 
-#: admin/class-admin-settings.php:4273
+#: admin/class-admin-settings.php:4271
 msgid "after the dedicated cron is in place and verified, you can disable WordPress' built-in cron loopback to avoid duplicate runs by adding to wp-config.php:"
 msgstr "nachdem der dedizierte Cron eingerichtet und überprüft wurde, können Sie den integrierten Cron-Loopback von WordPress deaktivieren, um doppelte Ausführungen zu vermeiden, indem Sie Folgendes zu wp-config.php hinzufügen:"
 
-#: admin/class-admin-settings.php:4277
+#: admin/class-admin-settings.php:4275
 msgid "Adjust the WP-CLI path if it differs on your host. The plugin auto-detected the path shown above."
 msgstr "Passen Sie den WP-CLI-Pfad an, falls er auf Ihrem Host abweicht. Das Plugin hat den oben angezeigten Pfad automatisch erkannt."
 
-#: admin/class-admin-settings.php:4298
+#: admin/class-admin-settings.php:4296
 msgid "Health, maintenance and tools"
 msgstr "Zustand, Wartung und Werkzeuge"
 
-#: admin/class-admin-settings.php:4307
+#: admin/class-admin-settings.php:4305
 msgid "Logging"
 msgstr "Protokollierung"
 
-#: admin/class-admin-settings.php:4311
+#: admin/class-admin-settings.php:4309
 msgid "Database"
 msgstr "Datenbank"
 
-#: admin/class-admin-settings.php:4315
+#: admin/class-admin-settings.php:4313
 msgid "API"
 msgstr "API"
 
-#: admin/class-admin-settings.php:4349
+#: admin/class-admin-settings.php:4347
 msgid "System Information"
 msgstr "Systeminformationen"
 
-#: admin/class-admin-settings.php:4354
+#: admin/class-admin-settings.php:4352
 msgid "Plugin Version"
 msgstr "Plugin-Version"
 
-#: admin/class-admin-settings.php:4358
+#: admin/class-admin-settings.php:4356
 msgid "PHP Version"
 msgstr "PHP-Version"
 
-#: admin/class-admin-settings.php:4362
+#: admin/class-admin-settings.php:4360
 msgid "WordPress Version"
 msgstr "WordPress-Version"
 
-#: admin/class-admin-settings.php:4366
+#: admin/class-admin-settings.php:4364
 msgid "Your IP Address"
 msgstr "Ihre IP-Adresse"
 
-#: admin/class-admin-settings.php:4371
-#: reportedip-hive.php:966
+#: admin/class-admin-settings.php:4369
+#: reportedip-hive.php:973
 msgid "Whitelisted"
 msgstr "Auf der Whitelist"
 
-#: admin/class-admin-settings.php:4379
+#: admin/class-admin-settings.php:4377
 msgid "Protection Mode"
 msgstr "Schutzmodus"
 
-#: admin/class-admin-settings.php:4382
+#: admin/class-admin-settings.php:4380
 msgid "Report Only"
 msgstr "Nur melden"
 
-#: admin/class-admin-settings.php:4384
+#: admin/class-admin-settings.php:4382
 msgid "Full Protection"
 msgstr "Vollständiger Schutz"
 
-#: admin/class-admin-settings.php:4389
+#: admin/class-admin-settings.php:4387
 msgid "Log Level"
 msgstr "Protokollstufe"
 
-#: admin/class-admin-settings.php:4403
+#: admin/class-admin-settings.php:4401
 msgid "Last Rule Sync"
 msgstr "Letzter Regel-Sync"
 
-#: admin/class-admin-settings.php:4409
+#: admin/class-admin-settings.php:4407
 msgid "Ruleset Versions"
 msgstr "Regelsatz-Versionen"
 
-#: admin/class-admin-settings.php:4419
+#: admin/class-admin-settings.php:4417
 msgid "WAF Drop-in"
 msgstr "WAF-Drop-in"
 
-#: admin/class-admin-settings.php:4424
+#: admin/class-admin-settings.php:4422
 msgid "Enabled (manual nginx config)"
 msgstr "Aktiviert (manuelle nginx-Konfiguration)"
 
-#: admin/class-admin-settings.php:4426
+#: admin/class-admin-settings.php:4424
 msgid "Enabled, directive missing"
 msgstr "Aktiviert, Direktive fehlt"
 
-#: admin/class-admin-settings.php:4428
+#: admin/class-admin-settings.php:4426
 msgid "Disabled"
 msgstr "Deaktiviert"
 
-#: admin/class-admin-settings.php:4432
+#: admin/class-admin-settings.php:4430
 msgid "Target not writable"
 msgstr "Ziel nicht beschreibbar"
 
-#: admin/class-admin-settings.php:4444
+#: admin/class-admin-settings.php:4442
 msgid "Cache management"
 msgstr "Cache-Verwaltung"
 
-#: admin/class-admin-settings.php:4450
+#: admin/class-admin-settings.php:4448
 msgid "Entries"
 msgstr "Einträge"
 
 #. translators: %1$s: active entries, %2$s: expired entries
-#: admin/class-admin-settings.php:4454
+#: admin/class-admin-settings.php:4452
 #, php-format
 msgid "%1$s active, %2$s expired"
 msgstr "%1$s aktiv, %2$s abgelaufen"
 
-#: admin/class-admin-settings.php:4459
+#: admin/class-admin-settings.php:4457
 msgid "Size"
 msgstr "Größe"
 
-#: admin/class-admin-settings.php:4465
+#: admin/class-admin-settings.php:4463
 msgid "Clear all cache"
 msgstr "Gesamten Cache leeren"
 
-#: admin/class-admin-settings.php:4468
+#: admin/class-admin-settings.php:4466
 msgid "Clean expired entries"
 msgstr "Abgelaufene Einträge bereinigen"
 
-#: admin/class-admin-settings.php:4479
+#: admin/class-admin-settings.php:4477
 #: admin/class-quickstart.php:102
 #: admin/class-quickstart.php:103
 msgid "Quickstart"
 msgstr "Schnellstart"
 
-#: admin/class-admin-settings.php:4481
+#: admin/class-admin-settings.php:4479
 msgid "Re-run the quickstart to change mode, Community Access Key and the recommended protection. Existing settings stay in place."
 msgstr "Führen Sie den Schnellstart erneut aus, um Modus, Community-Zugangsschlüssel und den empfohlenen Schutz zu ändern. Bestehende Einstellungen bleiben erhalten."
 
-#: admin/class-admin-settings.php:4485
+#: admin/class-admin-settings.php:4483
 msgid "Open quickstart"
 msgstr "Schnellstart öffnen"
 
-#: admin/class-admin-settings.php:4503
+#: admin/class-admin-settings.php:4501
 msgid "Quick Actions"
 msgstr "Schnellaktionen"
 
-#: admin/class-admin-settings.php:4508
+#: admin/class-admin-settings.php:4506
 msgid "Connection Tests"
 msgstr "Verbindungstests"
 
-#: admin/class-admin-settings.php:4513
+#: admin/class-admin-settings.php:4511
 msgid "Test Database"
 msgstr "Datenbank testen"
 
-#: admin/class-admin-settings.php:4518
+#: admin/class-admin-settings.php:4516
 msgid "Test API"
 msgstr "API testen"
 
-#: admin/class-admin-settings.php:4522
+#: admin/class-admin-settings.php:4520
 msgid "Enable WP_DEBUG for additional diagnostic tests."
 msgstr "Aktivieren Sie WP_DEBUG für zusätzliche Diagnosetests."
 
-#: admin/class-admin-settings.php:4528
+#: admin/class-admin-settings.php:4526
 msgid "Reset Plugin"
 msgstr "Plugin zurücksetzen"
 
-#: admin/class-admin-settings.php:4529
+#: admin/class-admin-settings.php:4527
 msgid "Reset all plugin settings to defaults. This will not delete your blocked IPs or logs."
 msgstr "Setzt alle Plugin-Einstellungen auf die Standardwerte zurück. Ihre gesperrten IPs und Protokolle werden dabei nicht gelöscht."
 
-#: admin/class-admin-settings.php:4533
+#: admin/class-admin-settings.php:4531
 msgid "Reset Settings"
 msgstr "Einstellungen zurücksetzen"
 
-#: admin/class-admin-settings.php:4537
+#: admin/class-admin-settings.php:4535
 msgid "Reset All Data"
 msgstr "Alle Daten zurücksetzen"
 
-#: admin/class-admin-settings.php:4583
+#: admin/class-admin-settings.php:4581
 msgid "No recent logs found"
 msgstr "Keine aktuellen Protokolle gefunden"
 
-#: admin/class-admin-settings.php:4584
+#: admin/class-admin-settings.php:4582
 msgid "No logs in the last 24 hours. This might indicate a logging problem."
 msgstr "Keine Protokolle in den letzten 24 Stunden. Dies könnte auf ein Protokollierungsproblem hindeuten."
 
-#: admin/class-admin-settings.php:4586
+#: admin/class-admin-settings.php:4584
 msgid "Logging system operational"
 msgstr "Protokollierungssystem betriebsbereit"
 
 #. translators: %s: timestamp of the most recent log entry
-#: admin/class-admin-settings.php:4588
+#: admin/class-admin-settings.php:4586
 #, php-format
 msgid "Last log entry: %s"
 msgstr "Letzter Protokolleintrag: %s"
 
-#: admin/class-admin-settings.php:4594
+#: admin/class-admin-settings.php:4592
 msgid "Log level is set to \"error\" - many events may not be logged."
 msgstr "Das Protokollierungslevel ist auf \"error\" gesetzt - viele Ereignisse werden möglicherweise nicht protokolliert."
 
-#: admin/class-admin-settings.php:4598
+#: admin/class-admin-settings.php:4596
 msgid "Logging system error"
 msgstr "Fehler im Protokollierungssystem"
 
-#: admin/class-admin-settings.php:4611
+#: admin/class-admin-settings.php:4609
 msgid "Database tables missing"
 msgstr "Datenbanktabellen fehlen"
 
-#: admin/class-admin-settings.php:4612
+#: admin/class-admin-settings.php:4610
 msgid "Plugin tables not found. Try deactivating and reactivating the plugin."
 msgstr "Plugin-Tabellen nicht gefunden. Versuchen Sie, das Plugin zu deaktivieren und erneut zu aktivieren."
 
-#: admin/class-admin-settings.php:4614
+#: admin/class-admin-settings.php:4612
 msgid "Database operational"
 msgstr "Datenbank betriebsbereit"
 
 #. translators: %d: total number of log entries in the database
-#: admin/class-admin-settings.php:4620
+#: admin/class-admin-settings.php:4618
 #, php-format
 msgid "Total log entries: %d"
 msgstr "Protokolleinträge insgesamt: %d"
 
-#: admin/class-admin-settings.php:4624
+#: admin/class-admin-settings.php:4622
 msgid "Database error"
 msgstr "Datenbankfehler"
+
+#: admin/class-admin-settings.php:4628
+#: admin/class-admin-settings.php:4881
+msgid "Local Shield mode active"
+msgstr "Lokaler Schutz aktiv"
 
 #: admin/class-admin-settings.php:4631
 #: includes/class-api-client.php:386
@@ -2097,10 +2102,6 @@ msgstr "Community-Bereiche"
 #: admin/class-admin-settings.php:4870
 msgid "Status has been refreshed."
 msgstr "Der Status wurde aktualisiert."
-
-#: admin/class-admin-settings.php:4881
-msgid "Local Shield mode active"
-msgstr "Lokaler Schutz aktiv"
 
 #: admin/class-admin-settings.php:4882
 msgid "Running locally, shared reports and the account quota are off. Join the Community Network for shared threat intelligence."
@@ -2774,7 +2775,7 @@ msgstr "Versuche"
 #: admin/class-two-factor-admin.php:409
 #: includes/class-two-factor-onboarding.php:357
 #: includes/class-two-factor.php:2325
-#: reportedip-hive.php:928
+#: reportedip-hive.php:935
 msgid "Error"
 msgstr "Fehler"
 
@@ -2999,92 +3000,88 @@ msgid "No blocked IPs found."
 msgstr "Keine gesperrten IPs gefunden."
 
 #: admin/class-dashboard-next-steps.php:146
-#: admin/class-dashboard-next-steps.php:170
+#: admin/class-dashboard-next-steps.php:166
 msgid "Switch on"
 msgstr "Einschalten"
 
 #: admin/class-dashboard-next-steps.php:151
-msgid "Show badge"
-msgstr "Badge anzeigen"
-
-#: admin/class-dashboard-next-steps.php:155
 msgid "Open server setup"
 msgstr "Server-Einrichtung öffnen"
 
-#: admin/class-dashboard-next-steps.php:159
+#: admin/class-dashboard-next-steps.php:155
 msgid "Enter a key"
 msgstr "Key eintragen"
 
-#: admin/class-dashboard-next-steps.php:163
+#: admin/class-dashboard-next-steps.php:159
 #: includes/class-two-factor-recommend.php:327
 msgid "Set up now"
 msgstr "Jetzt einrichten"
 
-#: admin/class-dashboard-next-steps.php:260
+#: admin/class-dashboard-next-steps.php:254
 msgid "Community protection is not connected."
 msgstr "Der Community-Schutz ist nicht verbunden."
 
-#: admin/class-dashboard-next-steps.php:261
+#: admin/class-dashboard-next-steps.php:255
 msgid "Connect now"
 msgstr "Jetzt verbinden"
 
 #. translators: %s: human-readable time span until the daily quota resets
-#: admin/class-dashboard-next-steps.php:274
+#: admin/class-dashboard-next-steps.php:268
 #, php-format
 msgid "Resets in %s."
 msgstr "Wird in %s zurückgesetzt."
 
 #. translators: 1: plan name, 2: date
-#: admin/class-dashboard-next-steps.php:291
+#: admin/class-dashboard-next-steps.php:285
 #, php-format
 msgid "Protection active since %2$s on the %1$s recommendation."
 msgstr "Schutz aktiv seit %2$s auf der %1$s-Empfehlung."
 
 #. translators: %s: plan name
-#: admin/class-dashboard-next-steps.php:294
+#: admin/class-dashboard-next-steps.php:288
 #, php-format
 msgid "Protection active on the %s recommendation."
 msgstr "Schutz aktiv auf der %s-Empfehlung."
 
-#: admin/class-dashboard-next-steps.php:297
+#: admin/class-dashboard-next-steps.php:291
 msgid "Community Network connected."
 msgstr "Community Network verbunden."
 
 #. translators: %d: number of settings that differ from the recommendation
-#: admin/class-dashboard-next-steps.php:304
+#: admin/class-dashboard-next-steps.php:298
 #, php-format
 msgid "Adjusted (%d setting)."
 msgid_plural "Adjusted (%d settings)."
 msgstr[0] "Angepasst (%d Einstellung)."
 msgstr[1] "Angepasst (%d Einstellungen)."
 
-#: admin/class-dashboard-next-steps.php:376
+#: admin/class-dashboard-next-steps.php:370
 msgid "Next steps"
 msgstr "Nächste Schritte"
 
-#: admin/class-dashboard-next-steps.php:403
+#: admin/class-dashboard-next-steps.php:397
 msgid "my-secret-door"
 msgstr "meine-geheime-tuer"
 
-#: admin/class-dashboard-next-steps.php:418
+#: admin/class-dashboard-next-steps.php:412
 msgid "Not now"
 msgstr "Jetzt nicht"
 
-#: admin/class-dashboard-next-steps.php:444
+#: admin/class-dashboard-next-steps.php:438
 #: admin/class-protection-page.php:1504
 msgid "Protection areas"
 msgstr "Schutzbereiche"
 
-#: admin/class-dashboard-next-steps.php:445
+#: admin/class-dashboard-next-steps.php:439
 msgid "Every area of the Protection page with its current state. The points show what the scores gain once an area is switched on."
 msgstr "Jeder Bereich der Schutz-Seite mit seinem aktuellen Zustand. Die Punkte zeigen, was die Scores gewinnen, sobald ein Bereich eingeschaltet wird."
 
-#: admin/class-dashboard-next-steps.php:502
+#: admin/class-dashboard-next-steps.php:496
 #: admin/class-protection-page.php:1679
 msgid "Rejected."
 msgstr "Abgelehnt."
 
-#: admin/class-dashboard-next-steps.php:507
+#: admin/class-dashboard-next-steps.php:501
 msgid "Done."
 msgstr "Erledigt."
 
@@ -3161,14 +3158,14 @@ msgid "Log Entries"
 msgstr "Protokolleinträge"
 
 #: admin/class-logs-table.php:51
-#: includes/class-ajax-handler.php:315
-#: includes/class-ajax-handler.php:351
+#: includes/class-ajax-handler.php:314
+#: includes/class-ajax-handler.php:350
 #: includes/class-legacy-data.php:237
 #: includes/class-security-monitor.php:1566
 #: includes/class-two-factor-notifications.php:98
 #: includes/class-two-factor-notifications.php:313
 #: includes/class-two-factor-notifications.php:327
-#: reportedip-hive.php:979
+#: reportedip-hive.php:986
 msgid "Time"
 msgstr "Zeit"
 
@@ -3183,7 +3180,7 @@ msgstr "Details"
 
 #: admin/class-logs-table.php:79
 #: admin/class-logs-table.php:150
-#: reportedip-hive.php:991
+#: reportedip-hive.php:998
 msgid "Whitelist IP"
 msgstr "IP auf die Whitelist setzen"
 
@@ -3762,7 +3759,7 @@ msgstr "Importieren und abschließen"
 #: admin/class-quickstart.php:837
 #: admin/class-settings-import-export.php:267
 #: includes/class-ajax-handler.php:169
-#: includes/class-ajax-handler.php:188
+#: includes/class-ajax-handler.php:187
 msgid "Insufficient permissions."
 msgstr "Unzureichende Berechtigungen."
 
@@ -3839,7 +3836,7 @@ msgid "Preview changes"
 msgstr "Änderungen in der Vorschau anzeigen"
 
 #: admin/class-settings-import-export.php:446
-#: includes/class-ajax-handler.php:1617
+#: includes/class-ajax-handler.php:1622
 msgid "No file uploaded."
 msgstr "Keine Datei hochgeladen."
 
@@ -4101,7 +4098,7 @@ msgstr "[%s] Ihre Zwei-Faktor-Authentifizierung wurde zurückgesetzt"
 #. translators: %s: user display name
 #. translators: %s: admin display name
 #: admin/class-two-factor-admin.php:137
-#: includes/class-ajax-handler.php:340
+#: includes/class-ajax-handler.php:339
 #: includes/class-two-factor-email.php:136
 #: includes/class-two-factor-notifications.php:120
 #: includes/class-two-factor-notifications.php:337
@@ -4741,360 +4738,360 @@ msgstr "Passwort-Zurücksetzung blockiert"
 msgid "Your reportedip.com account is on the %1$s plan. Download the ReportedIP Hive Pro add-on from %2$s to use it on this site."
 msgstr "Ihr reportedip.com-Konto läuft im Tarif %1$s. Laden Sie das Add-on ReportedIP Hive Pro unter %2$s herunter, um ihn auf dieser Website zu nutzen."
 
-#: includes/class-ajax-handler.php:217
+#: includes/class-ajax-handler.php:216
 #: includes/class-settings-registry.php:1363
 msgid "This option is not part of the settings registry."
 msgstr "Diese Option ist nicht Teil der Einstellungs-Registry."
 
-#: includes/class-ajax-handler.php:241
+#: includes/class-ajax-handler.php:240
 msgid "Invalid mode specified."
 msgstr "Ungültiger Modus angegeben."
 
 #. translators: %s: mode label
-#: includes/class-ajax-handler.php:255
+#: includes/class-ajax-handler.php:254
 #, php-format
 msgid "Mode changed to %s"
 msgstr "Modus geändert zu %s"
 
-#: includes/class-ajax-handler.php:265
+#: includes/class-ajax-handler.php:264
 msgid "Failed to change mode. Please try again."
 msgstr "Der Modus konnte nicht geändert werden. Bitte versuchen Sie es erneut."
 
-#: includes/class-ajax-handler.php:304
+#: includes/class-ajax-handler.php:303
 msgid "No valid recipient address available."
 msgstr "Keine gültige Empfängeradresse verfügbar."
 
-#: includes/class-ajax-handler.php:311
-#: includes/class-ajax-handler.php:347
+#: includes/class-ajax-handler.php:310
+#: includes/class-ajax-handler.php:346
 msgid "Test type"
 msgstr "Testtyp"
 
-#: includes/class-ajax-handler.php:312
-#: includes/class-ajax-handler.php:348
+#: includes/class-ajax-handler.php:311
+#: includes/class-ajax-handler.php:347
 msgid "Brand template + provider verification"
 msgstr "Markenvorlage + Anbieterverifizierung"
 
-#: includes/class-ajax-handler.php:313
-#: includes/class-ajax-handler.php:349
+#: includes/class-ajax-handler.php:312
+#: includes/class-ajax-handler.php:348
 msgid "Triggered by"
 msgstr "Ausgelöst von"
 
 #. translators: %s: site name
-#: includes/class-ajax-handler.php:335
+#: includes/class-ajax-handler.php:334
 #, php-format
 msgid "[%s] ReportedIP Hive test email"
 msgstr "[%s] ReportedIP Hive Test-E-Mail"
 
-#: includes/class-ajax-handler.php:343
+#: includes/class-ajax-handler.php:342
 msgid "This is a test message from ReportedIP Hive. If you can read this in your usual mail client, the brand template and your active mail provider are working correctly."
 msgstr "Dies ist eine Testnachricht von ReportedIP Hive. Wenn Sie diese in Ihrem üblichen E-Mail-Programm lesen können, funktionieren die Markenvorlage und Ihr aktiver E-Mail-Anbieter korrekt."
 
-#: includes/class-ajax-handler.php:354
+#: includes/class-ajax-handler.php:353
 msgid "No action required. This email was sent on demand from the plugin settings."
 msgstr "Keine Aktion erforderlich. Diese E-Mail wurde auf Anforderung aus den Plugin-Einstellungen gesendet."
 
 #. translators: %s: masked recipient
-#: includes/class-ajax-handler.php:365
+#: includes/class-ajax-handler.php:364
 #, php-format
 msgid "Test email sent to %s."
 msgstr "Test-E-Mail an %s gesendet."
 
-#: includes/class-ajax-handler.php:369
+#: includes/class-ajax-handler.php:368
 msgid "Note: the managed relay is currently in cooldown for this recipient, the mail was delivered through the local wp_mail() fallback. Check the Activity log for the most recent 402/429 entry to see why."
 msgstr "Hinweis: Das verwaltete Relay befindet sich für diesen Empfänger derzeit in einer Abkühlphase, die E-Mail wurde über den lokalen wp_mail()-Fallback zugestellt. Sehen Sie im Aktivitätsprotokoll nach dem neuesten 402/429-Eintrag, um die Ursache zu erfahren."
 
-#: includes/class-ajax-handler.php:382
+#: includes/class-ajax-handler.php:381
 msgid "Test email could not be sent. Check the WordPress mail configuration or your active mail provider."
 msgstr "Die Test-E-Mail konnte nicht gesendet werden. Überprüfen Sie die WordPress-E-Mail-Konfiguration oder Ihren aktiven E-Mail-Anbieter."
 
-#: includes/class-ajax-handler.php:407
+#: includes/class-ajax-handler.php:406
 msgid "Unknown self-test pass."
 msgstr "Unbekannter Selbsttest-Durchlauf."
 
-#: includes/class-ajax-handler.php:613
-#: includes/class-database.php:489
+#: includes/class-ajax-handler.php:612
+#: includes/class-database.php:504
 msgid "Invalid IP address."
 msgstr "Ungültige IP-Adresse."
 
-#: includes/class-ajax-handler.php:637
+#: includes/class-ajax-handler.php:636
 msgid "Invalid IP address or CIDR range."
 msgstr "Ungültige IP-Adresse oder ungültiger CIDR-Bereich."
 
-#: includes/class-ajax-handler.php:641
+#: includes/class-ajax-handler.php:640
 msgid "Reason is required."
 msgstr "Ein Grund ist erforderlich."
 
-#: includes/class-ajax-handler.php:670
-#: includes/class-ajax-handler.php:705
+#: includes/class-ajax-handler.php:669
+#: includes/class-ajax-handler.php:704
 msgid "IP address is required."
 msgstr "Eine IP-Adresse ist erforderlich."
 
-#: includes/class-ajax-handler.php:674
+#: includes/class-ajax-handler.php:673
 msgid "Invalid IP address or CIDR format."
 msgstr "Ungültige IP-Adresse oder ungültiges CIDR-Format."
 
-#: includes/class-ajax-handler.php:678
+#: includes/class-ajax-handler.php:677
 msgid "Invalid expiration date."
 msgstr "Ungültiges Ablaufdatum."
 
-#: includes/class-ajax-handler.php:754
+#: includes/class-ajax-handler.php:753
 msgid "WAF exception saved."
 msgstr "WAF-Ausnahme gespeichert."
 
-#: includes/class-ajax-handler.php:772
+#: includes/class-ajax-handler.php:771
 msgid "A valid exception id is required."
 msgstr "Eine gültige Ausnahme-ID ist erforderlich."
 
-#: includes/class-ajax-handler.php:776
+#: includes/class-ajax-handler.php:775
 msgid "WAF exception removed."
 msgstr "WAF-Ausnahme entfernt."
 
-#: includes/class-ajax-handler.php:779
+#: includes/class-ajax-handler.php:778
 msgid "Could not remove the exception."
 msgstr "Ausnahme konnte nicht entfernt werden."
 
 #. translators: 1: number of old log entries removed, 2: number of expired IP entries removed
-#: includes/class-ajax-handler.php:799
+#: includes/class-ajax-handler.php:798
 #, php-format
 msgid "Cleanup completed. Removed %1$d old log entries and %2$d expired IP entries."
 msgstr "Bereinigung abgeschlossen. %1$d alte Protokolleinträge und %2$d abgelaufene IP-Einträge wurden entfernt."
 
 #. translators: 1: number of anonymized entries, 2: minimum age in days
-#: includes/class-ajax-handler.php:828
+#: includes/class-ajax-handler.php:827
 #, php-format
 msgid "Anonymization completed. Anonymized %1$d entries older than %2$d days."
 msgstr "Anonymisierung abgeschlossen. %1$d Einträge, die älter als %2$d Tage sind, wurden anonymisiert."
 
-#: includes/class-ajax-handler.php:867
+#: includes/class-ajax-handler.php:866
 msgid "Imported from CSV"
 msgstr "Aus CSV importiert"
 
 #. translators: 1: line number in CSV file, 2: invalid IP value found
-#: includes/class-ajax-handler.php:871
+#: includes/class-ajax-handler.php:870
 #, php-format
 msgid "Line %1$d: Invalid IP \"%2$s\""
 msgstr "Zeile %1$d: Ungültige IP \"%2$s\""
 
 #. translators: 1: line number in CSV file, 2: IP address, 3: error message returned by the blocker
-#: includes/class-ajax-handler.php:885
+#: includes/class-ajax-handler.php:884
 #, php-format
 msgid "Line %1$d: Failed to block \"%2$s\" - %3$s"
 msgstr "Zeile %1$d: \"%2$s\" konnte nicht gesperrt werden - %3$s"
 
 #. translators: 1: number of imported IPs, 2: number of skipped IPs, 3: number of errors
-#: includes/class-ajax-handler.php:908
+#: includes/class-ajax-handler.php:907
 #, php-format
 msgid "%1$d IPs imported, %2$d skipped (already blocked), %3$d errors."
 msgstr "%1$d IPs importiert, %2$d übersprungen (bereits gesperrt), %3$d Fehler."
 
 #. translators: 1: number of IPs imported to whitelist, 2: number of errors
-#: includes/class-ajax-handler.php:946
+#: includes/class-ajax-handler.php:945
 #, php-format
 msgid "%1$d IPs imported to whitelist, %2$d errors."
 msgstr "%1$d IPs auf die Whitelist importiert, %2$d Fehler."
 
 #. translators: %s: severity level used in the test event
-#: includes/class-ajax-handler.php:980
+#: includes/class-ajax-handler.php:979
 #, php-format
 msgid "Successfully logged %s severity test event."
 msgstr "Testereignis mit Schweregrad %s erfolgreich protokolliert."
 
-#: includes/class-ajax-handler.php:985
+#: includes/class-ajax-handler.php:984
 msgid "Failed to log test event. Check database connection."
 msgstr "Testereignis konnte nicht protokolliert werden. Überprüfen Sie die Datenbankverbindung."
 
-#: includes/class-ajax-handler.php:1007
+#: includes/class-ajax-handler.php:1006
 msgid "Basic database connection failed."
 msgstr "Grundlegende Datenbankverbindung fehlgeschlagen."
 
-#: includes/class-ajax-handler.php:1015
+#: includes/class-ajax-handler.php:1014
 msgid "Plugin database tables are missing. Try deactivating and reactivating the plugin."
 msgstr "Die Datenbanktabellen des Plugins fehlen. Versuchen Sie, das Plugin zu deaktivieren und erneut zu aktivieren."
 
-#: includes/class-ajax-handler.php:1036
+#: includes/class-ajax-handler.php:1035
 msgid "Database insert test failed: "
 msgstr "Datenbank-Einfügetest fehlgeschlagen: "
 
-#: includes/class-ajax-handler.php:1044
+#: includes/class-ajax-handler.php:1043
 msgid "Database connection and functionality test successful."
 msgstr "Test der Datenbankverbindung und Funktionalität erfolgreich."
 
-#: includes/class-ajax-handler.php:1081
+#: includes/class-ajax-handler.php:1080
 msgid "Cron jobs triggered successfully. Check logs for results."
 msgstr "Cron-Jobs erfolgreich ausgelöst. Überprüfen Sie die Protokolle für die Ergebnisse."
 
-#: includes/class-ajax-handler.php:1117
+#: includes/class-ajax-handler.php:1116
 msgid "Auto-block function test successful! Test IP was blocked."
 msgstr "Test der automatischen Sperrfunktion erfolgreich! Test-IP wurde gesperrt."
 
 #. translators: %s: human readable reason why the IP was not blocked
-#: includes/class-ajax-handler.php:1139
+#: includes/class-ajax-handler.php:1138
 #, php-format
 msgid "Auto-block function test completed. IP was not blocked. Reason: %s"
 msgstr "Test der automatischen Sperrfunktion abgeschlossen. IP wurde nicht gesperrt. Grund: %s"
 
 #. translators: 1: number of attempts recorded, 2: configured threshold, 3: "Yes" or "No" indicating threshold exceeded
-#: includes/class-ajax-handler.php:1209
+#: includes/class-ajax-handler.php:1208
 #, php-format
 msgid "Failed login threshold simulation completed. %1$d attempts recorded, threshold is %2$d. Threshold exceeded: %3$s"
 msgstr "Simulation des Schwellenwerts für fehlgeschlagene Anmeldungen abgeschlossen. %1$d Versuche erfasst, der Schwellenwert beträgt %2$d. Schwellenwert überschritten: %3$s"
 
 #. translators: 1: number of attempts that were actually recorded, 2: number of attempts that were expected
-#: includes/class-ajax-handler.php:1226
+#: includes/class-ajax-handler.php:1225
 #, php-format
 msgid "Simulation failed. Only %1$d attempts recorded, but %2$d were expected."
 msgstr "Simulation fehlgeschlagen. Nur %1$d Versuche erfasst, aber %2$d wurden erwartet."
 
 #. translators: %d: number of cache entries that were removed
-#: includes/class-ajax-handler.php:1253
+#: includes/class-ajax-handler.php:1252
 #, php-format
 msgid "Cache cleared successfully. Removed %d cache entries."
 msgstr "Cache erfolgreich geleert. %d Cache-Einträge entfernt."
 
 #. translators: %d: number of expired cache entries that were removed
-#: includes/class-ajax-handler.php:1281
+#: includes/class-ajax-handler.php:1280
 #, php-format
 msgid "Expired cache entries cleaned up. Removed %d expired entries."
 msgstr "Abgelaufene Cache-Einträge bereinigt. %d abgelaufene Einträge entfernt."
 
-#: includes/class-ajax-handler.php:1304
-#: includes/class-ajax-handler.php:1437
+#: includes/class-ajax-handler.php:1303
+#: includes/class-ajax-handler.php:1436
 msgid "Invalid report ID."
 msgstr "Ungültige Bericht-ID."
 
-#: includes/class-ajax-handler.php:1314
+#: includes/class-ajax-handler.php:1313
 msgid "Queue row not found."
 msgstr "Warteschlangeneintrag nicht gefunden."
 
-#: includes/class-ajax-handler.php:1350
+#: includes/class-ajax-handler.php:1349
 msgid "Report sent."
 msgstr "Bericht gesendet."
 
 #. translators: %s: API error message
-#: includes/class-ajax-handler.php:1358
+#: includes/class-ajax-handler.php:1357
 #, php-format
 msgid "Send failed: %s"
 msgstr "Senden fehlgeschlagen: %s"
 
-#: includes/class-ajax-handler.php:1359
+#: includes/class-ajax-handler.php:1358
 msgid "unknown error"
 msgstr "unbekannter Fehler"
 
 #. translators: 1: reset count, 2: processed count, 3: errors count
-#: includes/class-ajax-handler.php:1403
+#: includes/class-ajax-handler.php:1402
 #, php-format
 msgid "%1$d failed reset · %2$d sent · %3$d errors"
 msgstr "%1$d fehlgeschlagene zurückgesetzt · %2$d gesendet · %3$d Fehler"
 
-#: includes/class-ajax-handler.php:1456
+#: includes/class-ajax-handler.php:1455
 msgid "Queue item deleted."
 msgstr "Warteschlangeneintrag gelöscht."
 
-#: includes/class-ajax-handler.php:1461
+#: includes/class-ajax-handler.php:1460
 msgid "Failed to delete queue item."
 msgstr "Warteschlangeneintrag konnte nicht gelöscht werden."
 
-#: includes/class-ajax-handler.php:1501
+#: includes/class-ajax-handler.php:1500
 msgid "All settings have been reset to defaults. The page will reload."
 msgstr "Alle Einstellungen wurden auf die Standardwerte zurückgesetzt. Die Seite wird neu geladen."
 
-#: includes/class-ajax-handler.php:1533
+#: includes/class-ajax-handler.php:1532
 msgid "API statistics have been reset. The page will reload."
 msgstr "Die API-Statistik wurde zurückgesetzt. Die Seite wird neu geladen."
 
-#: includes/class-ajax-handler.php:1560
+#: includes/class-ajax-handler.php:1559
 msgid "All plugin data has been deleted. The page will reload."
 msgstr "Alle Plugin-Daten wurden gelöscht. Die Seite wird neu geladen."
 
-#: includes/class-ajax-handler.php:1580
+#: includes/class-ajax-handler.php:1581
 msgid "Invalid notice ID."
 msgstr "Ungültige Hinweis-ID."
 
-#: includes/class-ajax-handler.php:1625
+#: includes/class-ajax-handler.php:1630
 msgid "File exceeds upload_max_filesize."
 msgstr "Die Datei überschreitet upload_max_filesize."
 
-#: includes/class-ajax-handler.php:1626
+#: includes/class-ajax-handler.php:1631
 msgid "File exceeds MAX_FILE_SIZE."
 msgstr "Die Datei überschreitet MAX_FILE_SIZE."
 
-#: includes/class-ajax-handler.php:1627
+#: includes/class-ajax-handler.php:1632
 msgid "File was only partially uploaded."
 msgstr "Die Datei wurde nur teilweise hochgeladen."
 
-#: includes/class-ajax-handler.php:1628
+#: includes/class-ajax-handler.php:1633
 msgid "No file was uploaded."
 msgstr "Es wurde keine Datei hochgeladen."
 
-#: includes/class-ajax-handler.php:1629
+#: includes/class-ajax-handler.php:1634
 msgid "Missing temporary folder."
 msgstr "Temporärer Ordner fehlt."
 
-#: includes/class-ajax-handler.php:1630
+#: includes/class-ajax-handler.php:1635
 msgid "Failed to write file to disk."
 msgstr "Datei konnte nicht auf den Datenträger geschrieben werden."
 
-#: includes/class-ajax-handler.php:1631
+#: includes/class-ajax-handler.php:1636
 msgid "File upload stopped by extension."
 msgstr "Datei-Upload durch eine Erweiterung gestoppt."
 
-#: includes/class-ajax-handler.php:1633
+#: includes/class-ajax-handler.php:1638
 msgid "Unknown upload error."
 msgstr "Unbekannter Upload-Fehler."
 
-#: includes/class-ajax-handler.php:1638
+#: includes/class-ajax-handler.php:1643
 msgid "File too large. Maximum size is 1 MB."
 msgstr "Datei zu groß. Die maximale Größe beträgt 1 MB."
 
-#: includes/class-ajax-handler.php:1643
+#: includes/class-ajax-handler.php:1648
 msgid "Invalid file type. Only CSV and TXT files are allowed."
 msgstr "Ungültiger Dateityp. Nur CSV- und TXT-Dateien sind erlaubt."
 
-#: includes/class-ajax-handler.php:1649
+#: includes/class-ajax-handler.php:1654
 msgid "Failed to read uploaded file."
 msgstr "Die hochgeladene Datei konnte nicht gelesen werden."
 
-#: includes/class-ajax-handler.php:1679
+#: includes/class-ajax-handler.php:1684
 msgid "Queue processed and quota refreshed. Check Activity log for details."
 msgstr "Warteschlange verarbeitet und Kontingent aktualisiert. Überprüfen Sie das Aktivitätsprotokoll für Details."
 
-#: includes/class-ajax-handler.php:1701
+#: includes/class-ajax-handler.php:1706
 msgid "Priority Sync requires a Contributor plan."
 msgstr "Priority-Sync erfordert mindestens den Contributor-Tarif."
 
-#: includes/class-ajax-handler.php:1706
+#: includes/class-ajax-handler.php:1711
 msgid "Rulesets synced."
 msgstr "Regelsätze synchronisiert."
 
-#: includes/class-ajax-handler.php:1730
+#: includes/class-ajax-handler.php:1735
 msgid "The drop-in manager is unavailable."
 msgstr "Der Drop-in-Manager ist nicht verfügbar."
 
-#: includes/class-ajax-handler.php:1738
+#: includes/class-ajax-handler.php:1743
 msgid "The server configuration target is not writable. Adjust file permissions and try again."
 msgstr "Das Server-Konfigurationsziel ist nicht beschreibbar. Passen Sie die Dateiberechtigungen an und versuchen Sie es erneut."
 
-#: includes/class-ajax-handler.php:1744
+#: includes/class-ajax-handler.php:1749
 msgid "Extended protection enabled."
 msgstr "Erweiterter Schutz aktiviert."
 
-#: includes/class-ajax-handler.php:1745
+#: includes/class-ajax-handler.php:1750
 msgid "Extended protection disabled."
 msgstr "Erweiterter Schutz deaktiviert."
 
-#: includes/class-ajax-handler.php:1747
+#: includes/class-ajax-handler.php:1752
 msgid "Guard file generated. Paste the nginx snippet into your server block and reload nginx."
 msgstr "Guard-Datei erzeugt. Fügen Sie das nginx-Snippet in Ihren Server-Block ein und laden Sie nginx neu."
 
-#: includes/class-ajax-handler.php:1784
+#: includes/class-ajax-handler.php:1789
 msgid "Invalid payload."
 msgstr "Ungültige Nutzdaten."
 
-#: includes/class-ajax-handler.php:1820
+#: includes/class-ajax-handler.php:1825
 msgid "Queue lock cleared."
 msgstr "Warteschlangensperre aufgehoben."
 
-#: includes/class-ajax-handler.php:1821
+#: includes/class-ajax-handler.php:1826
 msgid "No queue lock was held."
 msgstr "Es war keine Warteschlangensperre aktiv."
 
@@ -5154,15 +5151,15 @@ msgstr "Unbegrenzte Meldungen in dieser Stufe."
 msgid "%d reports remaining today."
 msgstr "%d Meldungen heute verbleibend."
 
-#: includes/class-attack-surface.php:443
+#: includes/class-attack-surface.php:430
 msgid "The REST API is only available to authenticated users on this site."
 msgstr "Die REST API steht auf dieser Website nur angemeldeten Benutzern offen."
 
-#: includes/class-attack-surface.php:458
+#: includes/class-attack-surface.php:445
 msgid "Your account role is not allowed to use the REST API on this site."
 msgstr "Ihre Benutzerrolle darf die REST API auf dieser Website nicht nutzen."
 
-#: includes/class-attack-surface.php:630
+#: includes/class-attack-surface.php:617
 msgid "XML-RPC is switched off under Firewall → Hardening, so this setting has no effect right now."
 msgstr "XML-RPC ist unter Firewall → Härtung abgeschaltet, diese Einstellung hat deshalb gerade keine Wirkung."
 
@@ -5306,19 +5303,19 @@ msgstr "Alle 15 Minuten"
 msgid "Every 6 Hours"
 msgstr "Alle 6 Stunden"
 
-#: includes/class-database.php:454
+#: includes/class-database.php:469
 msgid "Invalid exception scope."
 msgstr "Ungültiger Geltungsbereich der Ausnahme."
 
-#: includes/class-database.php:464
+#: includes/class-database.php:479
 msgid "A whole-engine exception must be scoped to at least a path or an IP address."
 msgstr "Eine Ausnahme für die gesamte Engine muss mindestens auf einen Pfad oder eine IP-Adresse beschränkt sein."
 
-#: includes/class-database.php:471
+#: includes/class-database.php:486
 msgid "A rule or group identifier is required for this exception scope."
 msgstr "Für diesen Geltungsbereich ist eine Regel- oder Gruppenkennung erforderlich."
 
-#: includes/class-database.php:536
+#: includes/class-database.php:551
 msgid "Could not store the exception."
 msgstr "Ausnahme konnte nicht gespeichert werden."
 
@@ -6433,124 +6430,116 @@ msgstr "%s ist hier aktiv und Hive kann es prüfen, der Schalter ist aber noch a
 msgid "%s is not covered yet"
 msgstr "%s ist noch nicht geschützt"
 
-#: includes/class-readiness.php:290
-msgid "Show the protection badge"
-msgstr "Schutz-Badge anzeigen"
-
-#: includes/class-readiness.php:291
-msgid "A small footer badge tells visitors the site is protected and links to the community network. It is a text line, no tracking."
-msgstr "Ein kleines Badge im Footer sagt Besuchern, dass die Site geschützt ist, und verlinkt auf das Community Network. Eine Textzeile, kein Tracking."
-
-#: includes/class-readiness.php:314
+#: includes/class-readiness.php:295
 msgid "Switch on Extended Protection"
 msgstr "Erweiterten Schutz einschalten"
 
-#: includes/class-readiness.php:315
+#: includes/class-readiness.php:296
 msgid "The guard rejects known-bad requests before WordPress loads. Your server supports it; one click writes the directive."
 msgstr "Der Wächter weist bekannt schädliche Anfragen ab, bevor WordPress lädt. Ihr Server unterstützt ihn; ein Klick schreibt die Direktive."
 
-#: includes/class-readiness.php:333
+#: includes/class-readiness.php:314
 msgid "Join the community network"
 msgstr "Dem Community Network beitreten"
 
-#: includes/class-readiness.php:334
+#: includes/class-readiness.php:315
 msgid "Local Shield blocks what it sees itself. With a free Community Access Key the site also refuses addresses the network already knows."
 msgstr "Local Shield sperrt, was es selbst sieht. Mit einem kostenlosen Community Access Key weist die Site auch Adressen ab, die das Netzwerk schon kennt."
 
-#: includes/class-readiness.php:355
+#: includes/class-readiness.php:336
 msgid "Set up your own second factor"
 msgstr "Richten Sie Ihren eigenen zweiten Faktor ein"
 
-#: includes/class-readiness.php:356
+#: includes/class-readiness.php:337
 msgid "Two-factor authentication is on for this site, but your account has no method yet. An authenticator app takes two minutes."
 msgstr "Die Zwei-Faktor-Authentifizierung ist für diese Site aktiv, Ihr Konto hat aber noch keine Methode. Eine Authenticator-App dauert zwei Minuten."
 
-#: includes/class-readiness.php:735
+#: includes/class-readiness.php:741
 msgid "Extended protection cannot record hits"
 msgstr "Erweiterter Schutz kann keine Treffer aufzeichnen"
 
-#: includes/class-readiness.php:769
+#: includes/class-readiness.php:775
 msgid "WP-Cron is not running"
 msgstr "WP-Cron läuft nicht"
 
-#: includes/class-readiness.php:770
+#: includes/class-readiness.php:776
 msgid "WP-Cron has not fired any ReportedIP Hive hook in the last 24 h."
 msgstr "WP-Cron hat in den letzten 24 Std. keinen ReportedIP Hive-Hook ausgelöst."
 
-#: includes/class-readiness.php:772
+#: includes/class-readiness.php:778
 msgid "Likely causes: the site cannot call its own wp-cron.php (a failing loopback request, listed under Tools, Site Health), or another plugin's cron jobs use up the per-run time limit (WP_CRON_LOCK_TIMEOUT) before our jobs run. Set up a dedicated server cron using the snippet below."
 msgstr "Wahrscheinliche Ursachen: Die Website kann ihre eigene wp-cron.php nicht aufrufen (ein fehlgeschlagener Loopback-Request, sichtbar unter Werkzeuge, Website-Zustand), oder die Cron-Jobs eines anderen Plugins verbrauchen das Zeitlimit pro Durchlauf (WP_CRON_LOCK_TIMEOUT), bevor unsere Jobs an die Reihe kommen. Richten Sie mit dem Snippet unten einen dedizierten Server-Cron ein."
 
-#: includes/class-readiness.php:806
+#: includes/class-readiness.php:812
 msgid "WP-Cron is disabled and overdue"
 msgstr "WP-Cron ist abgeschaltet und überfällig"
 
-#: includes/class-readiness.php:807
+#: includes/class-readiness.php:813
 msgid "DISABLE_WP_CRON is set, ALTERNATE_WP_CRON is off and the next scheduled run is more than an hour late. Without a server cron calling wp-cron.php the report queue, the quota refresh and the ruleset sync stop running."
 msgstr "DISABLE_WP_CRON ist gesetzt, ALTERNATE_WP_CRON ist aus, und der nächste geplante Lauf ist mehr als eine Stunde überfällig. Ohne einen Server-Cron, der wp-cron.php aufruft, laufen die Meldungs-Warteschlange, die Kontingent-Aktualisierung und der Abgleich der Regelsätze nicht mehr."
 
-#: includes/class-readiness.php:827
+#: includes/class-readiness.php:833
 msgid "Client-IP header trusted from any source"
 msgstr "Client-IP-Header wird aus jeder Quelle akzeptiert"
 
-#: includes/class-readiness.php:828
+#: includes/class-readiness.php:834
 msgid "The client-IP header is currently accepted from any source. Anyone able to reach this site directly can forge their IP address. Add the CIDR ranges of your proxy or CDN under Trusted proxy sources."
 msgstr "Der Client-IP-Header wird derzeit von jeder Quelle akzeptiert. Wer diese Website direkt erreicht, kann seine IP-Adresse fälschen. Tragen Sie unter Vertrauenswürdige Proxy-Quellen die CIDR-Bereiche Ihres Proxys oder CDNs ein."
 
-#: includes/class-readiness.php:848
+#: includes/class-readiness.php:854
 msgid "Database schema is out of date"
 msgstr "Datenbankschema ist veraltet"
 
 #. translators: 1: stored schema version, 2: schema version this build expects.
-#: includes/class-readiness.php:851
+#: includes/class-readiness.php:857
 #, php-format
 msgid "The plugin tables are at schema version %1$d but this build expects %2$d. Sensors that rely on the newer columns or indexes can behave incorrectly. Open the System Status page to let the migration run again."
 msgstr "Die Plugin-Tabellen stehen auf Schemaversion %1$d, dieser Build erwartet %2$d. Sensoren, die auf den neueren Spalten oder Indizes aufsetzen, können sich falsch verhalten. Öffnen Sie die Seite Systemstatus, damit die Migration erneut läuft."
 
-#: includes/class-readiness.php:875
+#: includes/class-readiness.php:881
 msgid "Community threat checks are failing"
 msgstr "Community-Bedrohungsabfragen schlagen fehl"
 
 #. translators: 1: success rate in percent, 2: number of calls in the rolling window.
-#: includes/class-readiness.php:878
+#: includes/class-readiness.php:884
 #, php-format
 msgid "Only %1$s%% of the last %2$d calls to the community network succeeded. Local protection is unaffected; reputation lookups and report submissions are unreliable until the connection recovers."
 msgstr "Nur %1$s%% der letzten %2$d Aufrufe an das Community-Netzwerk waren erfolgreich. Der lokale Schutz ist davon nicht betroffen, Reputationsabfragen und Meldungsübermittlungen bleiben aber unzuverlässig, bis die Verbindung wieder steht."
 
-#: includes/class-readiness.php:900
+#: includes/class-readiness.php:906
 msgid "Outgoing mail is failing"
 msgstr "Ausgehende E-Mails schlagen fehl"
 
 #. translators: 1: number of failed mails, 2: last error message reported by wp_mail().
-#: includes/class-readiness.php:903
+#: includes/class-readiness.php:909
 #, php-format
 msgid "%1$d outgoing mails failed in the last 24 hours. Two-factor codes, lockout alerts and quota warnings may not arrive. Last error: %2$s"
 msgstr "%1$d ausgehende E-Mails sind in den letzten 24 Stunden fehlgeschlagen. Zwei-Faktor-Codes, Sperrmeldungen und Kontingentwarnungen kommen womöglich nicht an. Letzter Fehler: %2$s"
 
-#: includes/class-readiness.php:925
+#: includes/class-readiness.php:931
 msgid "No encryption backend available"
 msgstr "Kein Verschlüsselungs-Backend verfügbar"
 
-#: includes/class-readiness.php:926
+#: includes/class-readiness.php:932
 msgid "Neither libsodium nor OpenSSL is available on this server, so two-factor secrets and phone numbers cannot be encrypted at rest. Ask your host to enable one of the two PHP extensions."
 msgstr "Auf diesem Server ist weder libsodium noch OpenSSL verfügbar, Zwei-Faktor-Geheimnisse und Telefonnummern lassen sich deshalb nicht verschlüsselt speichern. Bitten Sie Ihren Hoster, eine der beiden PHP-Erweiterungen zu aktivieren."
 
-#: includes/class-readiness.php:950
+#: includes/class-readiness.php:956
 msgid "Reports failed to reach the community"
 msgstr "Meldungen haben die Community nicht erreicht"
 
 #. translators: %d: number of failed queue entries.
-#: includes/class-readiness.php:953
+#: includes/class-readiness.php:959
 #, php-format
 msgid "%d queued reports could not be submitted. Retry or clear them on the API queue tab."
 msgstr "%d wartende Meldungen konnten nicht übermittelt werden. Wiederholen oder löschen Sie sie im Reiter API-Warteschlange."
 
-#: includes/class-readiness.php:978
+#: includes/class-readiness.php:984
 msgid "Report queue backlog"
 msgstr "Rückstau in der Meldungs-Warteschlange"
 
 #. translators: %d: number of pending queue entries.
-#: includes/class-readiness.php:981
+#: includes/class-readiness.php:987
 #, php-format
 msgid "%d reports are waiting to be submitted. The queue drains faster on a higher tier, or you can process it manually from the API queue tab."
 msgstr "%d Meldungen warten auf die Übermittlung. In einem höheren Tarif leert sich die Warteschlange schneller, alternativ verarbeiten Sie sie im Reiter API-Warteschlange von Hand."
@@ -8210,7 +8199,7 @@ msgid "Go to dashboard"
 msgstr "Zum Dashboard"
 
 #: includes/class-two-factor-onboarding.php:435
-#: reportedip-hive.php:926
+#: reportedip-hive.php:933
 msgid "Sending..."
 msgstr "Wird gesendet..."
 
@@ -8235,7 +8224,7 @@ msgid "Your browser does not support passkeys. Please choose another method."
 msgstr "Ihr Browser unterstützt keine Passkeys. Bitte wählen Sie eine andere Methode."
 
 #: includes/class-two-factor-onboarding.php:442
-#: reportedip-hive.php:931
+#: reportedip-hive.php:938
 msgid "Network error. Please try again."
 msgstr "Netzwerkfehler. Bitte versuchen Sie es erneut."
 
@@ -8899,422 +8888,422 @@ msgstr "Server-Side Template Injection (SSTI)"
 msgid "REST API abuse"
 msgstr "REST-API-Missbrauch"
 
-#: reportedip-hive.php:814
+#: reportedip-hive.php:821
 msgid "Pro add-on"
 msgstr "Pro-Add-on"
 
-#: reportedip-hive.php:905
+#: reportedip-hive.php:912
 msgid "Testing connection..."
 msgstr "Verbindung wird getestet..."
 
-#: reportedip-hive.php:906
+#: reportedip-hive.php:913
 msgid "Connection successful!"
 msgstr "Verbindung erfolgreich!"
 
-#: reportedip-hive.php:907
+#: reportedip-hive.php:914
 msgid "Connection failed!"
 msgstr "Verbindung fehlgeschlagen!"
 
-#: reportedip-hive.php:908
+#: reportedip-hive.php:915
 msgid "Are you sure you want to unblock this IP?"
 msgstr "Möchten Sie diese IP wirklich entsperren?"
 
-#: reportedip-hive.php:909
+#: reportedip-hive.php:916
 msgid "Are you sure you want to whitelist this IP?"
 msgstr "Möchten Sie diese IP wirklich auf die Whitelist setzen?"
 
-#: reportedip-hive.php:910
+#: reportedip-hive.php:917
 msgid "Are you sure you want to reset all settings to defaults?"
 msgstr "Möchten Sie wirklich alle Einstellungen auf die Standardwerte zurücksetzen?"
 
-#: reportedip-hive.php:911
+#: reportedip-hive.php:918
 msgid "Reset the API statistics counter? This clears usage history only."
 msgstr "Den API-Statistikzähler zurücksetzen? Dies löscht nur die Nutzungshistorie."
 
-#: reportedip-hive.php:912
+#: reportedip-hive.php:919
 msgid "WARNING: This will delete ALL plugin data including logs, blocked IPs, and whitelist entries. This cannot be undone!"
 msgstr "WARNUNG: Dadurch werden ALLE Plugin-Daten einschließlich Protokolle, gesperrter IPs und Whitelist-Einträge gelöscht. Dies kann nicht rückgängig gemacht werden!"
 
-#: reportedip-hive.php:913
+#: reportedip-hive.php:920
 msgid "Are you absolutely sure?"
 msgstr "Sind Sie absolut sicher?"
 
-#: reportedip-hive.php:914
+#: reportedip-hive.php:921
 msgid "Remove this WAF exception?"
 msgstr "Diese WAF-Ausnahme entfernen?"
 
 #. translators: %1$s = WAF rule id, %2$s = request path.
-#: reportedip-hive.php:916
+#: reportedip-hive.php:923
 #, php-format
 msgid "Allow rule \"%1$s\" on path \"%2$s\"? The WAF stays active everywhere else."
 msgstr "Regel \"%1$s\" auf Pfad \"%2$s\" erlauben? Die WAF bleibt überall sonst aktiv."
 
-#: reportedip-hive.php:917
+#: reportedip-hive.php:924
 msgid "Are you sure you want to remove this IP from the whitelist?"
 msgstr "Möchten Sie diese IP wirklich von der Whitelist entfernen?"
 
-#: reportedip-hive.php:918
+#: reportedip-hive.php:925
 msgid "Are you sure you want to clean up old logs? This action cannot be undone."
 msgstr "Möchten Sie alte Protokolle wirklich bereinigen? Diese Aktion kann nicht rückgängig gemacht werden."
 
-#: reportedip-hive.php:919
+#: reportedip-hive.php:926
 msgid "Are you sure you want to anonymize old data? This will remove personal information from logs."
 msgstr "Möchten Sie alte Daten wirklich anonymisieren? Dabei werden personenbezogene Informationen aus den Protokollen entfernt."
 
-#: reportedip-hive.php:920
+#: reportedip-hive.php:927
 msgid "Enter reason for whitelisting (optional):"
 msgstr "Grund für das Setzen auf die Whitelist eingeben (optional):"
 
-#: reportedip-hive.php:921
+#: reportedip-hive.php:928
 msgid "Manually whitelisted from blocked list"
 msgstr "Manuell aus der Sperrliste auf die Whitelist gesetzt"
 
-#: reportedip-hive.php:922
+#: reportedip-hive.php:929
 msgid "Enter reason for blocking this IP:"
 msgstr "Grund für das Sperren dieser IP eingeben:"
 
-#: reportedip-hive.php:923
+#: reportedip-hive.php:930
 msgid "Blocked from security logs"
 msgstr "Aus den Sicherheitsprotokollen gesperrt"
 
-#: reportedip-hive.php:924
+#: reportedip-hive.php:931
 msgid "Export logs from how many days? (default: 30)"
 msgstr "Protokolle aus wie vielen Tagen exportieren? (Standard: 30)"
 
-#: reportedip-hive.php:925
+#: reportedip-hive.php:932
 msgid "Request failed. Check server logs."
 msgstr "Anfrage fehlgeschlagen. Prüfen Sie die Server-Logs."
 
-#: reportedip-hive.php:927
+#: reportedip-hive.php:934
 msgid "Test email failed."
 msgstr "Test-E-Mail fehlgeschlagen."
 
-#: reportedip-hive.php:929
+#: reportedip-hive.php:936
 msgid "Request failed."
 msgstr "Anfrage fehlgeschlagen."
 
-#: reportedip-hive.php:930
+#: reportedip-hive.php:937
 msgid "Network error occurred"
 msgstr "Netzwerkfehler aufgetreten"
 
-#: reportedip-hive.php:932
+#: reportedip-hive.php:939
 msgid "API statistics reset."
 msgstr "API-Statistiken zurückgesetzt."
 
-#: reportedip-hive.php:933
+#: reportedip-hive.php:940
 msgid "Failed to reset API statistics."
 msgstr "API-Statistiken konnten nicht zurückgesetzt werden."
 
-#: reportedip-hive.php:934
+#: reportedip-hive.php:941
 msgid "Cache cleared."
 msgstr "Cache geleert."
 
-#: reportedip-hive.php:935
+#: reportedip-hive.php:942
 msgid "Failed to clear cache."
 msgstr "Cache konnte nicht geleert werden."
 
-#: reportedip-hive.php:936
+#: reportedip-hive.php:943
 msgid "Expired entries cleaned."
 msgstr "Abgelaufene Einträge bereinigt."
 
-#: reportedip-hive.php:937
+#: reportedip-hive.php:944
 msgid "Failed to clean expired entries."
 msgstr "Abgelaufene Einträge konnten nicht bereinigt werden."
 
-#: reportedip-hive.php:938
+#: reportedip-hive.php:945
 msgid "Mode changed successfully"
 msgstr "Modus erfolgreich geändert"
 
-#: reportedip-hive.php:939
+#: reportedip-hive.php:946
 msgid "Failed to change mode"
 msgstr "Modus konnte nicht geändert werden"
 
-#: reportedip-hive.php:940
+#: reportedip-hive.php:947
 msgid "IP address added to whitelist successfully"
 msgstr "IP-Adresse erfolgreich zur Whitelist hinzugefügt"
 
-#: reportedip-hive.php:941
+#: reportedip-hive.php:948
 msgid "Failed to add IP to whitelist"
 msgstr "IP konnte nicht zur Whitelist hinzugefügt werden"
 
-#: reportedip-hive.php:942
+#: reportedip-hive.php:949
 msgid "IP address removed from whitelist"
 msgstr "IP-Adresse von der Whitelist entfernt"
 
-#: reportedip-hive.php:943
+#: reportedip-hive.php:950
 msgid "Failed to remove IP from whitelist"
 msgstr "IP konnte nicht von der Whitelist entfernt werden"
 
-#: reportedip-hive.php:944
+#: reportedip-hive.php:951
 msgid "WAF exception saved"
 msgstr "WAF-Ausnahme gespeichert"
 
-#: reportedip-hive.php:945
+#: reportedip-hive.php:952
 msgid "Failed to save the exception"
 msgstr "Die Ausnahme konnte nicht gespeichert werden"
 
-#: reportedip-hive.php:946
+#: reportedip-hive.php:953
 msgid "WAF exception removed"
 msgstr "WAF-Ausnahme entfernt"
 
-#: reportedip-hive.php:947
+#: reportedip-hive.php:954
 msgid "Failed to remove the exception"
 msgstr "Die Ausnahme konnte nicht entfernt werden"
 
-#: reportedip-hive.php:948
+#: reportedip-hive.php:955
 msgid "WAF exception added for this rule"
 msgstr "WAF-Ausnahme für diese Regel hinzugefügt"
 
-#: reportedip-hive.php:949
+#: reportedip-hive.php:956
 msgid "Failed to add the exception"
 msgstr "Die Ausnahme konnte nicht hinzugefügt werden"
 
-#: reportedip-hive.php:950
+#: reportedip-hive.php:957
 msgid "IP address blocked successfully"
 msgstr "IP-Adresse erfolgreich gesperrt"
 
-#: reportedip-hive.php:951
+#: reportedip-hive.php:958
 msgid "Failed to block IP address"
 msgstr "Die IP-Adresse konnte nicht gesperrt werden"
 
-#: reportedip-hive.php:952
+#: reportedip-hive.php:959
 msgid "IP address unblocked successfully"
 msgstr "IP-Adresse erfolgreich entsperrt"
 
-#: reportedip-hive.php:953
+#: reportedip-hive.php:960
 msgid "Failed to unblock IP address"
 msgstr "Die Sperre der IP-Adresse konnte nicht aufgehoben werden"
 
-#: reportedip-hive.php:954
+#: reportedip-hive.php:961
 msgid "IP address whitelisted successfully"
 msgstr "IP-Adresse erfolgreich auf die Whitelist gesetzt"
 
-#: reportedip-hive.php:955
+#: reportedip-hive.php:962
 msgid "Failed to whitelist IP address"
 msgstr "Die IP-Adresse konnte nicht auf die Whitelist gesetzt werden"
 
-#: reportedip-hive.php:956
+#: reportedip-hive.php:963
 msgid "No IP address found"
 msgstr "Keine IP-Adresse gefunden"
 
-#: reportedip-hive.php:957
+#: reportedip-hive.php:964
 msgid "Failed to copy IP address"
 msgstr "IP-Adresse konnte nicht kopiert werden"
 
-#: reportedip-hive.php:958
+#: reportedip-hive.php:965
 msgid "Failed to cleanup logs"
 msgstr "Protokolle konnten nicht bereinigt werden"
 
-#: reportedip-hive.php:959
+#: reportedip-hive.php:966
 msgid "Failed to anonymize data"
 msgstr "Daten konnten nicht anonymisiert werden"
 
-#: reportedip-hive.php:960
+#: reportedip-hive.php:967
 msgid "Logs exported successfully"
 msgstr "Protokolle erfolgreich exportiert"
 
-#: reportedip-hive.php:961
+#: reportedip-hive.php:968
 msgid "Failed to export logs"
 msgstr "Protokolle konnten nicht exportiert werden"
 
-#: reportedip-hive.php:962
+#: reportedip-hive.php:969
 msgid "Import completed."
 msgstr "Import abgeschlossen."
 
-#: reportedip-hive.php:963
+#: reportedip-hive.php:970
 msgid "Import failed."
 msgstr "Import fehlgeschlagen."
 
-#: reportedip-hive.php:964
+#: reportedip-hive.php:971
 msgid "Please enter an IP address"
 msgstr "Bitte geben Sie eine IP-Adresse ein"
 
-#: reportedip-hive.php:965
+#: reportedip-hive.php:972
 msgid "Failed to lookup IP address"
 msgstr "IP-Adresse konnte nicht abgefragt werden"
 
-#: reportedip-hive.php:968
+#: reportedip-hive.php:975
 msgid "Clean"
 msgstr "Unauffällig"
 
-#: reportedip-hive.php:969
+#: reportedip-hive.php:976
 msgid "IP Information:"
 msgstr "IP-Informationen:"
 
-#: reportedip-hive.php:970
+#: reportedip-hive.php:977
 msgid "Valid:"
 msgstr "Gültig:"
 
-#: reportedip-hive.php:971
+#: reportedip-hive.php:978
 msgid "Private:"
 msgstr "Privat:"
 
-#: reportedip-hive.php:972
+#: reportedip-hive.php:979
 msgid "Version:"
 msgstr "Version:"
 
-#: reportedip-hive.php:973
+#: reportedip-hive.php:980
 msgid "Yes"
 msgstr "Ja"
 
-#: reportedip-hive.php:974
+#: reportedip-hive.php:981
 msgid "No"
 msgstr "Nein"
 
-#: reportedip-hive.php:975
+#: reportedip-hive.php:982
 msgid "Country:"
 msgstr "Land:"
 
-#: reportedip-hive.php:976
+#: reportedip-hive.php:983
 msgid "Abuse Confidence:"
 msgstr "Missbrauchs-Konfidenz:"
 
-#: reportedip-hive.php:977
+#: reportedip-hive.php:984
 msgid "Total Reports:"
 msgstr "Meldungen gesamt:"
 
-#: reportedip-hive.php:982
+#: reportedip-hive.php:989
 msgid "ISP:"
 msgstr "ISP:"
 
-#: reportedip-hive.php:983
+#: reportedip-hive.php:990
 msgid "ASN:"
 msgstr "ASN:"
 
-#: reportedip-hive.php:984
+#: reportedip-hive.php:991
 msgid "Usage Type:"
 msgstr "Nutzungsart:"
 
-#: reportedip-hive.php:985
+#: reportedip-hive.php:992
 #: templates/two-factor-onboarding.php:106
 msgid "Domain:"
 msgstr "Domain:"
 
-#: reportedip-hive.php:986
+#: reportedip-hive.php:993
 msgid "Distinct Reporters:"
 msgstr "Verschiedene Melder:"
 
-#: reportedip-hive.php:987
+#: reportedip-hive.php:994
 msgid "Last Reported:"
 msgstr "Zuletzt gemeldet:"
 
-#: reportedip-hive.php:988
+#: reportedip-hive.php:995
 msgid "Tor exit node"
 msgstr "Tor-Exit-Node"
 
-#: reportedip-hive.php:989
+#: reportedip-hive.php:996
 msgid "Community-verified infrastructure"
 msgstr "Community-verifizierte Infrastruktur"
 
-#: reportedip-hive.php:992
+#: reportedip-hive.php:999
 msgid "View community report"
 msgstr "Community-Bericht ansehen"
 
-#: reportedip-hive.php:993
+#: reportedip-hive.php:1000
 msgid "This is your own current IP address. Blocking it can lock you out of wp-admin. Continue?"
 msgstr "Das ist Ihre eigene aktuelle IP-Adresse. Eine Sperrung kann Sie aus wp-admin aussperren. Fortfahren?"
 
-#: reportedip-hive.php:994
+#: reportedip-hive.php:1001
 msgid "Are you sure you want to delete this queue item?"
 msgstr "Möchten Sie diesen Warteschlangeneintrag wirklich löschen?"
 
-#: reportedip-hive.php:995
+#: reportedip-hive.php:1002
 msgid "Retrying..."
 msgstr "Wird wiederholt..."
 
-#: reportedip-hive.php:996
+#: reportedip-hive.php:1003
 msgid "Deleting..."
 msgstr "Wird gelöscht..."
 
-#: reportedip-hive.php:997
+#: reportedip-hive.php:1004
 msgid "Error retrying report"
 msgstr "Fehler beim Wiederholen der Meldung"
 
-#: reportedip-hive.php:998
+#: reportedip-hive.php:1005
 msgid "Error deleting report"
 msgstr "Fehler beim Löschen der Meldung"
 
-#: reportedip-hive.php:999
+#: reportedip-hive.php:1006
 msgid "Processing queue..."
 msgstr "Warteschlange wird verarbeitet..."
 
-#: reportedip-hive.php:1000
+#: reportedip-hive.php:1007
 msgid "pending"
 msgstr "ausstehend"
 
-#: reportedip-hive.php:1115
+#: reportedip-hive.php:1122
 msgid "Events"
 msgstr "Ereignisse"
 
-#: reportedip-hive.php:1276
-#: reportedip-hive.php:1420
+#: reportedip-hive.php:1283
+#: reportedip-hive.php:1427
 msgid "Your IP address has been blocked due to suspicious activity."
 msgstr "Ihre IP-Adresse wurde aufgrund verdächtiger Aktivitäten gesperrt."
 
-#: reportedip-hive.php:1331
+#: reportedip-hive.php:1338
 msgid "Access denied due to IP reputation."
 msgstr "Zugriff aufgrund der IP-Reputation verweigert."
 
-#: reportedip-hive.php:1630
-#: reportedip-hive.php:1972
+#: reportedip-hive.php:1637
+#: reportedip-hive.php:1977
 msgid "Access denied. Your IP address has been blocked due to suspicious activity."
 msgstr "Zugriff verweigert. Ihre IP-Adresse wurde aufgrund verdächtiger Aktivitäten gesperrt."
 
-#: reportedip-hive.php:1699
-#: reportedip-hive.php:1754
-#: reportedip-hive.php:1780
+#: reportedip-hive.php:1706
+#: reportedip-hive.php:1759
+#: reportedip-hive.php:1785
 msgid "ReportedIP Hive:"
 msgstr "ReportedIP Hive:"
 
 #. translators: %1$d: number of failed reports, %2$s: link to queue page
-#: reportedip-hive.php:1702
+#: reportedip-hive.php:1709
 #, php-format
 msgid "%1$d API reports failed. %2$s"
 msgstr "%1$d API-Meldungen fehlgeschlagen. %2$s"
 
-#: reportedip-hive.php:1704
+#: reportedip-hive.php:1711
 msgid "View queue"
 msgstr "Warteschlange anzeigen"
 
-#: reportedip-hive.php:1715
+#: reportedip-hive.php:1722
 msgid "Retry all"
 msgstr "Alle erneut versuchen"
 
-#: reportedip-hive.php:1734
+#: reportedip-hive.php:1741
 msgid "ReportedIP Hive - Queue Critical:"
 msgstr "ReportedIP Hive - Warteschlange kritisch:"
 
 #. translators: %1$d: number of pending reports, %2$s: link to community page, %3$s: link to queue page
-#: reportedip-hive.php:1737
+#: reportedip-hive.php:1744
 #, php-format
 msgid "%1$d reports pending processing. Your API quota may not be sufficient. %2$s or %3$s."
 msgstr "%1$d Meldungen warten auf Verarbeitung. Ihr API-Kontingent ist möglicherweise nicht ausreichend. %2$s oder %3$s."
 
-#: reportedip-hive.php:1739
+#: reportedip-hive.php:1746
 msgid "See the quota of your account"
 msgstr "Kontingent Ihres Kontos ansehen"
 
-#: reportedip-hive.php:1740
+#: reportedip-hive.php:1747
 msgid "Manage queue"
 msgstr "Warteschlange verwalten"
 
 #. translators: %1$d: number of pending reports, %2$s: link to community page
-#: reportedip-hive.php:1757
+#: reportedip-hive.php:1762
 #, php-format
 msgid "%1$d reports pending processing. %2$s"
 msgstr "%1$d Meldungen warten auf Verarbeitung. %2$s"
 
-#: reportedip-hive.php:1759
+#: reportedip-hive.php:1764
 msgid "See the quota of your account."
 msgstr "Kontingent Ihres Kontos ansehen."
 
 #. translators: %s: link to settings page
-#: reportedip-hive.php:1783
+#: reportedip-hive.php:1788
 #, php-format
 msgid "No API key configured. %s"
 msgstr "Kein API-Schlüssel konfiguriert. %s"
 
-#: reportedip-hive.php:1784
+#: reportedip-hive.php:1789
 msgid "Configure now"
 msgstr "Jetzt konfigurieren"
 

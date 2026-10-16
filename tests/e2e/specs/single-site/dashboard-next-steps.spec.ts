@@ -40,7 +40,7 @@ test.describe('dashboard next steps', () => {
 		tolerant('transient delete reportedip_hive_readiness_cache');
 	});
 
-	test('the banner names the plan and the badge step switches the badge on', async ({ page }) => {
+	test('the banner names the plan and a badge that is off raises no step', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive');
 		await expect(page.locator('.rip-status-banner')).toHaveCount(1);
@@ -48,12 +48,9 @@ test.describe('dashboard next steps', () => {
 		await expect(page.locator('.rip-status-banner')).not.toContainText('1970');
 		await expect(page.locator('.rip-dashboard > .rip-status-banner:first-child')).toHaveCount(1);
 		await expect(page.locator('.rip-api-strip')).toHaveCount(0);
-		const card = page.locator('.rip-next-steps__card[data-step="badge_off"]');
-		await expect(card).toBeVisible();
-		await card.locator('button[type="submit"]').click();
-		await page.waitForURL(/page=reportedip-hive(&|$)/);
-		expect(wp('option get reportedip_hive_auto_footer_enabled')).toBe('1');
+		await expect(page.locator('.rip-next-steps__card[data-step="community_pending"]')).toBeVisible();
 		await expect(page.locator('.rip-next-steps__card[data-step="badge_off"]')).toHaveCount(0);
+		expect(wp('option get reportedip_hive_auto_footer_enabled')).toBe('0');
 	});
 
 	test('local shield shows the community card and "not now" hides it for a week', async ({ page }) => {

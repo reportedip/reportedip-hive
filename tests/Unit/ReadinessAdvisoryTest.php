@@ -54,9 +54,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 			}
 		}
 
-		public function test_badge_off_and_community_pending(): void {
-			$this->assertSame( 'badge_off', ReportedIP_Hive_Readiness::badge_off( false )['key'] );
-			$this->assertNull( ReportedIP_Hive_Readiness::badge_off( true ) );
+		public function test_no_badge_advisory_and_community_pending(): void {
+			$this->assertFalse( method_exists( ReportedIP_Hive_Readiness::class, 'badge_off' ), 'A credit badge is no security advisory.' );
 			$this->assertSame( 'community_pending', ReportedIP_Hive_Readiness::community_pending( 'local' )['key'] );
 			$this->assertNull( ReportedIP_Hive_Readiness::community_pending( 'community' ) );
 		}

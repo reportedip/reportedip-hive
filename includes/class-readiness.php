@@ -274,25 +274,6 @@ final class ReportedIP_Hive_Readiness {
 	}
 
 	/**
-	 * Advisory: the footer badge is off.
-	 *
-	 * @param bool $enabled Option state.
-	 * @return array<string,mixed>|null
-	 * @since  2.1.57
-	 */
-	public static function badge_off( $enabled ) {
-		if ( $enabled ) {
-			return null;
-		}
-		return self::issue(
-			'badge_off',
-			self::SEV_ADVISORY,
-			__( 'Show the protection badge', 'reportedip-hive' ),
-			__( 'A small footer badge tells visitors the site is protected and links to the community network. It is a text line, no tracking.', 'reportedip-hive' )
-		);
-	}
-
-	/**
 	 * Advisory: the pre-WordPress guard could run here but does not.
 	 *
 	 * Skipped under WP-CLI in {@see self::compute()}: the guard constant is
@@ -498,7 +479,6 @@ final class ReportedIP_Hive_Readiness {
 
 		if ( $mode->is_wizard_completed() ) {
 			$raised[] = self::hide_login_off( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_hide_login_enabled', false ) );
-			$raised[] = self::badge_off( (bool) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_auto_footer_enabled', false ) );
 			if ( $main_site && 'cli' !== PHP_SAPI ) {
 				$guard    = ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
 				$raised[] = self::dropin_not_running( $guard->supports_auto_install(), $guard->is_running() );
@@ -1077,7 +1057,6 @@ final class ReportedIP_Hive_Readiness {
 			'queue_failed'           => array( 'reportedip-hive-security', 'api_queue' ),
 			'queue_backlog'          => array( 'reportedip-hive-security', 'api_queue' ),
 			'hide_login_off'         => array( 'reportedip-hive-protection', 'hide_login' ),
-			'badge_off'              => array( 'reportedip-hive-community', 'badges' ),
 			'dropin_not_running'     => array( 'reportedip-hive-tools', 'server' ),
 			'community_pending'      => array( 'reportedip-hive-community', 'community' ),
 			'own_2fa_missing'        => array( 'profile', '' ),

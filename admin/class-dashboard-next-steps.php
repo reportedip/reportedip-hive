@@ -147,10 +147,6 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 				'write' => true,
 				'field' => 'slug',
 			),
-			'badge_off'          => array(
-				'label' => __( 'Show badge', 'reportedip-hive' ),
-				'write' => true,
-			),
 			'dropin_not_running' => array(
 				'label' => __( 'Open server setup', 'reportedip-hive' ),
 				'write' => false,
@@ -195,8 +191,6 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	 */
 	public static function step_values( $step, array $input ) {
 		switch ( (string) $step ) {
-			case 'badge_off':
-				return array( 'reportedip_hive_auto_footer_enabled' => 1 );
 			case 'hide_login_off':
 				return array(
 					'reportedip_hive_hide_login_slug'    => (string) ( $input['slug'] ?? '' ),
