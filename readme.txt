@@ -221,6 +221,9 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 
 == Changelog ==
 
+= 3.0.2 =
+* Translations no longer recurse until the memory runs out when Loco Translate or another plugin loads its own catalog on load_textdomain.
+
 = 3.0.1 =
 * Network activation on Multisite opens the quickstart in the Network Admin.
 * A plan upgrade applies the recommended settings of the new plan also without the Pro add-on.
@@ -245,6 +248,9 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 * Database schema 25.
 
 == Upgrade Notice ==
+
+= 3.0.2 =
+Fixes an error 500 on sites that run Loco Translate.
 
 = 3.0.1 =
 Fixes the quickstart defaults, the network activation on Multisite and the firewall rewrite after an update.

@@ -2,6 +2,12 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [3.0.2] - 2026-10-17
+
+### Fixes
+
+- Translations no longer recurse until the memory runs out when Loco Translate or another plugin loads its own catalog on `load_textdomain`; each side loaded its file again, and the site answered with an error 500.
+
 ## [3.0.1] - 2026-10-16
 
 ### Fixes

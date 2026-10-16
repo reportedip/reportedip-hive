@@ -750,6 +750,26 @@ class ReportedIP_Hive {
 	}
 
 	/**
+	 * True while the bundled catalog is being loaded, so the nested
+	 * `load_textdomain` action of that load returns at once.
+	 *
+	 * @var bool
+	 * @since 3.0.2
+	 */
+	private static $loading_bundled = false;
+
+	/**
+	 * Bundled catalogs loaded in this request, keyed by domain and path.
+	 * Another plugin that loads its own catalog on `load_textdomain`
+	 * (Loco Translate) would otherwise make each side load its file again
+	 * until the memory ran out. Emptied on `unload_textdomain`.
+	 *
+	 * @var array<string, bool>
+	 * @since 3.0.2
+	 */
+	private static $bundled_loaded = array();
+
+	/**
 	 * Load the bundled catalog ahead of a wordpress.org language pack.
 	 *
 	 * WordPress loads a pack from `wp-content/languages/plugins/` instead of
@@ -766,7 +786,7 @@ class ReportedIP_Hive {
 	 * @since  3.0.1
 	 */
 	public static function load_bundled_translations_first( $domain, $mofile ) {
-		if ( 'reportedip-hive' !== $domain ) {
+		if ( 'reportedip-hive' !== $domain || self::$loading_bundled ) {
 			return;
 		}
 		$dir = trailingslashit( wp_normalize_path( REPORTEDIP_HIVE_LANGUAGES_DIR ) );
@@ -774,8 +794,30 @@ class ReportedIP_Hive {
 			return;
 		}
 		$bundled = $dir . basename( (string) $mofile );
-		if ( is_readable( $bundled ) ) {
+		$key     = $domain . '|' . $bundled;
+		if ( isset( self::$bundled_loaded[ $key ] ) || ! is_readable( $bundled ) ) {
+			return;
+		}
+		self::$bundled_loaded[ $key ] = true;
+		self::$loading_bundled        = true;
+		try {
 			load_textdomain( $domain, $bundled );
+		} finally {
+			self::$loading_bundled = false;
+		}
+	}
+
+	/**
+	 * Forget the bundled catalogs of the domain once it is unloaded, so the
+	 * next load, for example after `switch_to_locale()`, loads them again.
+	 *
+	 * @param string $domain Text domain being unloaded.
+	 * @return void
+	 * @since  3.0.2
+	 */
+	public static function forget_bundled_translations( $domain ) {
+		if ( 'reportedip-hive' === $domain ) {
+			self::$bundled_loaded = array();
 		}
 	}
 
@@ -2504,6 +2546,7 @@ class ReportedIP_Hive {
 }
 
 add_action( 'load_textdomain', array( 'ReportedIP_Hive', 'load_bundled_translations_first' ), 10, 2 );
+add_action( 'unload_textdomain', array( 'ReportedIP_Hive', 'forget_bundled_translations' ) );
 add_filter( 'plugin_action_links_' . plugin_basename( __FILE__ ), array( 'ReportedIP_Hive', 'plugin_action_links' ) );
 add_filter( 'network_admin_plugin_action_links_' . plugin_basename( __FILE__ ), array( 'ReportedIP_Hive', 'plugin_action_links' ) );
 register_activation_hook( __FILE__, array( 'ReportedIP_Hive', 'activate_plugin' ) );
