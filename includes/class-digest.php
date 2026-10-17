@@ -175,7 +175,7 @@ class ReportedIP_Hive_Digest {
 		$in    = implode( ',', array_fill( 0, count( $types ), '%s' ) );
 		$table = $wpdb->base_prefix . 'reportedip_hive_logs';
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- plugin table, placeholders built from the count of $types.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,PluginCheck.Security.DirectDB.UnescapedDBParameter -- plugin table name from base_prefix, placeholders built from the count of $types.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT event_type, COUNT(*) AS n FROM {$table} WHERE created_at >= UTC_TIMESTAMP() - INTERVAL 1 DAY AND event_type IN ({$in}) GROUP BY event_type",
@@ -203,7 +203,7 @@ class ReportedIP_Hive_Digest {
 		$table = $wpdb->base_prefix . 'reportedip_hive_logs';
 		$args  = array_merge( $types, array( self::TOP_IPS ) );
 
-		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- plugin table, placeholders built from the count of $types.
+		// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.InterpolatedNotPrepared,WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare,PluginCheck.Security.DirectDB.UnescapedDBParameter -- plugin table name from base_prefix, placeholders built from the count of $types.
 		$rows = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT ip_address, COUNT(*) AS n FROM {$table} WHERE created_at >= UTC_TIMESTAMP() - INTERVAL 1 DAY AND event_type IN ({$in}) AND ip_address <> '' GROUP BY ip_address ORDER BY n DESC LIMIT %d",

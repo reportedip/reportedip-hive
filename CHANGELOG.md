@@ -2,7 +2,7 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [3.0.3] - unreleased
+## [3.0.3] - 2026-10-17
 
 ### Fixes
 
