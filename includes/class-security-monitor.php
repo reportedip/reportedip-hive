@@ -83,6 +83,15 @@ class ReportedIP_Hive_Security_Monitor {
 	 */
 	const LOG_MARKER_PREFIX = 'reportedip_hive_hardening_logged_window_';
 
+	/**
+	 * Lifetime of the per-event burst bucket. It must outlive the cap window,
+	 * otherwise the suppressed count expires together with the window and the
+	 * next mail never shows how many alerts were held back.
+	 *
+	 * @since 3.0.3
+	 */
+	const BURST_BUCKET_TTL = 86400;
+
 	private $database;
 	private $api_client;
 	private $logger;
@@ -989,6 +998,15 @@ class ReportedIP_Hive_Security_Monitor {
 				),
 				'critical'
 			);
+			ReportedIP_Hive_Alerts::send(
+				'auto_block_failed',
+				__( 'Protection failed: an attacker could not be blocked', 'reportedip-hive' ),
+				array(
+					array( __( 'IP address', 'reportedip-hive' ), (string) $ip_address ),
+					array( __( 'Event', 'reportedip-hive' ), ReportedIP_Hive_Event_Taxonomy::label( (string) $event_type ) ),
+					array( __( 'Problem', 'reportedip-hive' ), __( 'The block could not be written to the database.', 'reportedip-hive' ) ),
+				)
+			);
 
 			return false;
 		}
@@ -1373,6 +1391,10 @@ class ReportedIP_Hive_Security_Monitor {
 	 * Send admin notification (rate-limited per IP + event type)
 	 */
 	private function send_admin_notification( $ip_address, $event_type, $details ) {
+		if ( ReportedIP_Hive_Digest::MODE_INSTANT !== ReportedIP_Hive_Digest::attack_mode() ) {
+			return;
+		}
+
 		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_report_only_mode', false ) ) {
 			$this->logger->log_security_event(
 				'would_send_notification',
@@ -1422,7 +1444,8 @@ class ReportedIP_Hive_Security_Monitor {
 		$site_name = wp_specialchars_decode( (string) ( get_bloginfo( 'name' ) ?: 'WordPress Site' ), ENT_QUOTES );
 
 		$event_label = ReportedIP_Hive_Event_Taxonomy::label( $event_type_safe );
-		$subject     = sprintf( '[%s] Security Alert: %s', $site_name, $event_label );
+		/* translators: 1: site name, 2: event label */
+		$subject = sprintf( __( '[%1$s] Warning: %2$s blocked', 'reportedip-hive' ), $site_name, $event_label );
 		if ( $burst_summary['suppressed_count'] > 0 ) {
 			$subject .= sprintf( ' (+%d)', (int) $burst_summary['suppressed_count'] );
 		}
@@ -1441,7 +1464,7 @@ class ReportedIP_Hive_Security_Monitor {
 					'ip'        => $ip_address,
 					'timestamp' => $timestamp,
 				),
-				'disclaimer'      => __( 'No action required if this matches your expectations. You can fine-tune thresholds and alerts under ReportedIP Hive → Settings → Notifications.', 'reportedip-hive' ),
+				'disclaimer'      => __( 'No action required if this matches your expectations. You can switch to a daily summary under ReportedIP Hive > Protection > Operations > Notifications.', 'reportedip-hive' ),
 				'context'         => array(
 					'type'       => 'admin_security_alert',
 					'event_type' => $event_type_safe,
@@ -1503,7 +1526,7 @@ class ReportedIP_Hive_Security_Monitor {
 				$bucket['first_suppressed_at'] = $now;
 			}
 
-			set_transient( $bucket_key, $bucket, max( 60, $bucket['next_allowed_at'] - $now ) );
+			set_transient( $bucket_key, $bucket, self::BURST_BUCKET_TTL );
 
 			$this->logger->log_security_event(
 				'notification_event_cap_suppressed',
@@ -1535,7 +1558,7 @@ class ReportedIP_Hive_Security_Monitor {
 				'unique_ips_map'      => array(),
 				'first_suppressed_at' => 0,
 			),
-			$cap_minutes * MINUTE_IN_SECONDS
+			self::BURST_BUCKET_TTL
 		);
 
 		arsort( $unique_ips_map );

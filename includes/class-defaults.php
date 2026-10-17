@@ -252,6 +252,8 @@ final class ReportedIP_Hive_Defaults {
 		'reportedip_hive_2fa_password_reset_block_email_only' => true,
 
 		'reportedip_hive_notify_admin'                    => true,
+		'reportedip_hive_notify_attacks'                  => 'digest',
+		'reportedip_hive_notify_alerts'                   => true,
 		'reportedip_hive_notify_recipients'               => '',
 		'reportedip_hive_notify_from_name'                => '',
 		'reportedip_hive_notify_from_email'               => '',

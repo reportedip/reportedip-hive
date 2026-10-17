@@ -196,6 +196,19 @@ class ReportedIP_Hive_Geo_Anomaly {
 			'medium'
 		);
 
+		if ( user_can( $user, 'manage_options' ) ) {
+			ReportedIP_Hive_Alerts::send(
+				'admin_new_location_' . $user->ID . '_' . $country . '_' . $asn,
+				__( 'Administrator signed in from a new location', 'reportedip-hive' ),
+				array(
+					array( __( 'Account', 'reportedip-hive' ), $user->user_login ),
+					array( __( 'IP address', 'reportedip-hive' ), $ip ),
+					array( __( 'Country', 'reportedip-hive' ), '' !== $country ? $country : '?' ),
+					array( __( 'Network (ASN)', 'reportedip-hive' ), $asn > 0 ? 'AS' . $asn : '?' ),
+				)
+			);
+		}
+
 		$client  = ReportedIP_Hive::get_instance();
 		$monitor = $client->get_security_monitor();
 		if ( $monitor instanceof ReportedIP_Hive_Security_Monitor && ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_geo_report_to_api', false ) ) {

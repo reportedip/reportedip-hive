@@ -6,9 +6,16 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixes
 
+- A single warning mail now says "Warning: ... blocked" instead of "Security Alert".
+- The "(+N)" count of held-back warning mails survives until the next mail; it expired together with the waiting time before.
 - A new plan counts within the same request: after a key check the plan badge and every plan gate no longer show Free until the next page load.
 - A key check whose answer carries no plan no longer counts as a downgrade to Free.
 - The quickstart announces the plan whose recommendation it applied, so the Pro add-on no longer applies the same plan again later as an upgrade.
+
+### New
+
+- Blocked attacks arrive as one daily summary by default instead of one mail per threshold: count per kind, new blocks and the most active addresses. The setting "Blocked attacks" (Protection, Operations, Notifications) switches between the summary, a single mail per event and no mail. Sites that update move to the summary.
+- Instant alerts with "Alert" in the subject when something got through: a new administrator or super admin, an administrator signing in from a new country or network, or a block that could not be written. With the Pro add-on also a plugin or theme installed, a plugin activated, a file edited in the editor and role capabilities changed. The setting "Instant alerts" switches them off.
 
 ## [3.0.2] - 2026-10-17
 

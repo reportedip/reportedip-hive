@@ -67,6 +67,11 @@ Both layers are fail-open: a broken rule or an unwritable directory lets the req
 
 Each a switch: the REST API for signed-in users or chosen roles, XML-RPC and pingbacks, feeds, wp-admin for guests, PHP execution in uploads and software version fingerprints. Basic security headers come on top.
 
+## Notifications
+
+- **Daily summary** of blocked attacks: one mail a day with the count per kind, new blocks and the most active addresses, instead of one mail per threshold. A single mail per event or no mail at all are the other choices.
+- **Instant alerts** when something got through: a new administrator or super admin, an administrator signing in from a new country or network, or a block that could not be written. The Pro add-on adds installed plugins and themes, activated plugins, edited files and changed role capabilities.
+
 ## Community IP blocklist
 
 - **Local Shield** is the default. The plugin makes no outbound request, even with a key stored; every decision is taken from the data on your own server.

@@ -967,6 +967,8 @@ class ReportedIP_Hive_Protection_Page {
 			'warning'     => __( 'Warning', 'reportedip-hive' ),
 			'error'       => __( 'Error', 'reportedip-hive' ),
 			'critical'    => __( 'Critical', 'reportedip-hive' ),
+			'digest'      => __( 'Daily summary', 'reportedip-hive' ),
+			'instant'     => __( 'Single mail per event', 'reportedip-hive' ),
 		);
 		return $labels[ $value ] ?? $value;
 	}

@@ -398,6 +398,8 @@ class ReportedIP_Hive {
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/interface-mail-provider.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/mail-providers/class-mail-provider-wordpress.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-mailer.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-alerts.php';
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-digest.php';
 
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-crypto.php';
 		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-two-factor-totp.php';
@@ -495,6 +497,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Security_Headers::get_instance();
 		ReportedIP_Hive_WooCommerce_Monitor::get_instance();
 		ReportedIP_Hive_Geo_Anomaly::get_instance();
+		ReportedIP_Hive_Alerts::get_instance();
 		ReportedIP_Hive_Password_Strength::get_instance();
 		ReportedIP_Hive_Privacy::get_instance();
 		new ReportedIP_Hive_Two_Factor();

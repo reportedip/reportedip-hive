@@ -84,6 +84,7 @@ class ReportedIP_Hive_Cron_Handler {
 		add_action( 'reportedip_hive_process_queue', array( $this, 'cron_process_queue' ) );
 		add_action( 'reportedip_hive_refresh_quota', array( $this, 'cron_refresh_quota' ) );
 		add_action( 'reportedip_hive_sync_rulesets', array( $this, 'cron_sync_rulesets' ) );
+		add_action( 'reportedip_hive_send_digest', array( 'ReportedIP_Hive_Digest', 'run' ) );
 		add_action( 'reportedip_hive_sync_group', array( 'ReportedIP_Hive_Legacy_Data', 'on_group_sync_event' ) );
 
 		add_filter( 'cron_schedules', array( __CLASS__, 'add_cron_intervals' ) );
@@ -103,6 +104,7 @@ class ReportedIP_Hive_Cron_Handler {
 		'reportedip_hive_process_queue'   => 'fifteen_minutes',
 		'reportedip_hive_refresh_quota'   => 'six_hours',
 		'reportedip_hive_sync_rulesets'   => 'six_hours',
+		'reportedip_hive_send_digest'     => 'daily',
 	);
 
 	/**

@@ -1275,7 +1275,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'max'         => 1440,
 				'remote'      => true,
 				'label'       => __( 'Per-event notification cap (minutes)', 'reportedip-hive' ),
-				'description' => __( 'How long to wait before mailing about the same kind of event again.', 'reportedip-hive' ),
+				'description' => __( 'Only with a single mail per event: how long to wait before mailing about the same kind of event again.', 'reportedip-hive' ),
 			),
 
 			'reportedip_hive_notify_admin'                 => array(
@@ -1285,6 +1285,23 @@ final class ReportedIP_Hive_Settings_Registry {
 				'remote'      => true,
 				'label'       => __( 'Admin notifications', 'reportedip-hive' ),
 				'description' => __( 'Mail the recipients below when something needs a person to look at it.', 'reportedip-hive' ),
+			),
+			'reportedip_hive_notify_attacks'               => array(
+				'simple'      => true,
+				'section'     => 'notifications',
+				'kind'        => 'enum',
+				'allowed'     => array( 'digest', 'instant', 'off' ),
+				'remote'      => true,
+				'label'       => __( 'Blocked attacks', 'reportedip-hive' ),
+				'description' => __( 'Attacks the plugin already stopped. A daily summary keeps the inbox quiet; a single mail per event is meant for testing.', 'reportedip-hive' ),
+			),
+			'reportedip_hive_notify_alerts'                => array(
+				'simple'      => true,
+				'section'     => 'notifications',
+				'kind'        => 'bool',
+				'remote'      => true,
+				'label'       => __( 'Instant alerts', 'reportedip-hive' ),
+				'description' => __( 'Mail at once when something got through: a new admin account, an admin signing in from a new place, or protection that failed.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_notify_recipients'            => array(
 				'simple'      => true,
@@ -1315,7 +1332,7 @@ final class ReportedIP_Hive_Settings_Registry {
 				'max'         => 1440,
 				'remote'      => true,
 				'label'       => __( 'Notification cooldown (minutes)', 'reportedip-hive' ),
-				'description' => __( 'How long the same address and event type stays quiet after a mail went out.', 'reportedip-hive' ),
+				'description' => __( 'Only with a single mail per event: how long the same address and event type stays quiet after a mail went out.', 'reportedip-hive' ),
 			),
 		);
 

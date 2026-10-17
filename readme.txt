@@ -72,7 +72,7 @@ ReportedIP Hive replaces a CAPTCHA with checks the visitor never sees. No puzzle
 = Activity log and operations =
 
 * Security activity log with filters by event type, severity and date, CSV and JSON export.
-* E-mail alerts for blocks and critical events.
+* A daily summary of blocked attacks and instant alerts when something got through, such as a new administrator.
 * Settings import and export.
 * WP-CLI: `wp reportedip block`, `unblock`, `whitelist`, `lookup`, `status` and `2fa`.
 * Works behind Cloudflare and other reverse proxies with a trusted proxy list.
@@ -221,6 +221,11 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 
 == Changelog ==
 
+= 3.0.3 =
+* Blocked attacks arrive as one daily summary instead of one mail per threshold; the setting "Blocked attacks" switches back to single mails or off.
+* Instant alerts when something got through: a new administrator, an administrator signing in from a new place, or protection that failed.
+* A new plan counts within the same request, and a key check without a plan no longer counts as a downgrade to Free.
+
 = 3.0.2 =
 * Translations no longer recurse until the memory runs out when Loco Translate or another plugin loads its own catalog on load_textdomain.
 
@@ -248,6 +253,9 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 * Database schema 25.
 
 == Upgrade Notice ==
+
+= 3.0.3 =
+Mails about blocked attacks now arrive as one daily summary; instant alerts cover a new administrator and similar breaches. Change it under Protection, Operations, Notifications.
 
 = 3.0.2 =
 Fixes an error 500 on sites that run Loco Translate.
