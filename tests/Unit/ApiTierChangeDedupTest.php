@@ -89,4 +89,37 @@ class ApiTierChangeDedupTest extends TestCase {
 		$this->assertSame( array( 'free>enterprise' ), $events );
 		$this->assertSame( 'enterprise', $GLOBALS['wp_options']['reportedip_hive_known_tier'] ?? null );
 	}
+
+	public function test_the_new_plan_counts_within_the_same_request() {
+		$this->assertSame( 'free', \ReportedIP_Hive_Mode_Manager::get_instance()->get_current_tier() );
+
+		$this->refresh_with_role( 'reportedip_business' );
+
+		$this->assertSame( 'business', \ReportedIP_Hive_Mode_Manager::get_instance()->get_current_tier(), 'the tier memo of the request is dropped with the stored status' );
+	}
+
+	public function test_a_verified_key_check_counts_within_the_same_request() {
+		$this->assertSame( 'free', \ReportedIP_Hive_Mode_Manager::get_instance()->get_current_tier() );
+
+		$api = ( new \ReflectionClass( \ReportedIP_Hive_API::class ) )->newInstanceWithoutConstructor();
+		$api->persist_verified_status( array( 'valid' => true, 'userRole' => 'reportedip_professional' ) );
+
+		$this->assertSame( 'professional', \ReportedIP_Hive_Mode_Manager::get_instance()->get_current_tier() );
+	}
+
+	public function test_an_answer_without_a_role_keeps_the_known_plan() {
+		$fired = 0;
+		\add_action(
+			'reportedip_hive_tier_changed',
+			static function () use ( &$fired ) {
+				++$fired;
+			}
+		);
+		$this->refresh_with_role( 'reportedip_business' );
+
+		$this->refresh_with_role( '' );
+
+		$this->assertSame( 'business', $GLOBALS['wp_options']['reportedip_hive_known_tier'] ?? null, 'a missing role is no downgrade' );
+		$this->assertSame( 0, $fired );
+	}
 }

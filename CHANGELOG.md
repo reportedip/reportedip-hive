@@ -2,6 +2,14 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [3.0.3] - unreleased
+
+### Fixes
+
+- A new plan counts within the same request: after a key check the plan badge and every plan gate no longer show Free until the next page load.
+- A key check whose answer carries no plan no longer counts as a downgrade to Free.
+- The quickstart announces the plan whose recommendation it applied, so the Pro add-on no longer applies the same plan again later as an upgrade.
+
 ## [3.0.2] - 2026-10-17
 
 ### Fixes

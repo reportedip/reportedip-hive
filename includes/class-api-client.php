@@ -1209,6 +1209,7 @@ class ReportedIP_Hive_API {
 	 */
 	private function persist_api_status( $status ) {
 		set_transient( 'reportedip_hive_api_status', $status, 5 * MINUTE_IN_SECONDS );
+		ReportedIP_Hive_Mode_Manager::get_instance()->flush_cached_tier();
 
 		if ( isset( $status['domains'] ) && is_array( $status['domains'] ) ) {
 			ReportedIP_Hive_Option_Routing::set(
@@ -1240,7 +1241,10 @@ class ReportedIP_Hive_API {
 		do_action( 'reportedip_hive_api_status_persisted', $status );
 
 		$new_role = (string) ( $status['userRole'] ?? '' );
-		$new_tier = '' !== $new_role ? ReportedIP_Hive_Mode_Manager::tier_from_role( $new_role ) : 'free';
+		if ( '' === $new_role ) {
+			return;
+		}
+		$new_tier = ReportedIP_Hive_Mode_Manager::tier_from_role( $new_role );
 
 		$known_tier = (string) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_known_tier', '' );
 

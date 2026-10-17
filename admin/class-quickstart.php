@@ -752,6 +752,17 @@ class ReportedIP_Hive_Quickstart {
 		$values['reportedip_hive_notify_recipients']   = $notify ? (string) get_option( 'admin_email', '' ) : '';
 
 		$result = ReportedIP_Hive_Settings_Apply::apply( $values, 'quickstart' );
+
+		/**
+		 * Fires after the quickstart wrote the full recommendation of a plan,
+		 * so a listener can treat that plan as handled instead of replaying
+		 * it later as an upgrade from Free.
+		 *
+		 * @param string $tier Plan whose recommendation was applied.
+		 * @param string $mode `community` or `local`.
+		 * @since 3.0.3
+		 */
+		do_action( 'reportedip_hive_recommendation_applied', (string) $tier, $mode );
 		ReportedIP_Hive_Htaccess_Block_Writer::consent();
 		ReportedIP_Hive_Decoy_Htaccess_Writer::get_instance()->sync();
 		ReportedIP_Hive_Uploads_Htaccess_Writer::get_instance()->sync();
