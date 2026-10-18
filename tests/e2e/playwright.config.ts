@@ -4,8 +4,8 @@ import { defineConfig, devices, type PlaywrightTestConfig } from '@playwright/te
  * Playwright config for the ReportedIP Hive E2E suite.
  *
  * Two projects keep the dual-stack-testing policy explicit:
- *   - single-site → http://localhost:8080  (./run.sh up)
- *   - multisite   → http://localhost:8090  (./run.sh up-ms)
+ *   - single-site → http://localhost:8280  (./run.sh up)
+ *   - multisite   → http://localhost:8290  (./run.sh up-ms)
  *
  * Both projects share the same spec base under `specs/<project>/` so a
  * change to a spec file is scoped to one stack at a time.
@@ -57,7 +57,7 @@ export default defineConfig({
             dependencies: withAddOn ? ['add-on-on-single-site'] : [],
             use: {
                 ...devices['Desktop Chrome'],
-                baseURL: process.env.RIP_E2E_BASE_URL_SINGLE || 'http://localhost:8080',
+                baseURL: process.env.RIP_E2E_BASE_URL_SINGLE || 'http://localhost:8280',
             },
         },
         {
@@ -66,7 +66,7 @@ export default defineConfig({
             dependencies: withAddOn ? ['add-on-on-multisite'] : [],
             use: {
                 ...devices['Desktop Chrome'],
-                baseURL: process.env.RIP_E2E_BASE_URL_MS || 'http://localhost:8090',
+                baseURL: process.env.RIP_E2E_BASE_URL_MS || 'http://localhost:8290',
             },
         },
     ],
