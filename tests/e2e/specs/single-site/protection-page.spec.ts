@@ -254,7 +254,7 @@ test.describe('protection page', () => {
 		wp('option update reportedip_hive_delete_data_on_uninstall 0');
 	});
 
-	test('expert mode lists the tools page and the legacy urls land on their new home', async ({ page }) => {
+	test('the server page is always listed and the legacy urls land on their new home', async ({ page }) => {
 		wp('user meta update admin reportedip_hive_expert_mode 1');
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive');
@@ -267,8 +267,22 @@ test.describe('protection page', () => {
 		await expect(page.locator('.rip-nav-tabs__tab--active')).toContainText('Server');
 		forgetExpert();
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive');
-		await expect(page.locator('#adminmenu a[href*="page=reportedip-hive-tools"]')).toHaveCount(0);
+		await expect(page.locator('#adminmenu a[href*="page=reportedip-hive-tools"]')).toHaveCount(1);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-tools&tab=rules');
 		await expect(page.locator('.rip-nav-tabs__tab--active')).toContainText('Rules');
+	});
+
+	test('a wide screen shows the section list of the tab with a working anchor', async ({ page }) => {
+		await page.setViewportSize({ width: 1600, height: 900 });
+		await loginAsAdmin(page);
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
+		const toc = page.locator('.rip-protection__panel[data-tab="basics"] .rip-protection__toc');
+		await expect(toc).toBeVisible();
+		await expect(toc.locator('a.rip-protection__toc-link[href="#blocking"]')).toHaveCount(1);
+		await expect(toc.locator('button[type="submit"]')).toHaveCount(1);
+		await toc.locator('a[href="#blocking"]').click();
+		await expect(toc.locator('a.rip-protection__toc-link--active')).toHaveAttribute('href', '#blocking');
+		await page.setViewportSize({ width: 1200, height: 900 });
+		await expect(toc).toBeHidden();
 	});
 });

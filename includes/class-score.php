@@ -238,13 +238,13 @@ final class ReportedIP_Hive_Score {
 
 		$items = array(
 			self::item( 'failed_login', $w['failed_login'], 'detection', __( 'Failed-login monitor', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_failed_logins', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
-			self::item( 'waf', $w['waf'], 'detection', __( 'Web Application Firewall', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_waf_enabled', true ), self::url( 'reportedip-hive-protection', 'waf' ) ),
+			self::item( 'waf', $w['waf'], 'detection', __( 'Web Application Firewall', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_waf_enabled', true ) && ! self::opt( 'reportedip_hive_waf_report_only', false ), self::url( 'reportedip-hive-protection', 'waf' ) ),
 			self::item( 'rest_burst', $w['rest_burst'], 'detection', __( 'REST-API burst limit', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_rest_api', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
 			self::item( 'scan_404', $w['scan_404'], 'detection', __( 'Scan detector', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_404_scans', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
 			self::item( 'user_enum', $w['user_enum'], 'detection', __( 'User-enumeration block', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_block_user_enumeration', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
 			self::item( 'geo_anomaly', $w['geo_anomaly'], 'detection', __( 'Geo-anomaly detection', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_geo_anomaly', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
 			self::item( 'app_password', $w['app_password'], 'detection', __( 'App-password monitor', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_app_passwords', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
-			self::item( 'bot_verification', $w['bot_verification'], 'detection', __( 'Verified-bot detection', 'reportedip-hive' ), 'off' !== (string) self::opt( 'reportedip_hive_bot_action', 'flag' ), self::url( 'reportedip-hive-protection', 'waf' ), 'bot_verification' ),
+			self::item( 'bot_verification', $w['bot_verification'], 'detection', __( 'Verified-bot detection', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_bot_verification', true ) && 'off' !== (string) self::opt( 'reportedip_hive_bot_action', 'flag' ), self::url( 'reportedip-hive-protection', 'waf' ), 'bot_verification' ),
 			self::item( 'decoy_pathblock', $w['decoy_pathblock'], 'detection', __( 'Decoy-path block', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_decoy_pathblock_enabled', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
 			self::item( 'comment_xmlrpc', $w['comment_xmlrpc'], 'detection', __( 'Comment & XML-RPC monitor', 'reportedip-hive' ), (bool) self::opt( 'reportedip_hive_monitor_comments', true ) && (bool) self::opt( 'reportedip_hive_monitor_xmlrpc', true ), self::url( 'reportedip-hive-protection', 'detection' ) ),
 			self::item( 'reputation', $w['reputation'], 'detection', __( 'Community threat blocking', 'reportedip-hive' ), 'community' === (string) self::opt( 'reportedip_hive_operation_mode', 'local' ) && (bool) self::opt( 'reportedip_hive_auto_block', true ), self::url( 'reportedip-hive-community', '' ), 'reputation_blocking' ),
@@ -339,13 +339,16 @@ final class ReportedIP_Hive_Score {
 	}
 
 	/**
-	 * True when two-factor is enforced for at least one role.
+	 * True when two-factor is switched on and enforced for at least one role.
 	 *
 	 * @return bool
 	 * @since  2.1.2
 	 */
 	private static function twofa_enforced() {
 		if ( ! class_exists( 'ReportedIP_Hive_Option_Routing' ) ) {
+			return false;
+		}
+		if ( ! self::opt( 'reportedip_hive_2fa_enabled_global', false ) ) {
 			return false;
 		}
 		$roles = ReportedIP_Hive_Option_Routing::resolve_2fa_enforce_roles();

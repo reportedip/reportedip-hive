@@ -266,7 +266,7 @@ class ReportedIP_Hive_Digest {
 					'label' => __( 'Open dashboard', 'reportedip-hive' ),
 					'url'   => is_multisite() ? network_admin_url( 'admin.php?page=reportedip-hive' ) : admin_url( 'admin.php?page=reportedip-hive' ),
 				),
-				'disclaimer'      => __( 'One summary a day replaces the single warnings. Change this under ReportedIP Hive > Protection > Operations > Notifications.', 'reportedip-hive' ),
+				'disclaimer'      => __( 'One summary a day replaces the single warnings. Change this under ReportedIP Hive > Protection Settings > Operations > Notifications.', 'reportedip-hive' ),
 				'context'         => array( 'type' => 'admin_security_digest' ),
 			)
 		);

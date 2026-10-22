@@ -1464,7 +1464,7 @@ class ReportedIP_Hive_Security_Monitor {
 					'ip'        => $ip_address,
 					'timestamp' => $timestamp,
 				),
-				'disclaimer'      => __( 'No action required if this matches your expectations. You can switch to a daily summary under ReportedIP Hive > Protection > Operations > Notifications.', 'reportedip-hive' ),
+				'disclaimer'      => __( 'No action required if this matches your expectations. You can switch to a daily summary under ReportedIP Hive > Protection Settings > Operations > Notifications.', 'reportedip-hive' ),
 				'context'         => array(
 					'type'       => 'admin_security_alert',
 					'event_type' => $event_type_safe,

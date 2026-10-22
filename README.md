@@ -46,7 +46,7 @@ The server's own addresses are never auto-blocked, so cache preloaders and WP-Cr
 Hive inspects requests in two places that stay behaviourally identical:
 
 - **In-WordPress engine.** Runs on `init` priority 1 with a bundled baseline ruleset against SQL injection, XSS, path traversal and scanner traffic, a per-rule exception table (rule, group or path scope) and a report-only mode for testing. Works offline.
-- **Pre-WordPress guard.** An optional `auto_prepend_file` drop-in generated from the same rules, exceptions, whitelist and IP blocks. It refuses blocked IPs and rule matches before WordPress loads and feeds its hits back into the block ladder. The Tools page produces the directive for your stack (php.ini, `.user.ini`, hosting panel or nginx) and checks that the guard actually runs.
+- **Pre-WordPress guard.** An optional `auto_prepend_file` drop-in generated from the same rules, exceptions, whitelist and IP blocks. It refuses blocked IPs and rule matches before WordPress loads and feeds its hits back into the block ladder. The Server & Maintenance page produces the directive for your stack (php.ini, `.user.ini`, hosting panel or nginx) and checks that the guard actually runs.
 
 Both layers are fail-open: a broken rule or an unwritable directory lets the request through rather than taking the site down. IP blocks are enforced even with the WAF switched off.
 

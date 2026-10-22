@@ -89,7 +89,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_step_actions_map_every_advisory_key(): void {
-			foreach ( array( 'hide_login_off', 'dropin_not_running', 'community_pending', 'own_2fa_missing' ) as $key ) {
+			foreach ( array( 'hide_login_off', 'dropin_not_running', 'community_pending', 'own_2fa_missing', 'score_twofa_enforce', 'score_waf', 'score_security_headers', 'score_password_hibp' ) as $key ) {
 				$this->assertArrayHasKey( $key, ReportedIP_Hive_Dashboard_Next_Steps::step_actions(), $key );
 			}
 			$this->assertArrayNotHasKey( 'badge_off', ReportedIP_Hive_Dashboard_Next_Steps::step_actions(), 'A credit badge is no security step.' );
@@ -104,6 +104,8 @@ namespace ReportedIP\Hive\Tests\Unit {
 				ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'hide_login_off', array( 'slug' => 'secret-door' ) )
 			);
 			$this->assertSame( array(), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'community_pending', array() ), 'link-only steps write nothing' );
+			$this->assertSame( array(), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'score_waf', array() ), 'score steps open the setting, they write nothing' );
+			$this->assertSame( 4, ReportedIP_Hive_Dashboard_Next_Steps::MAX_STEPS );
 
 			$this->assertArrayNotHasKey( 'group_available', ReportedIP_Hive_Dashboard_Next_Steps::step_actions(), 'The group step comes with the add-on.' );
 			$this->assertSame( array(), ReportedIP_Hive_Dashboard_Next_Steps::step_values( 'group_available', array() ) );

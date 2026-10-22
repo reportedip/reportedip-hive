@@ -374,11 +374,23 @@
     margin: var(--rip-space-6) 0;
 }
 
-.rip-score-gauges,
-.rip-score-breakdowns {
+.rip-score-gauges {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: var(--rip-space-4);
+    align-items: start;
+}
+
+.rip-score-column {
+    background: white;
+    border: 1px solid var(--rip-gray-200);
+    border-radius: var(--rip-radius-lg);
+    overflow: hidden;
+}
+
+.rip-score-column > .rip-gauge-card {
+    border: 0;
+    border-radius: 0;
 }
 
 .rip-gauge-card {
@@ -462,9 +474,9 @@
 }
 
 .rip-score-list {
-    padding: var(--rip-space-2) var(--rip-space-4);
+    padding: var(--rip-space-2) var(--rip-space-5);
     background: var(--rip-gray-50);
-    border-radius: var(--rip-radius);
+    border-top: 1px solid var(--rip-gray-200);
 }
 
 .rip-score-list__summary {
@@ -543,8 +555,7 @@
 }
 
 @media (max-width: 782px) {
-    .rip-score-gauges,
-    .rip-score-breakdowns {
+    .rip-score-gauges {
         grid-template-columns: 1fr;
     }
 }

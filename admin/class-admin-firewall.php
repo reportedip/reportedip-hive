@@ -568,13 +568,13 @@ class ReportedIP_Hive_Admin_Firewall {
 		$planned = ReportedIP_Hive_Security_Headers::planned_headers();
 
 		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Security Headers at the web server (optional)', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
-		echo '<p class="rip-help-text">' . esc_html__( 'Hive already sends the configured headers via PHP on every WordPress response, nothing to do for normal pages. Setting them at the web server additionally covers static files (images, CSS, uploads) that never touch PHP. The snippets mirror the header settings on the Protection page. Optional on Apache and nginx alike: every page WordPress renders is covered without them.', 'reportedip-hive' ) . '</p>';
+		echo '<p class="rip-help-text">' . esc_html__( 'Hive already sends the configured headers via PHP on every WordPress response, nothing to do for normal pages. Setting them at the web server additionally covers static files (images, CSS, uploads) that never touch PHP. The snippets mirror the header settings on the Protection Settings page. Optional on Apache and nginx alike: every page WordPress renders is covered without them.', 'reportedip-hive' ) . '</p>';
 
 		if ( empty( $planned ) ) {
 			echo '<div class="rip-alert rip-alert--info">';
 			printf(
 				/* translators: 1: opening link tag to the header settings, 2: closing tag. */
-				esc_html__( 'No headers are configured yet. Turn on the security headers on the %1$sProtection page%2$s first, the snippets here update automatically.', 'reportedip-hive' ),
+				esc_html__( 'No headers are configured yet. Turn on the security headers on the %1$sProtection Settings page%2$s first, the snippets here update automatically.', 'reportedip-hive' ),
 				'<a href="' . esc_url( self::tab_url( 'hardening' ) ) . '">',
 				'</a>'
 			);

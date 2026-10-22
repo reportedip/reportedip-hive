@@ -35,7 +35,7 @@ class ReportedIP_Hive_Protection_Page {
 	const PAGE_SLUG = 'reportedip-hive-protection';
 
 	/**
-	 * URL of the Protection page opened at one section, on the tab that holds it.
+	 * URL of the Protection Settings page opened at one section, on the tab that holds it.
 	 *
 	 * @param string $section Section id, e.g. `privacy_logs`.
 	 * @return string
@@ -177,7 +177,7 @@ class ReportedIP_Hive_Protection_Page {
 				'label'    => __( 'Firewall & Bots', 'reportedip-hive' ),
 				'icon'     => 'users',
 				'sections' => array( 'waf', 'lockdown', 'headers' ),
-				'advice'   => __( 'Recommended: keep the firewall on. Add an exception on the Tools page before switching a rule off.', 'reportedip-hive' ),
+				'advice'   => __( 'Recommended: keep the firewall on. Add an exception on the Server & Maintenance page before switching a rule off.', 'reportedip-hive' ),
 			),
 			'advanced'   => array(
 				'label'    => __( 'Advanced', 'reportedip-hive' ),
@@ -206,7 +206,7 @@ class ReportedIP_Hive_Protection_Page {
 		}
 
 		/**
-		 * The tabs of the Protection page, slug => label, icon, sections and
+		 * The tabs of the Protection Settings page, slug => label, icon, sections and
 		 * advice. A result that is not an array is ignored.
 		 *
 		 * @param array<string, array{label:string,icon:string,sections:string[],advice:string}> $tabs Tabs in display order.
@@ -1327,11 +1327,58 @@ class ReportedIP_Hive_Protection_Page {
 			</label>
 			<span class="rip-expert-toggle__info" tabindex="0" aria-describedby="<?php echo esc_attr( self::INFO_ID ); ?>">
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-				<span class="rip-tooltip" id="<?php echo esc_attr( self::INFO_ID ); ?>" role="tooltip"><?php esc_html_e( 'Expert mode opens the technical details of every area by default and lists the Tools page. Simple mode keeps them folded; what sits in them runs on the recommendation. The switch is stored for your user only.', 'reportedip-hive' ); ?></span>
+				<span class="rip-tooltip" id="<?php echo esc_attr( self::INFO_ID ); ?>" role="tooltip"><?php esc_html_e( 'Expert mode opens the technical details of every area by default. Simple mode keeps them folded; what sits in them runs on the recommendation. The switch is stored for your user only.', 'reportedip-hive' ); ?></span>
 			</span>
 			<noscript><button type="submit" class="rip-button rip-button--ghost rip-button--sm"><?php esc_html_e( 'Apply', 'reportedip-hive' ); ?></button></noscript>
 		</form>
 		<?php
+	}
+
+	/**
+	 * Section list of one tab, shown beside the rows on wide screens.
+	 *
+	 * Each entry carries the state of its section as a coloured dot (the
+	 * text sits in a screen-reader span and the tooltip); a tab with fields
+	 * gets a save button that stays in view. A tab with a single section
+	 * gets no list.
+	 *
+	 * @param string[]            $sections Section slugs of the tab in display order.
+	 * @param array<string,mixed> $current  Registry values.
+	 * @param bool                $can_save The tab has fields to save.
+	 * @return string
+	 * @since  3.0.4
+	 */
+	public static function toc_markup( array $sections, array $current = array(), $can_save = false ) {
+		if ( count( $sections ) < 2 ) {
+			return '';
+		}
+		$meta  = ReportedIP_Hive_Settings_Registry::sections() + ReportedIP_Hive_Catalog::sections();
+		$items = '';
+		foreach ( $sections as $section ) {
+			$state  = self::section_state( $section, $current );
+			$status = '' === $state['text'] ? '' : sprintf(
+				'<span class="rip-protection__toc-dot rip-protection__toc-dot--%1$s" title="%2$s" aria-hidden="true"></span><span class="screen-reader-text">%3$s</span>',
+				esc_attr( $state['tone'] ),
+				esc_attr( $state['text'] ),
+				esc_html( $state['text'] )
+			);
+			$items .= sprintf(
+				'<li><a class="rip-protection__toc-link" href="#%1$s"><span class="rip-protection__toc-label">%2$s</span>%3$s</a></li>',
+				esc_attr( $section ),
+				esc_html( (string) ( $meta[ $section ]['label'] ?? $section ) ),
+				$status
+			);
+		}
+		$save = $can_save
+			? '<div class="rip-protection__toc-foot"><button type="submit" class="rip-button rip-button--secondary rip-button--sm">' . esc_html__( 'Save changes', 'reportedip-hive' ) . '</button></div>'
+			: '';
+		return sprintf(
+			'<nav class="rip-protection__toc" aria-label="%1$s"><p class="rip-protection__toc-title">%2$s</p><ul class="rip-protection__toc-list">%3$s</ul>%4$s</nav>',
+			esc_attr__( 'Sections of this tab', 'reportedip-hive' ),
+			esc_html__( 'On this tab', 'reportedip-hive' ),
+			$items,
+			$save
+		);
 	}
 
 	/**
@@ -1463,7 +1510,7 @@ class ReportedIP_Hive_Protection_Page {
 		$errors       = ! empty( $result['errors'] ) && is_array( $result['errors'] ) ? $result['errors'] : array();
 
 		ReportedIP_Hive_Admin_Settings::render_page_header(
-			__( 'Protection', 'reportedip-hive' ),
+			__( 'Protection Settings', 'reportedip-hive' ),
 			__( 'Every setting, grouped by area; the technical details fold away', 'reportedip-hive' )
 		);
 		?>
@@ -1528,9 +1575,14 @@ class ReportedIP_Hive_Protection_Page {
 					<?php wp_nonce_field( self::NONCE ); ?>
 					<div class="rip-card__body">
 						<div class="rip-alert rip-alert--info"><?php echo esc_html( $tab['advice'] ); ?></div>
-						<?php foreach ( $tab['sections'] as $section ) : ?>
-							<?php echo self::section_markup( $section, $current, $statuses, $expert, $detected, $errors ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside ?>
-						<?php endforeach; ?>
+						<div class="rip-protection__layout">
+							<div class="rip-protection__main">
+								<?php foreach ( $tab['sections'] as $section ) : ?>
+									<?php echo self::section_markup( $section, $current, $statuses, $expert, $detected, $errors ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside ?>
+								<?php endforeach; ?>
+							</div>
+							<?php echo self::toc_markup( $tab['sections'], $current, self::tab_has_fields( $slug ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside ?>
+						</div>
 						<?php if ( self::tab_has_fields( $slug ) ) : ?>
 						<div class="rip-card__footer rip-protection__footer">
 							<button type="submit" name="rip_reset" value="1" class="rip-button rip-button--ghost rip-protection__reset" data-confirm="<?php esc_attr_e( 'Set every setting of this tab back to the recommendation for your plan?', 'reportedip-hive' ); ?>"><?php esc_html_e( 'Restore defaults', 'reportedip-hive' ); ?></button>

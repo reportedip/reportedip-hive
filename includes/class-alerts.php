@@ -211,7 +211,7 @@ class ReportedIP_Hive_Alerts {
 				'intro_text'      => __( 'Something changed on your site that only a person with access can do. If you did not expect it, check the account and change its password.', 'reportedip-hive' ),
 				'main_block_html' => $blocks['html'],
 				'main_block_text' => $blocks['text'],
-				'disclaimer'      => __( 'You get these alerts at once. Switch them off under ReportedIP Hive > Protection > Operations > Notifications.', 'reportedip-hive' ),
+				'disclaimer'      => __( 'You get these alerts at once. Switch them off under ReportedIP Hive > Protection Settings > Operations > Notifications.', 'reportedip-hive' ),
 				'context'         => array(
 					'type' => 'admin_security_alert_breach',
 					'key'  => (string) $key,

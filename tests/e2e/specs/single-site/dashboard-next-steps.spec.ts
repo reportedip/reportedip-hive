@@ -78,10 +78,10 @@ test.describe('dashboard next steps', () => {
 		await expect(page.locator('.rip-areas__gain[href$="#hide_login"]')).toBeVisible();
 	});
 
-	test('the header toggle switches expert mode and lists the tools page', async ({ page }) => {
+	test('the header toggle switches expert mode, the server page is listed either way', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive');
-		await expect(page.locator('#adminmenu a[href*="page=reportedip-hive-tools"]')).toHaveCount(0);
+		await expect(page.locator('#adminmenu a[href*="page=reportedip-hive-tools"]')).toHaveCount(1);
 		await page.locator('label.rip-toggle:has(#rip-expert-mode)').click();
 		await page.waitForURL(/page=reportedip-hive(&|$)/);
 		await expect(page.locator('#rip-expert-mode')).toBeChecked();

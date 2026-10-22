@@ -192,6 +192,37 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 0, $out['max'] );
 		}
 
+		public function test_switches_that_only_record_do_not_count(): void {
+			require_once dirname( __DIR__, 2 ) . '/includes/class-option-routing.php';
+			$before = $GLOBALS['wp_options'] ?? array();
+			try {
+				$GLOBALS['wp_options']['reportedip_hive_waf_enabled']              = 1;
+				$GLOBALS['wp_options']['reportedip_hive_waf_report_only']          = 1;
+				$GLOBALS['wp_options']['reportedip_hive_monitor_bot_verification'] = 0;
+				$GLOBALS['wp_options']['reportedip_hive_bot_action']               = 'block';
+				$GLOBALS['wp_options']['reportedip_hive_2fa_enabled_global']       = 0;
+				$GLOBALS['wp_options']['reportedip_hive_2fa_enforce_roles']        = array( 'administrator' );
+				$items = array();
+				foreach ( array_merge( \ReportedIP_Hive_Score::detection_items(), \ReportedIP_Hive_Score::hardening_items() ) as $item ) {
+					$items[ $item['key'] ] = $item;
+				}
+				$this->assertFalse( $items['waf']['enabled'], 'A firewall in test mode blocks nothing.' );
+				$this->assertFalse( $items['bot_verification']['enabled'], 'The sensor master switch is off.' );
+				$this->assertFalse( $items['twofa_enforce']['enabled'], 'Enforced roles do nothing while 2FA is off.' );
+
+				$GLOBALS['wp_options']['reportedip_hive_waf_report_only']          = 0;
+				$GLOBALS['wp_options']['reportedip_hive_monitor_bot_verification'] = 1;
+				$items = array();
+				foreach ( \ReportedIP_Hive_Score::detection_items() as $item ) {
+					$items[ $item['key'] ] = $item;
+				}
+				$this->assertTrue( $items['waf']['enabled'] );
+				$this->assertTrue( $items['bot_verification']['enabled'] );
+			} finally {
+				$GLOBALS['wp_options'] = $before;
+			}
+		}
+
 		public function test_grade_boundaries(): void {
 			$this->assertSame( 'A+', \ReportedIP_Hive_Score::grade_for( 95 ) );
 			$this->assertSame( 'A', \ReportedIP_Hive_Score::grade_for( 94 ) );

@@ -1006,7 +1006,7 @@ class ReportedIP_Hive_Database {
 			$live  .= ' AND first_attempt > DATE_SUB(UTC_TIMESTAMP(), INTERVAL %d MINUTE)';
 			$args[] = $window;
 		}
-		$now_utc    = current_time( 'mysql', true );
+		$now_utc = current_time( 'mysql', true );
 
 		/*
 		 * Single atomic upsert on UNIQUE (ip_address, attempt_type), schema

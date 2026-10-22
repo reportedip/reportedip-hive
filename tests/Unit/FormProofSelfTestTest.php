@@ -127,7 +127,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 			try {
 				$off = $this->adapter_row( $this->state( array( 'adapters' => array( $this->adapter( true, true, false ) ) ) ) );
-				$this->assertSame( 'off: The form plugin is here, the switch on the Protection page is off.', $off['note'] );
+				$this->assertSame( 'off: The form plugin is here, the switch on the Protection Settings page is off.', $off['note'] );
 				$unavailable = $this->adapter_row( $this->state( array( 'adapters' => array( $this->adapter( true, false, true ) ) ) ) );
 				$this->assertStringStartsWith( 'unavailable: ', $unavailable['note'] );
 			} finally {
@@ -139,7 +139,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$row = $this->adapter_row( $this->state( array( 'adapters' => array( $this->adapter( true, true, false ) ) ) ) );
 
 			$this->assertSame( 'warning', $row['badge'] );
-			$this->assertStringContainsString( 'switch on the Protection page is off', $row['note'] );
+			$this->assertStringContainsString( 'switch on the Protection Settings page is off', $row['note'] );
 		}
 
 		public function test_an_armed_adapter_is_inactive_while_the_layer_is_off(): void {

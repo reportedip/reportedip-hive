@@ -22,11 +22,11 @@ test.describe('community page', () => {
 		wp('option update reportedip_hive_auto_footer_enabled 0');
 	});
 
-	test('settings open first and the nav carries the four tabs', async ({ page }) => {
+	test('the access key opens first and the nav carries the four tabs', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto(PAGE);
 		const tabs = page.locator('.rip-nav-tabs .rip-nav-tabs__tab');
-		await expect(tabs).toHaveText(['Settings', 'Community', 'Badges', 'Add-on']);
+		await expect(tabs).toHaveText(['Access Key', 'Community', 'Badges', 'Add-on']);
 		await expect(tabs.nth(0)).toHaveClass(/rip-nav-tabs__tab--active/);
 		await expect(page.locator('.rip-mode-card')).toHaveCount(2);
 		await expect(page.locator('#rip-badge-builder')).toHaveCount(0);

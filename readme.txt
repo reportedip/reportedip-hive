@@ -4,7 +4,7 @@ Tags: security, firewall, brute-force, 2fa, anti-spam
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 3.0.3
+Stable tag: 3.0.4
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -210,16 +210,22 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 == Screenshots ==
 
 1. Security dashboard with the protection score, blocks and the activity stream.
-2. Protection page: every sensor and threshold on five tabs.
+2. Protection Settings: every sensor and threshold on five tabs.
 3. Activity log with filters.
 4. Two-factor enrolment wizard.
 5. Sign-in challenge with authenticator, passkey and e-mail options.
-6. Tools page with the pre-WordPress firewall and the server rules.
-7. Community page: Local Shield or Community Network.
+6. Server & Maintenance page with the pre-WordPress firewall and the server rules.
+7. Community & Key page: Community Access Key, Local Shield or Community Network.
 8. System status and readiness check.
 9. Site view on a multisite network: local activity, protection managed centrally by the network admin.
 
 == Changelog ==
+
+= 3.0.4 =
+* Clearer page names: Protection Settings, Server & Maintenance (always in the menu) and Community & Key with the Community Access Key on its first tab.
+* Protection Settings keeps label and switch together on wide screens and lists the sections of each tab.
+* Dashboard: each score shows its items below it; next steps show at most four suggestions, now also for two-factor, firewall, security headers and the password policy.
+* A next-step card disappears as soon as its setting is on, and the scores no longer count a firewall in test mode or two-factor roles while two-factor is off.
 
 = 3.0.3 =
 * Blocked attacks arrive as one daily summary instead of one mail per threshold; the setting "Blocked attacks" switches back to single mails or off.
@@ -253,6 +259,9 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 * Database schema 25.
 
 == Upgrade Notice ==
+
+= 3.0.4 =
+Pages renamed: Protection Settings, Server & Maintenance and Community & Key (holds the Community Access Key). Nothing to do.
 
 = 3.0.3 =
 Mails about blocked attacks now arrive as one daily summary; instant alerts cover a new administrator and similar breaches. Change it under Protection, Operations, Notifications.

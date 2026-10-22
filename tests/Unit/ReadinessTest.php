@@ -363,6 +363,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertFalse( get_site_transient( \ReportedIP_Hive_Readiness::CACHE_KEY ) );
 		}
 
+		public function test_a_setting_behind_a_next_step_flushes_the_cache(): void {
+			foreach ( array( 'reportedip_hive_hide_login_enabled', 'reportedip_hive_operation_mode', 'reportedip_hive_waf_dropin_enabled', 'reportedip_hive_wizard_completed' ) as $option ) {
+				set_site_transient( \ReportedIP_Hive_Readiness::CACHE_KEY, array(), 300 );
+				\ReportedIP_Hive_Readiness::flush_on_option_change( $option );
+				$this->assertFalse( get_site_transient( \ReportedIP_Hive_Readiness::CACHE_KEY ), $option . ' changes a next-step card, the card must go at once.' );
+			}
+		}
+
 		public function test_state_option_is_runtime_only(): void {
 			$this->assertArrayNotHasKey(
 				\ReportedIP_Hive_Readiness::OPT_STATE,

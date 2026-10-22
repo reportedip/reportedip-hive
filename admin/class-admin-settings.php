@@ -365,7 +365,7 @@ class ReportedIP_Hive_Admin_Settings {
 				'<a class="rip-mode-badge %1$s" href="%2$s" title="%3$s">',
 				esc_attr( $info['badge_class'] ),
 				esc_url( $community_url ),
-				esc_attr__( 'Open the Community page', 'reportedip-hive' )
+				esc_attr__( 'Open the Community & Key page', 'reportedip-hive' )
 			);
 		} else {
 			printf( '<span class="rip-mode-badge %1$s">', esc_attr( $info['badge_class'] ) );
@@ -959,7 +959,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 
 	/**
-	 * Reputation of the site's own address on the Community page.
+	 * Reputation of the site's own address on the Community & Key page.
 	 *
 	 * The value comes from verify-key and lives in the option
 	 * `reportedip_hive_reputation`. Renders nothing while it is unknown. An
@@ -1531,31 +1531,10 @@ class ReportedIP_Hive_Admin_Settings {
 		);
 		add_submenu_page( 'reportedip-hive', __( 'Dashboard', 'reportedip-hive' ), __( 'Dashboard', 'reportedip-hive' ), $cap, 'reportedip-hive', array( $this, 'dashboard_page' ) );
 		add_submenu_page( 'reportedip-hive', __( 'Activity', 'reportedip-hive' ), __( 'Activity', 'reportedip-hive' ), $cap, 'reportedip-hive-security', array( $this, 'security_page' ) );
-		add_submenu_page( 'reportedip-hive', __( 'Protection', 'reportedip-hive' ), __( 'Protection', 'reportedip-hive' ), $cap, ReportedIP_Hive_Protection_Page::PAGE_SLUG, array( 'ReportedIP_Hive_Protection_Page', 'render_page' ) );
-		$tools_parent = ReportedIP_Hive_Protection_Page::is_expert() ? 'reportedip-hive' : '';
-		$tools_hook   = add_submenu_page( $tools_parent, __( 'Tools', 'reportedip-hive' ), __( 'Tools', 'reportedip-hive' ), $cap, ReportedIP_Hive_Tools_Page::PAGE_SLUG, array( new ReportedIP_Hive_Tools_Page(), 'render_page' ) );
-		if ( '' === $tools_parent && is_string( $tools_hook ) ) {
-			add_action( 'load-' . $tools_hook, array( __CLASS__, 'title_hidden_tools_page' ) );
-		}
-		add_submenu_page( 'reportedip-hive', __( 'Community & Quota', 'reportedip-hive' ), __( 'Community', 'reportedip-hive' ), $cap, 'reportedip-hive-community', array( $this, 'community_page' ) );
+		add_submenu_page( 'reportedip-hive', __( 'Protection Settings', 'reportedip-hive' ), __( 'Protection Settings', 'reportedip-hive' ), $cap, ReportedIP_Hive_Protection_Page::PAGE_SLUG, array( 'ReportedIP_Hive_Protection_Page', 'render_page' ) );
+		add_submenu_page( 'reportedip-hive', __( 'Server & Maintenance', 'reportedip-hive' ), __( 'Server & Maintenance', 'reportedip-hive' ), $cap, ReportedIP_Hive_Tools_Page::PAGE_SLUG, array( new ReportedIP_Hive_Tools_Page(), 'render_page' ) );
+		add_submenu_page( 'reportedip-hive', __( 'Community & Key', 'reportedip-hive' ), __( 'Community & Key', 'reportedip-hive' ), $cap, 'reportedip-hive-community', array( $this, 'community_page' ) );
 		add_submenu_page( 'reportedip-hive', __( 'System Status', 'reportedip-hive' ), __( 'System Status', 'reportedip-hive' ), $cap, 'reportedip-hive-debug', array( $this, 'debug_page' ) );
-	}
-
-	/**
-	 * Give the Tools page its title while it is outside the menu.
-	 *
-	 * A page without a parent is not in `$submenu`, so
-	 * `get_admin_page_title()` finds no title and admin-header.php hands
-	 * null to `strip_tags()`. On PHP 8.1 that deprecation notice is the
-	 * first output with WP_DEBUG on, and every later header (the user
-	 * settings cookie on Multisite) fails with "headers already sent".
-	 *
-	 * @return void
-	 * @since  3.0.0
-	 */
-	public static function title_hidden_tools_page() {
-		global $title;
-		$title = __( 'Tools', 'reportedip-hive' ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- core reads the page title from this global and finds none for a page outside the menu.
 	}
 
 	/**
@@ -2866,8 +2845,8 @@ class ReportedIP_Hive_Admin_Settings {
 	/**
 	 * Render the protection- and hardening-score section on the dashboard.
 	 *
-	 * Two SVG ring gauges (detection / hardening) followed by per-group item
-	 * breakdowns with activate-direct-links and tier/mode-lock CTAs, plus
+	 * Two columns (detection / hardening), each an SVG ring gauge with its
+	 * item breakdown directly below, activate-direct-links and tier/mode-lock CTAs, plus
 	 * independent-verification deep links for the site host.
 	 *
 	 * @return void
@@ -2884,20 +2863,22 @@ class ReportedIP_Hive_Admin_Settings {
 		?>
 		<section class="rip-score-section">
 			<div class="rip-score-gauges">
-				<?php
-				$this->render_score_gauge( $detection, __( 'Detection Score', 'reportedip-hive' ) );
-				$this->render_score_gauge( $hardening, __( 'Hardening Score', 'reportedip-hive' ) );
-				?>
+				<div class="rip-score-column">
+					<?php
+					$this->render_score_gauge( $detection, __( 'Detection Score', 'reportedip-hive' ) );
+					$this->render_score_items( $detection, __( 'Detection sensors', 'reportedip-hive' ) );
+					?>
+				</div>
+				<div class="rip-score-column">
+					<?php
+					$this->render_score_gauge( $hardening, __( 'Hardening Score', 'reportedip-hive' ) );
+					$this->render_score_items( $hardening, __( 'Hardening features', 'reportedip-hive' ) );
+					?>
+				</div>
 			</div>
 			<?php if ( (int) ( $hardening['score'] ?? 0 ) < 70 ) : ?>
-				<p class="rip-help-text"><?php esc_html_e( 'A low hardening score is normal right after setup. It rises with each hardening step you switch on below; the protection against attacks is already active.', 'reportedip-hive' ); ?></p>
+				<p class="rip-help-text"><?php esc_html_e( 'A low hardening score is normal right after setup. It rises with each hardening step you switch on; the protection against attacks is already active.', 'reportedip-hive' ); ?></p>
 			<?php endif; ?>
-			<div class="rip-score-breakdowns">
-				<?php
-				$this->render_score_items( $detection, __( 'Detection sensors', 'reportedip-hive' ) );
-				$this->render_score_items( $hardening, __( 'Hardening features', 'reportedip-hive' ) );
-				?>
-			</div>
 			<?php if ( '' !== $host ) : ?>
 			<div class="rip-score-verify">
 				<span class="rip-score-verify__label"><?php esc_html_e( 'Check from outside:', 'reportedip-hive' ); ?></span>
@@ -3819,46 +3800,32 @@ class ReportedIP_Hive_Admin_Settings {
 
 
 	/**
-	 * Render General settings tab (Mode + API Configuration)
+	 * Render the Access Key tab: Community Access Key, connection, operation mode.
 	 */
 	public function render_connection_card() {
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 		?>
 		<div class="rip-settings-section">
 			<h2 class="rip-settings-section__title">
-				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/><path d="M2 10h16M10 2c2.8 2.8 4.4 6.5 4.4 8s-1.6 5.2-4.4 8" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
-				<?php esc_html_e( 'Operation Mode', 'reportedip-hive' ); ?>
-			</h2>
-			<p class="rip-settings-section__desc"><?php esc_html_e( 'Choose how ReportedIP Hive should operate. You can switch modes at any time.', 'reportedip-hive' ); ?></p>
-
-			<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>" class="rip-form rip-form--mode">
-				<?php settings_fields( 'reportedip_hive_general' ); ?>
-				<?php self::render_mode_comparison( array( 'interactive' => true ) ); ?>
-				<p class="rip-help-text"><?php esc_html_e( 'Mode changes take effect immediately after saving.', 'reportedip-hive' ); ?></p>
-				<p class="rip-help-text"><?php esc_html_e( 'Privacy note: in Community mode every API request identifies this installation with its site address and plugin/WordPress version (wp.org-style, for licence domain counting and support). Visitor-related data stays limited to the IP address and event type of detected threats, never usernames, comment content or full user agents.', 'reportedip-hive' ); ?></p>
-				<div class="rip-form-actions">
-					<?php submit_button( __( 'Save Mode', 'reportedip-hive' ), 'rip-button rip-button--primary', 'submit', false ); ?>
-				</div>
-			</form>
-		</div>
-
-		<?php if ( $mode_manager->is_community_mode() ) : ?>
-		<div class="rip-settings-section">
-			<h2 class="rip-settings-section__title">
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-				<?php esc_html_e( 'API Configuration', 'reportedip-hive' ); ?>
+				<?php esc_html_e( 'Community Access Key', 'reportedip-hive' ); ?>
 			</h2>
-			<p class="rip-settings-section__desc"><?php esc_html_e( 'Connect to the ReportedIP community network for enhanced protection.', 'reportedip-hive' ); ?></p>
+			<p class="rip-settings-section__desc"><?php esc_html_e( 'The key connects this site to the ReportedIP community network and to the plan of your reportedip.com account.', 'reportedip-hive' ); ?></p>
+			<?php if ( ! $mode_manager->is_community_mode() ) : ?>
+				<div class="rip-alert rip-alert--info">
+					<?php esc_html_e( 'This site runs in Local Shield mode. A saved key is used once you switch the operation mode below to Community.', 'reportedip-hive' ); ?>
+				</div>
+			<?php endif; ?>
 
 			<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>" class="rip-form">
 				<?php settings_fields( 'reportedip_hive_api' ); ?>
 
 				<div class="rip-form-group">
-					<label class="rip-label" for="reportedip_hive_api_key"><?php esc_html_e( 'API Key', 'reportedip-hive' ); ?></label>
+					<label class="rip-label" for="reportedip_hive_api_key"><?php esc_html_e( 'Community Access Key', 'reportedip-hive' ); ?></label>
 					<input type="password" id="reportedip_hive_api_key" name="reportedip_hive_api_key" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' ) ); ?>" class="rip-input" />
 					<p class="rip-help-text">
-						<?php esc_html_e( 'Your ReportedIP API key.', 'reportedip-hive' ); ?>
-						<a href="https://reportedip.com/dashboard/api-keys/?rc=hive-plugin" target="_blank"><?php esc_html_e( 'Get API Key', 'reportedip-hive' ); ?></a>
+						<?php esc_html_e( 'You find the key in your reportedip.com account.', 'reportedip-hive' ); ?>
+						<a href="https://reportedip.com/dashboard/api-keys/?rc=hive-plugin" target="_blank"><?php esc_html_e( 'Get a key', 'reportedip-hive' ); ?></a>
 					</p>
 				</div>
 
@@ -3930,7 +3897,25 @@ class ReportedIP_Hive_Admin_Settings {
 				<div id="api-test-result" class="rip-api-result"></div>
 			</form>
 		</div>
-		<?php endif; ?>
+
+		<div class="rip-settings-section">
+			<h2 class="rip-settings-section__title">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" fill="none"/><path d="M2 10h16M10 2c2.8 2.8 4.4 6.5 4.4 8s-1.6 5.2-4.4 8" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+				<?php esc_html_e( 'Operation Mode', 'reportedip-hive' ); ?>
+			</h2>
+			<p class="rip-settings-section__desc"><?php esc_html_e( 'Choose how ReportedIP Hive should operate. You can switch modes at any time.', 'reportedip-hive' ); ?></p>
+
+			<form method="post" action="<?php echo esc_url( self::settings_form_action() ); ?>" class="rip-form rip-form--mode">
+				<?php settings_fields( 'reportedip_hive_general' ); ?>
+				<?php self::render_mode_comparison( array( 'interactive' => true ) ); ?>
+				<p class="rip-help-text"><?php esc_html_e( 'Mode changes take effect immediately after saving.', 'reportedip-hive' ); ?></p>
+				<p class="rip-help-text"><?php esc_html_e( 'Privacy note: in Community mode every API request identifies this installation with its site address and plugin/WordPress version (wp.org-style, for licence domain counting and support). Visitor-related data stays limited to the IP address and event type of detected threats, never usernames, comment content or full user agents.', 'reportedip-hive' ); ?></p>
+				<div class="rip-form-actions">
+					<?php submit_button( __( 'Save Mode', 'reportedip-hive' ), 'rip-button rip-button--primary', 'submit', false ); ?>
+				</div>
+			</form>
+		</div>
+
 		<?php
 	}
 
@@ -3968,7 +3953,7 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Diagnostics tab of the Tools page: the branded test mail.
+	 * Diagnostics tab of the Server & Maintenance page: the branded test mail.
 	 *
 	 * @return void
 	 * @since  2.1.56
@@ -4751,7 +4736,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 */
 	public static function community_tabs() {
 		$tabs = array(
-			'settings'  => __( 'Settings', 'reportedip-hive' ),
+			'settings'  => __( 'Access Key', 'reportedip-hive' ),
 			'community' => __( 'Community', 'reportedip-hive' ),
 			'badges'    => __( 'Badges', 'reportedip-hive' ),
 			'addon'     => __( 'Add-on', 'reportedip-hive' ),
@@ -4870,7 +4855,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'security_summary'  => $security_summary,
 		);
 
-		self::render_page_header( __( 'Community & Quota', 'reportedip-hive' ), __( 'Join the hive, share threats, set a badge, and help every member stay protected', 'reportedip-hive' ) );
+		self::render_page_header( __( 'Community & Key', 'reportedip-hive' ), __( 'Join the hive, share threats, set a badge, and help every member stay protected', 'reportedip-hive' ) );
 		?>
 
 			<nav class="rip-nav-tabs" aria-label="<?php esc_attr_e( 'Community sections', 'reportedip-hive' ); ?>">
@@ -5223,7 +5208,7 @@ class ReportedIP_Hive_Admin_Settings {
 			<div class="rip-card rip-mb-4 rip-addon__section" data-section="<?php echo esc_attr( (string) $section ); ?>">
 				<div class="rip-card__header">
 					<h3 class="rip-card__title"><?php echo esc_html( (string) ( $labels[ $section ]['label'] ?? $section ) ); ?></h3>
-					<a class="rip-button rip-button--ghost rip-button--sm" href="<?php echo esc_url( ReportedIP_Hive_Protection_Page::section_url( (string) $section ) ); ?>"><?php esc_html_e( 'Open on the Protection page', 'reportedip-hive' ); ?></a>
+					<a class="rip-button rip-button--ghost rip-button--sm" href="<?php echo esc_url( ReportedIP_Hive_Protection_Page::section_url( (string) $section ) ); ?>"><?php esc_html_e( 'Open in Protection Settings', 'reportedip-hive' ); ?></a>
 				</div>
 				<div class="rip-card__body">
 					<table class="rip-table">

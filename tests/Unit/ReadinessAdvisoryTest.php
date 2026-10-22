@@ -27,6 +27,34 @@ namespace ReportedIP\Hive\Tests\Unit {
 	 */
 	final class ReadinessAdvisoryTest extends TestCase {
 
+		public function test_score_advisories_list_the_heaviest_open_items_first(): void {
+			$item = static function ( string $key, int $weight, bool $available, bool $enabled, bool $present = true ): array {
+				return array(
+					'key'       => $key,
+					'weight'    => $weight,
+					'present'   => $present,
+					'available' => $available,
+					'enabled'   => $enabled,
+				);
+			};
+			$issues = ReportedIP_Hive_Readiness::score_advisories(
+				array(
+					$item( 'password_hibp', 12, true, false ),
+					$item( 'twofa_enforce', 18, true, false ),
+					$item( 'waf', 15, true, true ),
+					$item( 'security_headers', 12, true, false, false ),
+					$item( 'hide_login', 14, true, false ),
+					$item( 'feeds_off', 2, false, false ),
+				)
+			);
+			$this->assertSame( array( 'score_twofa_enforce', 'score_password_hibp' ), array_column( $issues, 'key' ) );
+			foreach ( $issues as $issue ) {
+				$this->assertSame( ReportedIP_Hive_Readiness::SEV_ADVISORY, $issue['severity'] );
+				$this->assertNotSame( '', $issue['message'] );
+			}
+			$this->assertSame( array(), ReportedIP_Hive_Readiness::score_advisories( array() ) );
+		}
+
 		public function test_hide_login_off_raises_only_while_the_slug_is_off(): void {
 			$issue = ReportedIP_Hive_Readiness::hide_login_off( false );
 			$this->assertSame( 'hide_login_off', $issue['key'] );

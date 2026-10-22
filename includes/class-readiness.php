@@ -58,12 +58,6 @@ final class ReportedIP_Hive_Readiness {
 	const HOT_OPTIONS = array(
 		'reportedip_hive_api_stats',
 		'reportedip_hive_cache_stats',
-		'reportedip_hive_hide_login_enabled',
-		'reportedip_hive_2fa_frontend_enabled',
-		'reportedip_hive_auto_footer_enabled',
-		'reportedip_hive_operation_mode',
-		'reportedip_hive_wizard_completed',
-		'reportedip_hive_waf_dropin_enabled',
 	);
 
 	/**
@@ -317,6 +311,53 @@ final class ReportedIP_Hive_Readiness {
 	}
 
 	/**
+	 * Advisories for the score items that weigh the most and are still off.
+	 *
+	 * Only items that are present, available on this plan and switched off
+	 * raise an advisory, heaviest first.
+	 *
+	 * @param array<int,array<string,mixed>> $items Score item descriptors of both groups.
+	 * @return array<int,array<string,mixed>>
+	 * @since  3.0.4
+	 */
+	public static function score_advisories( array $items ) {
+		$texts = array(
+			'twofa_enforce'    => array(
+				__( 'Require two-factor sign-in', 'reportedip-hive' ),
+				__( 'A stolen password alone then no longer opens an administrator account. Switch two-factor on and pick the roles that must use it.', 'reportedip-hive' ),
+			),
+			'waf'              => array(
+				__( 'Switch on the firewall', 'reportedip-hive' ),
+				__( 'The firewall refuses SQL injection, script injection and path probing before WordPress handles the request. In test mode it only logs what it would block.', 'reportedip-hive' ),
+			),
+			'security_headers' => array(
+				__( 'Send security headers', 'reportedip-hive' ),
+				__( 'A few response headers stop browsers from framing your pages and guessing file types. They cost nothing and rarely conflict with a theme.', 'reportedip-hive' ),
+			),
+			'password_hibp'    => array(
+				__( 'Switch on the password policy', 'reportedip-hive' ),
+				__( 'New passwords then need a minimum length and are checked against known leaks, so a reused password does not open the site.', 'reportedip-hive' ),
+			),
+		);
+
+		$open = array();
+		foreach ( $items as $item ) {
+			$id = (string) ( $item['key'] ?? '' );
+			if ( ! isset( $texts[ $id ] ) || empty( $item['present'] ) || empty( $item['available'] ) || ! empty( $item['enabled'] ) ) {
+				continue;
+			}
+			$open[ $id ] = (int) ( $item['weight'] ?? 0 );
+		}
+		arsort( $open );
+
+		$issues = array();
+		foreach ( array_keys( $open ) as $id ) {
+			$issues[] = self::issue( 'score_' . $id, self::SEV_ADVISORY, $texts[ $id ][0], $texts[ $id ][1] );
+		}
+		return $issues;
+	}
+
+	/**
 	 * Per-user advisory: 2FA is on for the site, the admin has no method.
 	 *
 	 * Not part of the cached register: the answer differs per user.
@@ -484,6 +525,15 @@ final class ReportedIP_Hive_Readiness {
 				$raised[] = self::dropin_not_running( $guard->supports_auto_install(), $guard->is_running() );
 			}
 			$raised[] = self::community_pending( (string) $mode->get_mode() );
+			if ( class_exists( 'ReportedIP_Hive_Score' ) ) {
+				$score_items = array_merge(
+					(array) ( ReportedIP_Hive_Score::hardening_score()['items'] ?? array() ),
+					(array) ( ReportedIP_Hive_Score::detection_score()['items'] ?? array() )
+				);
+				foreach ( self::score_advisories( $score_items ) as $score_issue ) {
+					$raised[] = $score_issue;
+				}
+			}
 
 			/**
 			 * Add advisories after the free quickstart advisories, before
@@ -1058,8 +1108,12 @@ final class ReportedIP_Hive_Readiness {
 			'queue_backlog'          => array( 'reportedip-hive-security', 'api_queue' ),
 			'hide_login_off'         => array( 'reportedip-hive-protection', 'hide_login' ),
 			'dropin_not_running'     => array( 'reportedip-hive-tools', 'server' ),
-			'community_pending'      => array( 'reportedip-hive-community', 'community' ),
+			'community_pending'      => array( 'reportedip-hive-community', 'settings' ),
 			'own_2fa_missing'        => array( 'profile', '' ),
+			'score_twofa_enforce'    => array( 'reportedip-hive-protection', 'account_security' ),
+			'score_waf'              => array( 'reportedip-hive-protection', 'waf' ),
+			'score_security_headers' => array( 'reportedip-hive-protection', 'headers' ),
+			'score_password_hibp'    => array( 'reportedip-hive-protection', 'account_password' ),
 		);
 
 		foreach ( array_keys( self::form_adapters() ) as $slug ) {

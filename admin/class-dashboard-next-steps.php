@@ -43,6 +43,13 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	const META_DISMISSED_OWN_2FA = 'reportedip_hive_next_step_dismissed_own_2fa_missing';
 
 	/**
+	 * Most next-step cards shown at once; the rest follow as these are done.
+	 *
+	 * @var int
+	 */
+	const MAX_STEPS = 4;
+
+	/**
 	 * Wire hooks.
 	 */
 	public function __construct() {
@@ -161,6 +168,13 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 			),
 		);
 
+		foreach ( array( 'twofa_enforce', 'waf', 'security_headers', 'password_hibp' ) as $item ) {
+			$actions[ 'score_' . $item ] = array(
+				'label' => __( 'Open the setting', 'reportedip-hive' ),
+				'write' => false,
+			);
+		}
+
 		foreach ( array_keys( ReportedIP_Hive_Form_Adapters::adapters() ) as $slug ) {
 			$actions[ 'form_adapter_' . $slug ] = array(
 				'label' => __( 'Switch on', 'reportedip-hive' ),
@@ -271,7 +285,7 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 			<div class="rip-alert rip-alert--warning rip-status-banner">
 				<?php
 				echo esc_html( trim( (string) ( $quota['message'] ?? '' ) . ' ' . $countdown ) );
-				printf( ' <a href="%1$s">%2$s</a>', esc_url( $community_url ), esc_html__( 'Open the Community page', 'reportedip-hive' ) );
+				printf( ' <a href="%1$s">%2$s</a>', esc_url( $community_url ), esc_html__( 'Open the Community & Key page', 'reportedip-hive' ) );
 				?>
 			</div>
 			<?php
@@ -333,9 +347,13 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 		<?php if ( is_array( $result ) && ! empty( $result['message'] ) ) : ?>
 			<div class="rip-alert <?php echo ! empty( $result['ok'] ) ? 'rip-alert--success' : 'rip-alert--error'; ?>"><?php echo esc_html( (string) $result['message'] ); ?></div>
 		<?php endif; ?>
+		<div class="rip-card rip-next-steps" id="rip-next-steps">
+			<?php
+			self::render_next_steps( $current, $user_id );
+			self::render_area_rows( $current, $protection_url );
+			?>
+		</div>
 		<?php
-		self::render_next_steps( $current, $user_id );
-		self::render_area_rows( $current, $protection_url );
 
 		/**
 		 * Print a card below the area rows of the dashboard, inside the
@@ -348,7 +366,8 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 	}
 
 	/**
-	 * The next-step cards.
+	 * The next-step cards, at most {@see self::MAX_STEPS}, with a line on
+	 * where the suggestions come from.
 	 *
 	 * @param array<string,mixed> $current Registry values.
 	 * @param int                 $user_id Current user.
@@ -365,10 +384,12 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 		if ( array() === $issues ) {
 			return;
 		}
+		$waiting = max( 0, count( $issues ) - self::MAX_STEPS );
+		$issues  = array_slice( $issues, 0, self::MAX_STEPS );
 		?>
-		<div class="rip-card rip-next-steps" id="rip-next-steps">
-			<div class="rip-card__header"><h2><?php esc_html_e( 'Next steps', 'reportedip-hive' ); ?></h2></div>
-			<div class="rip-card__body rip-next-steps__grid">
+		<div class="rip-card__header"><h2><?php esc_html_e( 'Next steps', 'reportedip-hive' ); ?></h2></div>
+		<div class="rip-card__body rip-next-steps__body">
+			<div class="rip-next-steps__grid">
 				<?php foreach ( $issues as $issue ) : ?>
 					<?php
 					$key         = (string) $issue['key'];
@@ -414,6 +435,20 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 					</div>
 				<?php endforeach; ?>
 			</div>
+			<p class="rip-help-text rip-next-steps__info">
+				<?php
+				esc_html_e( 'The suggestions come from the protection check of this site: open points that raise the detection or hardening score the most, plus steps the setup still misses. A suggestion you hide with "Not now" comes back after 7 days.', 'reportedip-hive' );
+				if ( $waiting > 0 ) {
+					echo ' ' . esc_html(
+						sprintf(
+							/* translators: %d: number of further suggestions */
+							_n( '%d more suggestion follows once these are done.', '%d more suggestions follow once these are done.', $waiting, 'reportedip-hive' ),
+							$waiting
+						)
+					);
+				}
+				?>
+			</p>
 		</div>
 		<?php
 	}
@@ -433,10 +468,10 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 			)
 		);
 		?>
-		<details class="rip-card rip-areas">
+		<details class="rip-areas">
 			<summary class="rip-areas__summary">
 				<span class="rip-areas__title"><?php esc_html_e( 'Protection areas', 'reportedip-hive' ); ?></span>
-				<span class="rip-areas__intro"><?php esc_html_e( 'Every area of the Protection page with its current state. The points show what the scores gain once an area is switched on.', 'reportedip-hive' ); ?></span>
+				<span class="rip-areas__intro"><?php esc_html_e( 'Every area of the Protection Settings with its current state. The points show what the scores gain once an area is switched on.', 'reportedip-hive' ); ?></span>
 			</summary>
 			<ul class="rip-areas__list">
 				<?php foreach ( ReportedIP_Hive_Settings_Registry::sections() as $section => $meta ) : ?>

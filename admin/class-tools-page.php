@@ -47,7 +47,7 @@ class ReportedIP_Hive_Tools_Page {
 		if ( ! isset( $tabs[ $active ] ) ) {
 			$active = 'server';
 		}
-		ReportedIP_Hive_Admin_Settings::render_page_header( __( 'Tools', 'reportedip-hive' ), __( 'Server setup, rule delivery, data and diagnostics', 'reportedip-hive' ) );
+		ReportedIP_Hive_Admin_Settings::render_page_header( __( 'Server & Maintenance', 'reportedip-hive' ), __( 'Server setup, rule delivery, data and diagnostics', 'reportedip-hive' ) );
 		echo '<nav class="rip-nav-tabs">';
 		foreach ( $tabs as $slug => $label ) {
 			printf(
@@ -214,7 +214,7 @@ class ReportedIP_Hive_Tools_Page {
 		}
 
 		if ( ! $enabled ) {
-			return self::selftest_row( $label, 'warning', __( 'Off', 'reportedip-hive' ), __( 'The master switch on the Protection page is off, so no form carries an anchor.', 'reportedip-hive' ) );
+			return self::selftest_row( $label, 'warning', __( 'Off', 'reportedip-hive' ), __( 'The master switch on the Protection Settings page is off, so no form carries an anchor.', 'reportedip-hive' ) );
 		}
 
 		return self::selftest_row( $label, 'success', __( 'On', 'reportedip-hive' ), __( 'Every protected form carries the hidden anchor.', 'reportedip-hive' ) );
@@ -254,7 +254,7 @@ class ReportedIP_Hive_Tools_Page {
 		}
 
 		if ( empty( $adapter['option'] ) ) {
-			return self::selftest_row( $label, 'warning', __( 'Inactive', 'reportedip-hive' ), self::selftest_adapter_note( 'off', __( 'The form plugin is here, the switch on the Protection page is off.', 'reportedip-hive' ), $adapter ) );
+			return self::selftest_row( $label, 'warning', __( 'Inactive', 'reportedip-hive' ), self::selftest_adapter_note( 'off', __( 'The form plugin is here, the switch on the Protection Settings page is off.', 'reportedip-hive' ), $adapter ) );
 		}
 
 		if ( ! $enabled ) {
@@ -448,7 +448,7 @@ class ReportedIP_Hive_Tools_Page {
 		if ( 'visitor' === $run ) {
 			return $ok
 				? __( 'A normal submission reached the site. Readers are not caught by the check.', 'reportedip-hive' )
-				: __( 'A normal submission was refused. Visitors would be turned away on your forms too, so switch the execution proof off on the Protection page until this reads correctly.', 'reportedip-hive' );
+				: __( 'A normal submission was refused. Visitors would be turned away on your forms too, so switch the execution proof off on the Protection Settings page until this reads correctly.', 'reportedip-hive' );
 		}
 
 		if ( 'replay' === $run ) {
@@ -542,7 +542,7 @@ class ReportedIP_Hive_Tools_Page {
 	/**
 	 * Register the self-test script and hand it what it needs.
 	 *
-	 * The Tools page is never cached, so a value an add-on adds that depends
+	 * The Server & Maintenance page is never cached, so a value an add-on adds that depends
 	 * on this request is safe here in a way it would not be inside a rendered
 	 * form.
 	 *

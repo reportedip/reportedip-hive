@@ -1,8 +1,9 @@
 /**
  * Protection page: tab switching, hash handling, search across tabs, the
  * on/off text next to a switch, a row that follows another switch
- * (`data-depends`), the preset coupling and two guards (an invalid field
- * inside a closed details block, the reset confirmation).
+ * (`data-depends`), the preset coupling, two guards (an invalid field
+ * inside a closed details block, the reset confirmation) and the marker on
+ * the section list that follows the scroll position.
  * No server roundtrip; everything the filter needs is in `data-search`.
  *
  * @package   ReportedIP_Hive
@@ -185,4 +186,42 @@
 			});
 		});
 	});
+
+	var tocLinks = root.querySelectorAll('.rip-protection__toc-link');
+	if (tocLinks.length) {
+		var ticking = false;
+		var markSection = function () {
+			ticking = false;
+			var panel = root.querySelector('.rip-protection__panel:not(.rip-hidden)');
+			var sections = panel ? panel.querySelectorAll('.rip-protection__main > .rip-protection__section') : [];
+			var current = '';
+			var atEnd = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+			sections.forEach(function (section) {
+				if (section.getBoundingClientRect().top <= 140) {
+					current = section.id;
+				}
+			});
+			if (atEnd && sections.length) {
+				current = sections[sections.length - 1].id;
+			}
+			if (!current && sections.length) {
+				current = sections[0].id;
+			}
+			tocLinks.forEach(function (link) {
+				link.classList.toggle('rip-protection__toc-link--active', link.getAttribute('href') === '#' + current);
+			});
+		};
+		window.addEventListener('scroll', function () {
+			if (!ticking) {
+				ticking = true;
+				window.requestAnimationFrame(markSection);
+			}
+		}, { passive: true });
+		tabs.forEach(function (tab) {
+			tab.addEventListener('click', function () {
+				window.requestAnimationFrame(markSection);
+			});
+		});
+		markSection();
+	}
 })();
