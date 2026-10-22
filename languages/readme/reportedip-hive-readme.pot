@@ -15,6 +15,14 @@ msgstr ""
 msgid "ReportedIP Hive: Firewall, Brute Force Protection, 2FA and Anti-Spam"
 msgstr ""
 
+#. Screenshot description.
+msgid "Community &amp; Key page: Community Access Key, Local Shield or Community Network."
+msgstr ""
+
+#. Screenshot description.
+msgid "Server &amp; Maintenance page with the pre-WordPress firewall and the server rules."
+msgstr ""
+
 #. Found in description list item.
 msgid "A daily summary of blocked attacks and instant alerts when something got through, such as a new administrator."
 msgstr ""
@@ -339,14 +347,6 @@ msgstr ""
 msgid "Web application firewall (WAF)"
 msgstr ""
 
-#. Screenshot description.
-msgid "Community page: Local Shield or Community Network."
-msgstr ""
-
-#. Screenshot description.
-msgid "Tools page with the pre-WordPress firewall and the server rules."
-msgstr ""
-
 #. Found in faq paragraph.
 msgid "Version 3.0.0 arrives like any other update from the plugin directory. Your whitelist, blocks, counters and settings are carried over, including ranges, permanent whitelist entries and the True-Client-IP or X-Cluster-Client-IP proxy header. On a multisite network where the plugin ran site by site, the data of every site moves into the network tables. Open the quickstart afterwards to pick Local Shield or the Community Network."
 msgstr ""
@@ -572,7 +572,7 @@ msgid "Activity log with filters."
 msgstr ""
 
 #. Screenshot description.
-msgid "Protection page: every sensor and threshold on five tabs."
+msgid "Protection Settings: every sensor and threshold on five tabs."
 msgstr ""
 
 #. Screenshot description.
@@ -581,6 +581,22 @@ msgstr ""
 
 #. Found in description header.
 msgid "External Services"
+msgstr ""
+
+#. Found in changelog list item.
+msgid "A next-step card disappears as soon as its setting is on, and the scores no longer count a firewall in test mode or two-factor roles while two-factor is off."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Dashboard: each score shows its items below it; next steps show at most four suggestions, now also for two-factor, firewall, security headers and the password policy."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Protection Settings keeps label and switch together on wide screens and lists the sections of each tab."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Clearer page names: Protection Settings, Server &amp; Maintenance (always in the menu) and Community &amp; Key with the Community Access Key on its first tab."
 msgstr ""
 
 #. Found in changelog list item.

@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version: ReportedIP Hive 3.0.4\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/reportedip-hive\n"
 "POT-Creation-Date: 2026-10-16T09:32:19+00:00\n"
-"PO-Revision-Date: 2026-10-22T11:45:58+00:00\n"
+"PO-Revision-Date: 2026-10-22T12:14:50+00:00\n"
 "Last-Translator: Patrick Schlesinger <1@reportedip.com>\n"
 "Language-Team: es_ES\n"
 "Language: es\n"
@@ -541,7 +541,7 @@ msgstr "Ajustes guardados."
 
 #: admin/class-admin-settings.php:368 admin/class-dashboard-next-steps.php:288
 msgid "Open the Community & Key page"
-msgstr "Abrir la página Community y clave"
+msgstr "Abrir la página Community & clave"
 
 #: admin/class-admin-settings.php:564
 msgid "Community only"
@@ -901,11 +901,11 @@ msgstr "Ajustes de protección"
 
 #: admin/class-admin-settings.php:1535 admin/class-tools-page.php:50
 msgid "Server & Maintenance"
-msgstr "Servidor y mantenimiento"
+msgstr "Servidor & mantenimiento"
 
 #: admin/class-admin-settings.php:1536 admin/class-admin-settings.php:4858
 msgid "Community & Key"
-msgstr "Community y clave"
+msgstr "Community & clave"
 
 #: admin/class-admin-settings.php:1537 admin/class-admin-settings.php:4310
 msgid "System Status"
@@ -3072,7 +3072,7 @@ msgstr "Cortafuegos y bots"
 
 #: admin/class-protection-page.php:180
 msgid "Recommended: keep the firewall on. Add an exception on the Server & Maintenance page before switching a rule off."
-msgstr "Recomendado: mantén el cortafuegos activado. Añade una excepción en la página Servidor y mantenimiento antes de desactivar una regla."
+msgstr "Recomendado: mantén el cortafuegos activado. Añade una excepción en la página Servidor & mantenimiento antes de desactivar una regla."
 
 #: admin/class-protection-page.php:186
 msgid "These settings only matter during a coordinated attack or for a second factor asked again. The recommendation covers both."

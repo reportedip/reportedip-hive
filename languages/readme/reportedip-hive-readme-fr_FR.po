@@ -195,10 +195,6 @@ msgid "Activity log with filters."
 msgstr "Journal d'activité avec filtres."
 
 #. Screenshot description.
-msgid "Protection page: every sensor and threshold on five tabs."
-msgstr "Page Protection : tous les capteurs et tous les seuils répartis sur cinq onglets."
-
-#. Screenshot description.
 msgid "Security dashboard with the protection score, blocks and the activity stream."
 msgstr "Tableau de bord de sécurité avec le score de protection, les blocages et le flux d'activité."
 
@@ -586,14 +582,6 @@ msgstr "Anti-spam et protection des formulaires sans CAPTCHA"
 msgid "Web application firewall (WAF)"
 msgstr "Pare-feu applicatif web (WAF)"
 
-#. Screenshot description.
-msgid "Community page: Local Shield or Community Network."
-msgstr "Page Community : Local Shield ou Community Network."
-
-#. Screenshot description.
-msgid "Tools page with the pre-WordPress firewall and the server rules."
-msgstr "Page Outils avec le pare-feu en amont de WordPress et les règles serveur."
-
 #. Found in faq paragraph.
 msgid "Yes, the plugin is free under the GPL and works without any account. A free account at reportedip.com adds the community IP reputation check and synced firewall rulesets."
 msgstr "Oui, l'extension est gratuite sous licence GPL et fonctionne sans aucun compte. Un compte gratuit sur reportedip.com ajoute la vérification communautaire de réputation IP et des jeux de règles de pare-feu synchronisés."
@@ -681,3 +669,31 @@ msgstr "Le passage à une offre supérieure applique les réglages recommandés 
 #. Found in changelog list item.
 msgid "Network activation on Multisite opens the quickstart in the Network Admin."
 msgstr "L'activation sur le réseau d'un multisite ouvre le démarrage rapide dans l'administration du réseau."
+
+#. Screenshot description.
+msgid "Community &amp; Key page: Community Access Key, Local Shield or Community Network."
+msgstr "Page Community &amp; clé : Community Access Key, Local Shield ou Community Network."
+
+#. Screenshot description.
+msgid "Server &amp; Maintenance page with the pre-WordPress firewall and the server rules."
+msgstr "Page Serveur &amp; maintenance avec le pare-feu en amont de WordPress et les règles du serveur."
+
+#. Screenshot description.
+msgid "Protection Settings: every sensor and threshold on five tabs."
+msgstr "Réglages de protection : chaque capteur et chaque seuil sur cinq onglets."
+
+#. Found in changelog list item.
+msgid "A next-step card disappears as soon as its setting is on, and the scores no longer count a firewall in test mode or two-factor roles while two-factor is off."
+msgstr "Une carte des Prochaines étapes disparaît dès que son réglage est actif, et les scores ne comptent plus un pare-feu en mode test ni des rôles à deux facteurs tant que la connexion à deux facteurs est désactivée."
+
+#. Found in changelog list item.
+msgid "Dashboard: each score shows its items below it; next steps show at most four suggestions, now also for two-factor, firewall, security headers and the password policy."
+msgstr "Tableau de bord : chaque score affiche ses éléments juste en dessous ; Prochaines étapes affiche au plus quatre suggestions, désormais aussi pour la connexion à deux facteurs, le pare-feu, les en-têtes de sécurité et la politique de mots de passe."
+
+#. Found in changelog list item.
+msgid "Protection Settings keeps label and switch together on wide screens and lists the sections of each tab."
+msgstr "Réglages de protection garde le libellé et l'interrupteur ensemble sur les grands écrans et liste les sections de chaque onglet."
+
+#. Found in changelog list item.
+msgid "Clearer page names: Protection Settings, Server &amp; Maintenance (always in the menu) and Community &amp; Key with the Community Access Key on its first tab."
+msgstr "Noms de page plus clairs : Réglages de protection, Serveur &amp; maintenance (toujours dans le menu) et Community &amp; clé avec la Community Access Key dans le premier onglet."
