@@ -2,6 +2,26 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [3.0.4] - 2026-10-22
+
+### Fixes
+
+- A next-step card disappears as soon as its setting is on; after Hide Login or the Community mode was switched on, the card stayed for up to five minutes.
+- The "Join the community network" card now opens the tab with the key field.
+- The scores no longer count a firewall in test mode, a bot check whose sensor is off, or two-factor roles while two-factor is switched off.
+- The sign-in page reads "Secured by ReportedIP, a community initiative for a safer internet", the same line now closes the mails and the 2FA setup page.
+
+### Changed
+
+- The admin pages carry clearer names: Protection Settings (was Protection), Server & Maintenance (was Tools, now always in the menu) and Community & Key (was Community).
+- The Community & Key page opens on the Access Key tab with the Community Access Key field first; the field is visible in Local Shield mode too.
+- Protection Settings keeps label and switch close together on wide screens and shows a list of the sections of each tab with their state and a save button.
+- Dashboard: each score shows its sensors or features directly below it; next steps and protection areas share one card, with at most four suggestions and a line on where they come from.
+
+### New
+
+- Next steps also suggest requiring two-factor sign-in, the firewall, security headers and the password policy when they are off.
+
 ## [3.0.3] - 2026-10-17
 
 ### Fixes
