@@ -1,7 +1,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: ReportedIP Hive readme 3.0.0\n"
+"Project-Id-Version: ReportedIP Hive readme 3.0.3\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/reportedip-hive\n"
 "POT-Creation-Date: 2026-10-16T09:32:19+00:00\n"
 "PO-Revision-Date: 2026-10-16T09:32:19+00:00\n"
@@ -14,29 +14,13 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Domain: reportedip-hive\n"
 
-#. Short description.
-msgid "Firewall, brute force protection, 2FA with passkeys and spam protection for forms. Optional community IP blocklist. GDPR-first, made in Germany."
-msgstr "Cortafuegos, protección contra fuerza bruta, 2FA con passkeys y antispam en formularios. Lista comunitaria de IP opcional. Conforme al RGPD."
-
-#. Plugin name.
-msgid "ReportedIP Hive: Firewall, Login Security, Brute Force Protection and 2FA"
-msgstr "ReportedIP Hive: cortafuegos, seguridad de acceso, protección contra fuerza bruta y 2FA"
-
 #. Found in faq paragraph.
 msgid "Use a recovery code, or run <code>wp reportedip 2fa reset &lt;user_id&gt;</code> and <code>wp reportedip unblock &lt;ip&gt;</code> with WP-CLI. Adding your own address to the whitelist prevents blocks in the first place."
 msgstr "Usa un código de recuperación o ejecuta <code>wp reportedip 2fa reset &lt;user_id&gt;</code> y <code>wp reportedip unblock &lt;ip&gt;</code> con WP-CLI. Si añades tu propia dirección a la lista blanca, evitas los bloqueos desde el principio."
 
 #. Found in faq paragraph.
-msgid "Usually not. The invisible form check stops scripted submissions on comments, registrations, password resets and Contact Form 7 without a puzzle for your visitors."
-msgstr "Normalmente no. La comprobación invisible del formulario detiene los envíos automatizados en comentarios, registros, restablecimientos de contraseña y Contact Form 7 sin ningún acertijo para tus visitantes."
-
-#. Found in faq paragraph.
 msgid "Yes. Any FIDO2 or WebAuthn authenticator works as a second factor, including YubiKey hardware keys and platform passkeys such as Face ID, Touch ID and Windows Hello."
 msgstr "Sí. Cualquier autenticador FIDO2 o WebAuthn sirve como segundo factor, incluidas las llaves físicas YubiKey y las llaves de acceso (passkeys) de plataforma como Face ID, Touch ID y Windows Hello."
-
-#. Found in faq paragraph.
-msgid "Yes. The block page sends no-cache headers that WP Rocket, W3 Total Cache, WP Super Cache and LiteSpeed Cache respect, and the form check contains nothing request-specific, so cached pages keep working."
-msgstr "Sí. La página de bloqueo envía cabeceras no-cache que respetan WP Rocket, W3 Total Cache, WP Super Cache y LiteSpeed Cache, y la comprobación del formulario no contiene nada específico de la petición, así que las páginas en caché siguen funcionando."
 
 #. Found in faq paragraph.
 msgid "Yes. Choose the header that carries the visitor address (CF-Connecting-IP, X-Forwarded-For, X-Real-IP, Client-IP, True-Client-IP or X-Cluster-Client-IP) and list the trusted proxy ranges."
@@ -47,14 +31,6 @@ msgid "Only the attacking IP address, the event category, the time, your site na
 msgstr "Solo la dirección IP atacante, la categoría del evento, la hora, el nombre y la dirección de tu sitio, el número de intentos y la versión del plugin. Los nombres de usuario, las contraseñas y el contenido de los formularios nunca salen del sitio."
 
 #. Found in faq paragraph.
-msgid "The plugin is built for GDPR compliance: logging is minimal, retention is configurable (30 days by default), addresses are anonymised after 7 days and the Community Network is opt-in. A suggested text for your privacy policy is added under Settings, Privacy."
-msgstr "El plugin está diseñado para cumplir el RGPD: el registro es mínimo, el periodo de conservación es configurable (30 días por defecto), las direcciones se anonimizan pasados 7 días y el Community Network es opcional. En Ajustes, Privacidad se añade un texto sugerido para tu política de privacidad."
-
-#. Found in faq paragraph.
-msgid "Yes. The WooCommerce sign-in and registration forms are protected by the same login attempt limits, the registration rules and disposable e-mail blocking."
-msgstr "Sí. Los formularios de acceso y registro de WooCommerce están protegidos por los mismos límites de intentos de inicio de sesión, las reglas de registro y el bloqueo de correos desechables."
-
-#. Found in faq paragraph.
 msgid "A cloud firewall filters traffic before it reaches your server, while ReportedIP Hive runs inside WordPress and sees what a cloud firewall cannot: failed sign-ins, usernames tried, form submissions and user roles. Both work well together; set the proxy header so the plugin sees the real visitor address."
 msgstr "Un cortafuegos en la nube filtra el tráfico antes de que llegue a tu servidor, mientras que ReportedIP Hive funciona dentro de WordPress y ve lo que un cortafuegos en la nube no puede ver: inicios de sesión fallidos, nombres de usuario probados, envíos de formularios y perfiles de usuario. Ambos se complementan bien; configura la cabecera del proxy para que el plugin vea la dirección real del visitante."
 
@@ -62,29 +38,13 @@ msgstr "Un cortafuegos en la nube filtra el tráfico antes de que llegue a tu se
 msgid "Yes, but switch off overlapping features. Two plugins that both limit login attempts or both ask for a second factor will lock users out twice, so keep one of each."
 msgstr "Sí, pero desactiva las funciones que se solapen. Dos plugins que limitan los intentos de inicio de sesión o que piden un segundo factor bloquearán a los usuarios dos veces, así que quédate con uno de cada."
 
-#. Found in faq paragraph.
-msgid "No. A blocked address is refused at the very start of the request, before themes and most plugins load, and community reports are sent in the background by WP-Cron."
-msgstr "No. Una dirección bloqueada se rechaza al principio de la petición, antes de que se carguen los temas y la mayoría de los plugins, y los informes a la comunidad se envían en segundo plano mediante WP-Cron."
-
-#. Found in faq paragraph.
-msgid "Yes, the plugin is free under the GPL and works without any account. A free account at reportedip.com adds the community IP reputation check and the synced firewall rulesets."
-msgstr "Sí, el plugin es gratuito bajo la GPL y funciona sin cuenta. Una cuenta gratuita en reportedip.com añade la consulta de reputación de IP de la comunidad y los conjuntos de reglas del cortafuegos sincronizados."
-
 #. Found in faq header.
 msgid "What if I lock myself out?"
 msgstr "¿Qué pasa si me bloqueo a mí mismo?"
 
 #. Found in faq header.
-msgid "Do I still need a CAPTCHA?"
-msgstr "¿Sigo necesitando un CAPTCHA?"
-
-#. Found in faq header.
 msgid "Does it support passkeys and YubiKeys?"
 msgstr "¿Es compatible con passkeys y YubiKeys?"
-
-#. Found in faq header.
-msgid "Does it work with caching plugins?"
-msgstr "¿Funciona con plugins de caché?"
 
 #. Found in faq header.
 msgid "Does it work behind Cloudflare or a reverse proxy?"
@@ -126,41 +86,9 @@ msgstr "El plugin escribe sus dos bloques opcionales de .htaccess (respuestas a 
 msgid "Enrol your own second factor on your profile page."
 msgstr "Configura tu propio segundo factor en tu página de perfil."
 
-#. Found in installation list item.
-msgid "Open ReportedIP Hive in the admin menu. The quickstart lets you pick Local Shield or the Community Network and applies the recommended settings with one click."
-msgstr "Abre ReportedIP Hive en el menú de administración. El inicio rápido te permite elegir Local Shield o el Community Network y aplica los ajustes recomendados con un clic."
-
-#. Found in installation list item.
-msgid "Install the plugin from the WordPress plugin directory and activate it. On a multisite network, activate it network-wide."
-msgstr "Instala el plugin desde el directorio de plugins de WordPress y actívalo. En una red multisitio, actívalo en toda la red."
-
 #. Found in description paragraph.
 msgid "Both libraries ship inside the plugin, nothing is loaded from a CDN."
 msgstr "Ambas bibliotecas se incluyen en el plugin, no se carga nada desde un CDN."
-
-#. Found in description paragraph.
-msgid "When a user sets a new password, the first five characters of its SHA-1 hash are sent to <code>https://api.pwnedpasswords.com/range/</code>; the password itself never leaves the site. Service by Have I Been Pwned: https://haveibeenpwned.com/Privacy."
-msgstr "Cuando un usuario establece una nueva contraseña, los cinco primeros caracteres de su hash SHA-1 se envían a <code>https://api.pwnedpasswords.com/range/</code>; la contraseña en sí nunca sale del sitio. Servicio de Have I Been Pwned: https://haveibeenpwned.com/Privacy."
-
-#. Found in description paragraph.
-msgid "<strong>api.pwnedpasswords.com (only with the breach check switched on)</strong>"
-msgstr "<strong>api.pwnedpasswords.com (solo con la comprobación de filtraciones activada)</strong>"
-
-#. Found in description paragraph.
-msgid "Terms of use: https://reportedip.com/nutzungsbedingungen/ and privacy policy: https://reportedip.com/datenschutzerklaerung/."
-msgstr "Condiciones de uso: https://reportedip.com/nutzungsbedingungen/ y política de privacidad: https://reportedip.com/datenschutzerklaerung/."
-
-#. Found in description paragraph.
-msgid "Endpoint base: <code>https://reportedip.com/wp-json/reportedip/v2/</code>. Every request carries the key, the site address (<code>X-Rip-Site</code>) and a user agent with the plugin and WordPress version."
-msgstr "Base del endpoint: <code>https://reportedip.com/wp-json/reportedip/v2/</code>. Cada petición lleva la clave, la dirección del sitio (<code>X-Rip-Site</code>) y un agente de usuario con la versión del plugin y de WordPress."
-
-#. Found in description paragraph.
-msgid "<strong>reportedip.com (Community Network on, only with a Community Access Key you enter)</strong>"
-msgstr "<strong>reportedip.com (Community Network activado, solo con un Community Access Key que tú introduces)</strong>"
-
-#. Found in description paragraph.
-msgid "In Local Shield (the default) the plugin contacts no external service on its own, even with a key stored. Only a click on \"Check\" in the quickstart or on \"Test Connection\" sends one <code>verify-key</code> request."
-msgstr "En Local Shield (el modo por defecto) el plugin no contacta por sí mismo con ningún servicio externo, aunque haya una clave guardada. Solo un clic en \"Check\" en el inicio rápido o en \"Test Connection\" envía una petición <code>verify-key</code>."
 
 #. Found in description paragraph.
 msgid "Verified bot detection resolves the host name of visitors that claim to be a search engine crawler through your server's DNS resolver, which means the visitor address is sent to that resolver. Results are cached for up to 24 hours."
@@ -174,26 +102,6 @@ msgstr "El plugin guarda las direcciones de los inicios de sesión fallidos, las
 msgid "Documentation: <a href=\"https://reportedip.com/docs/integrations/wordpress-hive/?rc=hive-wporg\">ReportedIP Hive guide</a>."
 msgstr "Documentación: <a href=\"https://reportedip.com/docs/integrations/wordpress-hive/?rc=hive-wporg\">guía de ReportedIP Hive</a>."
 
-#. Found in description paragraph.
-msgid "A separate add-on, ReportedIP Hive Pro, extends this plugin with a managed EU relay for 2FA mails and SMS codes, two-factor authentication on the WooCommerce storefront, adaptive per-role 2FA policies, a hardening mode during attack waves, advanced security headers, a computation check on forms, form protection for further form plugins, Tor exit node blocking, an audit trail, user account control and fleet management. It is not hosted on wordpress.org and is described on the <a href=\"https://reportedip.com/products/wordpress-plugin/?rc=hive-wporg\">product page</a>."
-msgstr "Un complemento independiente, ReportedIP Hive Pro, amplía este plugin con un relé gestionado en la UE para correos y códigos SMS de 2FA, autenticación de dos factores en la tienda de WooCommerce, políticas de 2FA adaptativas por perfil, un modo de refuerzo durante oleadas de ataques, cabeceras de seguridad avanzadas, una comprobación de cálculo en formularios, protección para más plugins de formularios, bloqueo de nodos de salida de Tor, un registro de auditoría, control de cuentas de usuario y gestión de flotas. No está alojado en wordpress.org y se describe en la <a href=\"https://reportedip.com/products/wordpress-plugin/?rc=hive-wporg\">página del producto</a>."
-
-#. Found in description paragraph.
-msgid "ReportedIP Hive does not scan files for malware and does not monitor file integrity. Run a scanner next to it if your site needs one."
-msgstr "ReportedIP Hive no analiza archivos en busca de malware ni vigila la integridad de los archivos. Si tu sitio lo necesita, usa un escáner junto a él."
-
-#. Found in description paragraph.
-msgid "Everything in this plugin is free and complete: no trial, no locked switch, no account requirement. The Community Network and the separate Pro add-on are optional."
-msgstr "Todo lo que incluye este plugin es gratuito y completo: sin periodo de prueba, sin opciones bloqueadas y sin necesidad de cuenta. El Community Network y el complemento Pro independiente son opcionales."
-
-#. Found in description paragraph.
-msgid "Sixteen sensors watch the sign-in form, XML-RPC, the REST API, the comment, registration and password-reset forms and the request itself. Four two-factor methods keep accounts safe when a password leaks."
-msgstr "Dieciséis sensores vigilan el formulario de acceso, XML-RPC, la API REST, los formularios de comentarios, registro y restablecimiento de contraseña y la propia petición. Cuatro métodos de dos factores mantienen las cuentas a salvo cuando se filtra una contraseña."
-
-#. Found in description paragraph.
-msgid "ReportedIP Hive is a WordPress security plugin that combines a web application firewall (WAF), login security with limited login attempts, two-factor authentication with passkeys, and spam protection for comments, registrations and contact forms. It blocks malicious IPs on your own server, works without an account, and can optionally share and check attacking addresses through a community IP blocklist."
-msgstr "ReportedIP Hive es un plugin de seguridad para WordPress que combina un cortafuegos de aplicaciones web (WAF), seguridad de acceso con intentos de inicio de sesión limitados, autenticación de dos factores con passkeys y protección antispam para comentarios, registros y formularios de contacto. Bloquea las IP maliciosas en tu propio servidor, funciona sin cuenta y, de forma opcional, puede compartir y consultar direcciones atacantes a través de una lista de bloqueo de IP comunitaria."
-
 #. Found in description list item.
 msgid "qrcode-generator 1.4.4 (MIT) draws the TOTP QR code. Source: https://github.com/kazuhikoarase/qrcode-generator"
 msgstr "qrcode-generator 1.4.4 (MIT) dibuja el código QR de TOTP. Código fuente: https://github.com/kazuhikoarase/qrcode-generator"
@@ -201,42 +109,6 @@ msgstr "qrcode-generator 1.4.4 (MIT) dibuja el código QR de TOTP. Código fuent
 #. Found in description list item.
 msgid "Chart.js 4.4.1 (MIT) renders the dashboard charts. Source: https://github.com/chartjs/Chart.js"
 msgstr "Chart.js 4.4.1 (MIT) genera los gráficos del escritorio. Código fuente: https://github.com/chartjs/Chart.js"
-
-#. Found in description list item.
-msgid "<code>https://reportedip.com/feed/?post_type=news</code> (or the localised feed for German, Spanish and French): the dashboard shows the latest reportedip.com news, cached for twelve hours."
-msgstr "<code>https://reportedip.com/feed/?post_type=news</code> (o el feed traducido para alemán, español y francés): el escritorio muestra las últimas noticias de reportedip.com, guardadas en caché durante doce horas."
-
-#. Found in description list item.
-msgid "<code>rules/&lt;ruleset&gt;</code>: receives signed firewall, bot, bait-path and disposable-domain rulesets every six hours. Signatures are verified before use; the bundled baseline is used when the service is unreachable."
-msgstr "<code>rules/&lt;ruleset&gt;</code>: recibe cada seis horas conjuntos de reglas firmados para el cortafuegos, bots, rutas cebo y dominios desechables. Las firmas se verifican antes de usarlos; si el servicio no está disponible, se usa la base incluida."
-
-#. Found in description list item.
-msgid "<code>notification-config</code>: only with the switch \"Sync alert recipients\" on; sends the alert recipient addresses of this site to your account."
-msgstr "<code>notification-config</code>: solo con la opción \"Sync alert recipients\" activada; envía a tu cuenta las direcciones de los destinatarios de alertas de este sitio."
-
-#. Found in description list item.
-msgid "<code>categories</code>: receives the report category list."
-msgstr "<code>categories</code>: recibe la lista de categorías de informe."
-
-#. Found in description list item.
-msgid "<code>whitelist</code>: sends an address marked as legitimate, as positive feedback."
-msgstr "<code>whitelist</code>: envía una dirección marcada como legítima, como valoración positiva."
-
-#. Found in description list item.
-msgid "<code>report</code>: shares an address the plugin blocked; sends the address, the event category and a one-line description with the site name, site address and attempt count. Queued and sent in batches."
-msgstr "<code>report</code>: comparte una dirección que el plugin ha bloqueado; envía la dirección, la categoría del evento y una descripción de una línea con el nombre del sitio, la dirección del sitio y el número de intentos. Se pone en cola y se envía por lotes."
-
-#. Found in description list item.
-msgid "<code>check</code>: looks up an attacking address during sign-in attempts and on the comment, registration and password-reset forms; sends the address."
-msgstr "<code>check</code>: consulta una dirección atacante durante los intentos de inicio de sesión y en los formularios de comentarios, registro y restablecimiento de contraseña; envía la dirección."
-
-#. Found in description list item.
-msgid "<code>verify-key</code>: validates the key when you check it and, while the Community Network is on, every six hours; receives the plan and quotas of your account."
-msgstr "<code>verify-key</code>: valida la clave cuando la compruebas y, mientras el Community Network esté activado, cada seis horas; recibe el plan y las cuotas de tu cuenta."
-
-#. Found in description list item.
-msgid "<strong>Community Network</strong> is optional. With a free Community Access Key from <a href=\"https://reportedip.com/?rc=hive-wporg\">reportedip.com</a> the plugin checks the IP reputation of attacking addresses during sign-in and on forms, shares the addresses it blocks with the community blocklist, and receives updated firewall rulesets. Every request is listed under External Services below."
-msgstr "<strong>Community Network</strong> es opcional. Con un Community Access Key gratuito de <a href=\"https://reportedip.com/?rc=hive-wporg\">reportedip.com</a>, el plugin consulta la reputación de IP de las direcciones atacantes al iniciar sesión y en los formularios, comparte las direcciones que bloquea con la lista de bloqueo de la comunidad y recibe conjuntos de reglas del cortafuegos actualizados. Cada petición aparece más abajo en Servicios externos."
 
 #. Found in description list item.
 msgid "<strong>Local Shield</strong> is the default. The plugin makes no outbound request."
@@ -247,76 +119,12 @@ msgid "Works behind Cloudflare and other reverse proxies with a trusted proxy li
 msgstr "Funciona detrás de Cloudflare y otros proxies inversos con una lista de proxies de confianza."
 
 #. Found in description list item.
-msgid "WordPress multisite: network-activated, one set of tables, per-site logs."
-msgstr "WordPress multisitio: activación en toda la red, un único conjunto de tablas y registros por sitio."
-
-#. Found in description list item.
-msgid "WP-CLI commands for blocks, the whitelist, 2FA and status."
-msgstr "Comandos de WP-CLI para bloqueos, la lista blanca (Whitelist), la 2FA y el estado."
-
-#. Found in description list item.
-msgid "Activity log, protection score, CSV and JSON exports, settings import and export."
-msgstr "Registro de actividad, puntuación de protección, exportaciones CSV y JSON, importación y exportación de ajustes."
-
-#. Found in description list item.
-msgid "Basic security headers."
-msgstr "Cabeceras de seguridad básicas."
-
-#. Found in description list item.
-msgid "Feeds, wp-admin for guests, PHP execution in uploads and software version fingerprints, each a switch."
-msgstr "Feeds, wp-admin para invitados, ejecución de PHP en uploads y huellas de versión del software, cada uno con su propio interruptor."
-
-#. Found in description list item.
-msgid "REST API for signed-in users or chosen roles."
-msgstr "API REST solo para usuarios conectados o roles elegidos."
-
-#. Found in description list item.
-msgid "<strong>Registration rules:</strong> prohibited usernames, e-mail allow and block rules and a sign-up rate limit."
-msgstr "<strong>Reglas de registro:</strong> nombres de usuario prohibidos, reglas para permitir y bloquear correos electrónicos y un límite de frecuencia de altas."
-
-#. Found in description list item.
 msgid "<strong>Disposable e-mail blocking</strong> on registrations and forms."
 msgstr "<strong>Bloqueo de correos electrónicos desechables</strong> en registros y formularios."
 
 #. Found in description list item.
 msgid "<strong>Comment honeypot.</strong>"
 msgstr "<strong>Honeypot en comentarios.</strong>"
-
-#. Found in description list item.
-msgid "<strong>Comment spam filter</strong> that scores links, link density, disposable addresses and other signals."
-msgstr "<strong>Filtro de spam en comentarios</strong> que puntúa enlaces, densidad de enlaces, direcciones desechables y otras señales."
-
-#. Found in description list item.
-msgid "<strong>Contact Form 7 spam protection</strong> through the same check."
-msgstr "<strong>Protección contra spam para Contact Form 7</strong> con la misma comprobación."
-
-#. Found in description list item.
-msgid "<strong>Invisible form check instead of a CAPTCHA.</strong> A cache-safe execution proof on the comment, registration and password-reset forms. Visitors see no puzzle, and no third-party CAPTCHA service is loaded."
-msgstr "<strong>Comprobación invisible del formulario en lugar de un CAPTCHA.</strong> Una prueba de ejecución compatible con la caché en los formularios de comentarios, registro y restablecimiento de contraseña. Los visitantes no ven ningún acertijo y no se carga ningún servicio de CAPTCHA externo."
-
-#. Found in description list item.
-msgid "<strong>Firewall exceptions</strong> and a report-only mode for testing."
-msgstr "<strong>Excepciones del cortafuegos</strong> y un modo solo informe para hacer pruebas."
-
-#. Found in description list item.
-msgid "<strong>Verified bot detection.</strong> Googlebot, Bingbot and other large crawlers are confirmed through their published address ranges or reverse DNS. A fake Googlebot gains nothing."
-msgstr "<strong>Detección de bots verificados.</strong> Googlebot, Bingbot y otros grandes rastreadores se confirman mediante sus rangos de direcciones publicados o DNS inverso. Un Googlebot falso no consigue nada."
-
-#. Found in description list item.
-msgid "<strong>404 and scanner detection.</strong> Requests for bait paths such as .env or .git/config block the address at once."
-msgstr "<strong>Detección de 404 y escáneres.</strong> Las peticiones a rutas cebo como .env o .git/config bloquean la dirección al instante."
-
-#. Found in description list item.
-msgid "<strong>Pre-WordPress guard.</strong> An optional firewall layer that applies the same rules, exceptions, whitelist and IP blocks before WordPress loads."
-msgstr "<strong>Guardia previa a WordPress.</strong> Una capa opcional del cortafuegos que aplica las mismas reglas, excepciones, lista blanca y bloqueos de IP antes de que cargue WordPress."
-
-#. Found in description list item.
-msgid "<strong>Request inspection</strong> with a bundled baseline ruleset against SQL injection, XSS, path traversal and scanner traffic."
-msgstr "<strong>Inspección de peticiones</strong> con un conjunto de reglas básico incluido contra inyección SQL, XSS, path traversal y tráfico de escáneres."
-
-#. Found in description list item.
-msgid "Trusted devices, an enrolment wizard, 2FA enforcement per user role and a password-reset gate that a stolen mailbox cannot bypass."
-msgstr "Dispositivos de confianza, un asistente de alta, 2FA obligatoria por rol de usuario y un control en el restablecimiento de contraseña que un buzón de correo robado no puede eludir."
 
 #. Found in description list item.
 msgid "<strong>Recovery codes,</strong> ten single-use codes per user."
@@ -329,26 +137,6 @@ msgstr "<strong>Códigos por correo electrónico.</strong>"
 #. Found in description list item.
 msgid "<strong>Passkeys and hardware security keys (WebAuthn, FIDO2),</strong> for example a YubiKey, Face ID, Touch ID or Windows Hello. One key per account."
 msgstr "<strong>Llaves de acceso (passkeys) y llaves de seguridad físicas (WebAuthn, FIDO2),</strong> por ejemplo una YubiKey, Face ID, Touch ID o Windows Hello. Una llave por cuenta."
-
-#. Found in description list item.
-msgid "<strong>Authenticator apps (TOTP)</strong> such as Google Authenticator, Authy or 1Password."
-msgstr "<strong>Aplicaciones de autenticación (TOTP)</strong> como Google Authenticator, Authy o 1Password."
-
-#. Found in description list item.
-msgid "<strong>Password policy</strong> with an optional breach check (off by default)."
-msgstr "<strong>Política de contraseñas</strong> con una comprobación opcional de filtraciones (desactivada por defecto)."
-
-#. Found in description list item.
-msgid "<strong>WooCommerce login protection.</strong> The My Account sign-in and registration forms are counted like wp-login.php."
-msgstr "<strong>Protección del acceso en WooCommerce.</strong> Los formularios de acceso y registro de Mi cuenta se cuentan igual que wp-login.php."
-
-#. Found in description list item.
-msgid "<strong>Login anomaly detection.</strong> A sign-in from a new country asks for the second factor again."
-msgstr "<strong>Detección de anomalías en el acceso.</strong> Un inicio de sesión desde un país nuevo vuelve a pedir el segundo factor."
-
-#. Found in description list item.
-msgid "<strong>XML-RPC and pingback protection,</strong> with a switch to turn XML-RPC off."
-msgstr "<strong>Protección de XML-RPC y pingbacks,</strong> con un interruptor para desactivar XML-RPC."
 
 #. Found in description list item.
 msgid "<strong>User enumeration protection.</strong> Author archives, the users REST route, the user sitemap and login error messages no longer reveal usernames."
@@ -366,10 +154,6 @@ msgstr "<strong>Bloqueo progresivo de IP.</strong> Seis niveles, de 5 minutos a 
 msgid "<strong>Password spraying detection.</strong> Many usernames tried from one address are caught separately."
 msgstr "<strong>Detección de password spraying.</strong> Muchos nombres de usuario probados desde una misma dirección se detectan por separado."
 
-#. Found in description list item.
-msgid "<strong>Limit login attempts.</strong> Failed sign-ins are counted per IP address. The default locks an address after 5 failures in 15 minutes."
-msgstr "<strong>Limita los intentos de inicio de sesión.</strong> Los inicios de sesión fallidos se cuentan por dirección IP. Por defecto, una dirección se bloquea tras 5 fallos en 15 minutos."
-
 #. Found in description header.
 msgid "Credits"
 msgstr "Créditos"
@@ -379,32 +163,8 @@ msgid "Privacy Policy"
 msgstr "Política de privacidad"
 
 #. Found in description header.
-msgid "ReportedIP Hive Pro"
-msgstr "ReportedIP Hive Pro"
-
-#. Found in description header.
 msgid "What it does not do"
 msgstr "Lo que no hace"
-
-#. Found in description header.
-msgid "Two ways to run it"
-msgstr "Dos formas de usarlo"
-
-#. Found in description header.
-msgid "Operations"
-msgstr "Operaciones"
-
-#. Found in description header.
-msgid "Access lockdown"
-msgstr "Restricción de acceso"
-
-#. Found in description header.
-msgid "Spam protection for forms and comments"
-msgstr "Protección contra spam para formularios y comentarios"
-
-#. Found in description header.
-msgid "Web application firewall"
-msgstr "Cortafuegos de aplicaciones web"
 
 #. Found in description header.
 msgid "Two-factor authentication (2FA)"
@@ -421,14 +181,6 @@ msgstr "Vista del sitio en una red multisitio: actividad local, con la protecci�
 #. Screenshot description.
 msgid "System status and readiness check."
 msgstr "Estado del sistema y comprobación de preparación."
-
-#. Screenshot description.
-msgid "Community page with the connection card."
-msgstr "Página de la comunidad con la tarjeta de conexión."
-
-#. Screenshot description.
-msgid "Firewall rules and the pre-WordPress guard on the Tools page."
-msgstr "Reglas del cortafuegos y guardia previa a WordPress en la página Herramientas."
 
 #. Screenshot description.
 msgid "Sign-in challenge with authenticator, passkey and e-mail options."
@@ -501,3 +253,431 @@ msgstr "Las redes que usaban la versión 1.3.9 sitio por sitio conservan los blo
 #. Found in changelog list item.
 msgid "Update path from version 1.3.9: permanent and range whitelist entries, attempt counters and the proxy header are kept."
 msgstr "Actualización desde la versión 1.3.9: se conservan las entradas permanentes y de rango de la lista blanca, los contadores de intentos y la cabecera de proxy."
+
+#. Short description.
+msgid "Firewall, limit login attempts, 2FA with passkeys and anti-spam for comments and forms without CAPTCHA. Optional IP blocklist. GDPR-first."
+msgstr "Cortafuegos, límite de intentos de acceso, 2FA con passkeys y antispam para comentarios y formularios sin CAPTCHA. Lista de IP opcional. RGPD."
+
+#. Plugin name.
+msgid "ReportedIP Hive: Firewall, Brute Force Protection, 2FA and Anti-Spam"
+msgstr "ReportedIP Hive: cortafuegos, protección contra fuerza bruta, 2FA y antispam"
+
+#. Found in description list item.
+msgid "A daily summary of blocked attacks and instant alerts when something got through, such as a new administrator."
+msgstr "Un resumen diario de los ataques bloqueados y alertas inmediatas cuando algo ha pasado, por ejemplo un nuevo administrador."
+
+#. Found in faq paragraph.
+msgid "The add-on adds SMS 2FA and a managed mail relay, WooCommerce storefront 2FA, adaptive 2FA policies, hardening mode, advanced security headers, a computation proof on forms, Tor blocking, group ban lists, protection for further form plugins, an audit trail, account blocking and fleet management. The list per plan is in the description above."
+msgstr "El complemento añade 2FA por SMS y un relé de correo gestionado, 2FA en la tienda de WooCommerce, políticas de 2FA adaptativas, modo de refuerzo, cabeceras de seguridad avanzadas, una prueba de cálculo en formularios, bloqueo de Tor, listas de bloqueo de grupo, protección para más plugins de formularios, un registro de auditoría, bloqueo de cuentas y gestión de flotas. La lista por plan está en la descripción de arriba."
+
+#. Found in faq paragraph.
+msgid "Yes. The plugin is activated network-wide and keeps one set of tables for the whole network. Blocks and the whitelist apply to every site, and each site admin sees the activity of their own site."
+msgstr "Sí. El plugin se activa en toda la red y usa un único conjunto de tablas para toda la red. Los bloqueos y la lista blanca se aplican a todos los sitios, y cada administrador de sitio ve la actividad de su propio sitio."
+
+#. Found in faq paragraph.
+msgid "Wordfence includes a malware scanner and file integrity checks; ReportedIP Hive does not. ReportedIP Hive focuses on the firewall, login security, two-factor authentication and form spam protection without CAPTCHA, sends no data in its default mode and offers an optional community IP blocklist. Many sites run a scanner next to it."
+msgstr "Wordfence incluye un escáner de malware y comprobaciones de integridad de archivos; ReportedIP Hive no. ReportedIP Hive se centra en el cortafuegos, la seguridad del acceso, la autenticación de dos factores y la protección contra spam en formularios sin CAPTCHA, no envía datos en su modo por defecto y ofrece una lista de bloqueo de IP comunitaria opcional. Muchos sitios usan un escáner junto a él."
+
+#. Found in faq paragraph.
+msgid "On an anonymous page view the plugin runs five database queries of its own. A request from a blocked address is refused by the pre-WordPress firewall in about 1.5 ms. Both figures come from a test site with 500,000 log entries and 5,000 blocked addresses. Community reports are sent in the background by WP-Cron."
+msgstr "En una visita anónima a una página, el plugin ejecuta cinco consultas propias a la base de datos. El cortafuegos previo a WordPress rechaza una petición de una dirección bloqueada en unos 1,5 ms. Ambas cifras proceden de un sitio de pruebas con 500.000 entradas de registro y 5.000 direcciones bloqueadas. Los informes a la comunidad se envían en segundo plano mediante WP-Cron."
+
+#. Found in faq paragraph.
+msgid "Yes. The WooCommerce sign-in and registration forms get the same login attempt limits, registration rules and disposable e-mail blocking. Two-factor authentication on the storefront is part of the Pro add-on."
+msgstr "Sí. Los formularios de acceso y registro de WooCommerce reciben los mismos límites de intentos de inicio de sesión, las mismas reglas de registro y el bloqueo de correos desechables. La autenticación de dos factores en la tienda forma parte del complemento Pro."
+
+#. Found in faq paragraph.
+msgid "The plugin is built for GDPR compliance: logging is minimal, retention is configurable (30 days by default), addresses are anonymised after 7 days and the Community Network is opt-in. In Local Shield mode no data leaves the site."
+msgstr "El plugin está diseñado para cumplir el RGPD: el registro es mínimo, el periodo de conservación es configurable (30 días por defecto), las direcciones se anonimizan pasados 7 días y el Community Network es opcional. En Local Shield ningún dato sale del sitio."
+
+#. Found in faq paragraph.
+msgid "Three layers: the invisible execution proof refuses bots that do not run a browser, the honeypot catches bots that fill every field, and the comment spam filter scores links, domains, disposable addresses and text without content. Spam goes to the spam folder or is rejected."
+msgstr "Tres capas: la prueba de ejecución invisible rechaza los bots que no ejecutan un navegador, el honeypot atrapa a los bots que rellenan todos los campos y el filtro de spam en comentarios puntúa enlaces, dominios, direcciones desechables y textos sin contenido. El spam va a la carpeta de spam o se rechaza."
+
+#. Found in faq paragraph.
+msgid "For most sites, yes. The invisible execution proof stops scripted submissions on comments, registrations, password resets and Contact Form 7 without a puzzle for your visitors and without loading a third-party service."
+msgstr "En la mayoría de los sitios, sí. La prueba de ejecución invisible detiene los envíos automatizados en comentarios, registros, restablecimientos de contraseña y Contact Form 7 sin ningún acertijo para tus visitantes y sin cargar un servicio de terceros."
+
+#. Found in faq paragraph.
+msgid "ReportedIP Hive is a WordPress security plugin that combines a firewall, brute force protection with limited login attempts, two-factor authentication with passkeys and anti-spam protection for comments and forms. It runs on your own server and works without an account."
+msgstr "ReportedIP Hive es un plugin de seguridad para WordPress que combina un cortafuegos, protección contra fuerza bruta con intentos de inicio de sesión limitados, autenticación de dos factores con passkeys y protección antispam para comentarios y formularios. Funciona en tu propio servidor y sin cuenta."
+
+#. Found in faq header.
+msgid "What is in the Pro add-on?"
+msgstr "¿Qué incluye el complemento Pro?"
+
+#. Found in faq header.
+msgid "Does it work on WordPress multisite?"
+msgstr "¿Funciona en WordPress multisitio?"
+
+#. Found in faq header.
+msgid "How is it different from Wordfence?"
+msgstr "¿En qué se diferencia de Wordfence?"
+
+#. Found in faq header.
+msgid "How does it stop comment spam?"
+msgstr "¿Cómo detiene el spam en comentarios?"
+
+#. Found in faq header.
+msgid "Does ReportedIP Hive replace a CAPTCHA or reCAPTCHA?"
+msgstr "¿Sustituye ReportedIP Hive a un CAPTCHA o a reCAPTCHA?"
+
+#. Found in faq header.
+msgid "What is ReportedIP Hive?"
+msgstr "¿Qué es ReportedIP Hive?"
+
+#. Found in installation list item.
+msgid "The quickstart opens after activation, on a multisite network in the Network Admin. It lets you pick Local Shield or the Community Network and applies the recommended settings with one click. You find it again under ReportedIP Hive, System Status, Open quickstart."
+msgstr "El inicio rápido se abre tras la activación; en una red multisitio, en la Administración de la red. Te permite elegir Local Shield o el Community Network y aplica los ajustes recomendados con un clic. Lo encuentras de nuevo en ReportedIP Hive, Estado del sistema, Abrir inicio rápido."
+
+#. Found in installation list item.
+msgid "Install the plugin from the WordPress plugin directory and activate it. On a multisite network, install it in the Network Admin and click Network Activate."
+msgstr "Instala el plugin desde el directorio de plugins de WordPress y actívalo. En una red multisitio, instálalo en la Administración de la red y haz clic en Activar para la red."
+
+#. Found in description paragraph.
+msgid "<strong>api.pwnedpasswords.com.</strong> Only with the breach check switched on: when a user sets a new password (also on the WooCommerce and Ultimate Member account and registration forms), the first five characters of its SHA-1 hash are sent to <code>https://api.pwnedpasswords.com/range/</code>; the password never leaves the site. Service by Have I Been Pwned, privacy: https://haveibeenpwned.com/Privacy."
+msgstr "<strong>api.pwnedpasswords.com.</strong> Solo con la comprobación de filtraciones activada: cuando un usuario establece una nueva contraseña (también en los formularios de cuenta y registro de WooCommerce y Ultimate Member), los cinco primeros caracteres de su hash SHA-1 se envían a <code>https://api.pwnedpasswords.com/range/</code>; la contraseña nunca sale del sitio. Servicio de Have I Been Pwned, privacidad: https://haveibeenpwned.com/Privacy."
+
+#. Found in description paragraph.
+msgid "<strong>reportedip.com.</strong> In Local Shield (the default) the plugin contacts no external service, even with a key stored; only a click on \"Check\" in the quickstart or on \"Test Connection\" sends one key check. With the Community Network switched on and a Community Access Key entered, the plugin talks to <code>https://reportedip.com/wp-json/reportedip/v2/</code>. It checks the key every six hours, looks up attacking addresses during sign-ins and on forms, reports addresses it blocked (address, event category, attempt count, site name), sends addresses you whitelist as feedback, and downloads signed firewall, bot and disposable-domain rulesets every six hours. With \"Sync alert recipients\" on, it also sends the alert recipient addresses. Every request carries the key, the site address and the plugin and WordPress version. The dashboard shows the reportedip.com news feed (<code>https://reportedip.com/feed/?post_type=news</code>), cached for twelve hours. If the Pro add-on is installed, it checks reportedip.com for its own updates with your key. Terms of use: https://reportedip.com/nutzungsbedingungen/. Privacy policy: https://reportedip.com/datenschutzerklaerung/."
+msgstr "<strong>reportedip.com.</strong> En Local Shield (el modo por defecto) el plugin no contacta con ningún servicio externo, aunque haya una clave guardada; solo un clic en \"Comprobar\" en el inicio rápido o en \"Probar conexión\" envía una comprobación de la clave. Con el Community Network activado y un Community Access Key introducido, el plugin se comunica con <code>https://reportedip.com/wp-json/reportedip/v2/</code>. Comprueba la clave cada seis horas, consulta las direcciones atacantes durante los inicios de sesión y en los formularios, informa de las direcciones que ha bloqueado (dirección, categoría del evento, número de intentos, nombre del sitio), envía como valoración las direcciones que añades a la lista blanca y descarga cada seis horas conjuntos de reglas firmados para el cortafuegos, los bots y los dominios desechables. Con \"Sync alert recipients\" activado, también envía las direcciones de los destinatarios de alertas. Cada petición lleva la clave, la dirección del sitio y la versión del plugin y de WordPress. El escritorio muestra el feed de noticias de reportedip.com (<code>https://reportedip.com/feed/?post_type=news</code>), guardado en caché durante doce horas. Si el complemento Pro está instalado, comprueba sus propias actualizaciones en reportedip.com con tu clave. Condiciones de uso: https://reportedip.com/nutzungsbedingungen/. Política de privacidad: https://reportedip.com/datenschutzerklaerung/."
+
+#. Found in description paragraph.
+msgid "Paid plans also receive fresher and deeper rulesets through the Community Network. Plans and prices: <a href=\"https://reportedip.com/pricing/?rc=hive-wporg\">reportedip.com pricing</a>."
+msgstr "Los planes de pago también reciben conjuntos de reglas más recientes y completos a través del Community Network. Planes y precios: <a href=\"https://reportedip.com/pricing/?rc=hive-wporg\">precios de reportedip.com</a>."
+
+#. Found in description paragraph.
+msgid "Business plan, in addition:"
+msgstr "Plan Business, además:"
+
+#. Found in description paragraph.
+msgid "Professional plan:"
+msgstr "Plan Professional:"
+
+#. Found in description paragraph.
+msgid "ReportedIP Hive Pro is a separate add-on for paid plans. It is not hosted on wordpress.org and adds new features on top of this plugin; nothing in the free plugin is held back for it."
+msgstr "ReportedIP Hive Pro es un complemento independiente para los planes de pago. No está alojado en wordpress.org y añade funciones nuevas sobre este plugin; el plugin gratuito no se recorta en nada por su causa."
+
+#. Found in description paragraph.
+msgid "ReportedIP Hive replaces a CAPTCHA with checks the visitor never sees. No puzzle, no checkbox, no Google reCAPTCHA or other third-party script."
+msgstr "ReportedIP Hive sustituye el CAPTCHA por comprobaciones que el visitante nunca ve. Sin acertijos, sin casillas, sin Google reCAPTCHA ni otros scripts de terceros."
+
+#. Found in description paragraph.
+msgid "Everything described here up to the add-on section is free and complete: no trial, no locked switch, no time limit."
+msgstr "Todo lo descrito aquí hasta la sección del complemento es gratuito y completo: sin periodo de prueba, sin opciones bloqueadas y sin límite de tiempo."
+
+#. Found in description paragraph.
+msgid "The plugin blocks attacking IP addresses on your own server. It needs no account. Sixteen sensors watch the sign-in form, XML-RPC, the REST API, the comment, registration and password-reset forms and every request. An optional community IP blocklist shares and checks attacking addresses with other sites."
+msgstr "El plugin bloquea las direcciones IP atacantes en tu propio servidor. No necesita cuenta. Dieciséis sensores vigilan el formulario de acceso, XML-RPC, la API REST, los formularios de comentarios, registro y restablecimiento de contraseña y cada petición. Una lista de bloqueo de IP comunitaria opcional comparte y consulta direcciones atacantes con otros sitios."
+
+#. Found in description paragraph.
+msgid "ReportedIP Hive is a free WordPress security plugin with a web application firewall (WAF), brute force protection, two-factor authentication (2FA) and anti-spam protection for comments, registrations and contact forms. It is built for site owners, agencies and WooCommerce shops that want login security and spam protection in one plugin, without a CAPTCHA and without sending data anywhere by default."
+msgstr "ReportedIP Hive es un plugin de seguridad gratuito para WordPress con cortafuegos de aplicaciones web (WAF), protección contra fuerza bruta, autenticación de dos factores (2FA) y protección antispam para comentarios, registros y formularios de contacto. Está pensado para propietarios de sitios, agencias y tiendas WooCommerce que quieren seguridad del acceso y protección contra spam en un solo plugin, sin CAPTCHA y sin enviar datos a ningún sitio por defecto."
+
+#. Found in description list item.
+msgid "Higher mail and SMS quotas (2,500 mails and 75 SMS per month)."
+msgstr "Cuotas de correo y SMS más altas (2.500 correos y 75 SMS al mes)."
+
+#. Found in description list item.
+msgid "<strong>Cloud fleet management</strong> of many sites from the reportedip.com dashboard."
+msgstr "<strong>Gestión de flotas en la nube</strong> de muchos sitios desde el panel de reportedip.com."
+
+#. Found in description list item.
+msgid "<strong>Multiple security keys per account</strong> with model detection."
+msgstr "<strong>Varias llaves de seguridad por cuenta</strong> con detección del modelo."
+
+#. Found in description list item.
+msgid "<strong>User account blocking and session management:</strong> block accounts, end sessions and review active sessions."
+msgstr "<strong>Bloqueo de cuentas de usuario y gestión de sesiones:</strong> bloquea cuentas, cierra sesiones y revisa las sesiones activas."
+
+#. Found in description list item.
+msgid "<strong>Audit trail (activity log for changes):</strong> who changed which setting, plugin, theme, page, menu, file or user account, with old and new values and export."
+msgstr "<strong>Registro de auditoría (registro de actividad de los cambios):</strong> quién cambió qué ajuste, plugin, tema, página, menú, archivo o cuenta de usuario, con los valores antiguos y nuevos y exportación."
+
+#. Found in description list item.
+msgid "<strong>Spam protection for further form plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator and Ultimate Member."
+msgstr "<strong>Protección contra spam para más plugins de formularios:</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator y Ultimate Member."
+
+#. Found in description list item.
+msgid "<strong>Group ban lists:</strong> one block list and whitelist shared by all sites of a group."
+msgstr "<strong>Listas de bloqueo de grupo:</strong> una lista de bloqueo y una lista blanca compartidas por todos los sitios de un grupo."
+
+#. Found in description list item.
+msgid "<strong>Unlimited registration rules</strong> with regular expressions and sign-ups restricted to allowlisted IP addresses."
+msgstr "<strong>Reglas de registro ilimitadas</strong> con expresiones regulares y altas limitadas a direcciones IP permitidas."
+
+#. Found in description list item.
+msgid "<strong>Tor exit node blocking.</strong>"
+msgstr "<strong>Bloqueo de nodos de salida de Tor.</strong>"
+
+#. Found in description list item.
+msgid "<strong>Computation proof on forms,</strong> a proof of work the browser solves in the background, as a CAPTCHA alternative that a script cannot copy."
+msgstr "<strong>Prueba de cálculo en formularios,</strong> una prueba de trabajo que el navegador resuelve en segundo plano, como alternativa al CAPTCHA que un script no puede copiar."
+
+#. Found in description list item.
+msgid "<strong>Advanced security headers:</strong> Content Security Policy (CSP) builder, HSTS with preload, Permissions-Policy and Cross-Origin headers."
+msgstr "<strong>Cabeceras de seguridad avanzadas:</strong> generador de Content Security Policy (CSP), HSTS con preload, Permissions-Policy y cabeceras Cross-Origin."
+
+#. Found in description list item.
+msgid "<strong>Hardening mode</strong> that tightens thresholds for one hour during a coordinated attack."
+msgstr "<strong>Modo de refuerzo</strong> que endurece los umbrales durante una hora en caso de un ataque coordinado."
+
+#. Found in description list item.
+msgid "<strong>Adaptive 2FA policies per role:</strong> ask again on a new device, IP address, network or country, every N days or sign-ins, or above a session limit."
+msgstr "<strong>Políticas de 2FA adaptativas por perfil:</strong> vuelve a pedir el segundo factor en un dispositivo, dirección IP, red o país nuevos, cada N días o inicios de sesión, o por encima de un límite de sesiones."
+
+#. Found in description list item.
+msgid "<strong>WooCommerce two-factor authentication</strong> on My Account, the classic checkout and the WooCommerce Blocks login, inside the shop theme."
+msgstr "<strong>Autenticación de dos factores en WooCommerce</strong> en Mi cuenta, el pago clásico y el acceso de WooCommerce Blocks, dentro del tema de la tienda."
+
+#. Found in description list item.
+msgid "<strong>Managed 2FA mail relay</strong> (500 mails per month) and <strong>SMS two-factor authentication</strong> through an EU SMS gateway (25 SMS per month)."
+msgstr "<strong>Relé de correo gestionado para 2FA</strong> (500 correos al mes) y <strong>autenticación de dos factores por SMS</strong> a través de una pasarela de SMS en la UE (25 SMS al mes)."
+
+#. Found in description list item.
+msgid "Made in Germany."
+msgstr "Made in Germany."
+
+#. Found in description list item.
+msgid "A suggested text for your privacy policy is added under Settings, Privacy."
+msgstr "En Ajustes, Privacidad se añade un texto sugerido para tu política de privacidad."
+
+#. Found in description list item.
+msgid "Usernames, passwords and form content never leave the site."
+msgstr "Los nombres de usuario, las contraseñas y el contenido de los formularios nunca salen del sitio."
+
+#. Found in description list item.
+msgid "Minimal logging, retention of 30 days by default, addresses anonymised after 7 days."
+msgstr "Registro mínimo, conservación de 30 días por defecto, direcciones anonimizadas pasados 7 días."
+
+#. Found in description list item.
+msgid "MainWP dashboards read status counts and push settings through the MainWP Child plugin, with no extra child plugin."
+msgstr "Los paneles de MainWP leen los contadores de estado y envían ajustes a través del plugin MainWP Child, sin ningún plugin hijo adicional."
+
+#. Found in description list item.
+msgid "Site admins see the activity of their own site; protection is managed by the network admin."
+msgstr "Los administradores de cada sitio ven la actividad de su propio sitio; la protección la gestiona el administrador de la red."
+
+#. Found in description list item.
+msgid "Network-activated, one set of tables, IP blocks and whitelist shared by every site."
+msgstr "Activación en toda la red, un único conjunto de tablas, bloqueos de IP y lista blanca compartidos por todos los sitios."
+
+#. Found in description list item.
+msgid "Compatible with WP Rocket, W3 Total Cache, WP Super Cache and LiteSpeed Cache."
+msgstr "Compatible con WP Rocket, W3 Total Cache, WP Super Cache y LiteSpeed Cache."
+
+#. Found in description list item.
+msgid "WP-CLI: <code>wp reportedip block</code>, <code>unblock</code>, <code>whitelist</code>, <code>lookup</code>, <code>status</code> and <code>2fa</code>."
+msgstr "WP-CLI: <code>wp reportedip block</code>, <code>unblock</code>, <code>whitelist</code>, <code>lookup</code>, <code>status</code> y <code>2fa</code>."
+
+#. Found in description list item.
+msgid "Settings import and export."
+msgstr "Importación y exportación de ajustes."
+
+#. Found in description list item.
+msgid "Security activity log with filters by event type, severity and date, CSV and JSON export."
+msgstr "Registro de actividad de seguridad con filtros por tipo de evento, gravedad y fecha, exportación CSV y JSON."
+
+#. Found in description list item.
+msgid "Protection score and a readiness check that lists what still needs attention."
+msgstr "Puntuación de protección y una comprobación de preparación que enumera lo que aún requiere atención."
+
+#. Found in description list item.
+msgid "Security headers: X-Content-Type-Options, X-Frame-Options and Referrer-Policy."
+msgstr "Cabeceras de seguridad: X-Content-Type-Options, X-Frame-Options y Referrer-Policy."
+
+#. Found in description list item.
+msgid "XML-RPC and pingbacks off with one switch."
+msgstr "XML-RPC y pingbacks desactivados con un solo interruptor."
+
+#. Found in description list item.
+msgid "<strong>IP reputation on forms.</strong> In the Community Network, comment, registration and password-reset submissions from known attacking addresses are refused."
+msgstr "<strong>Reputación de IP en formularios.</strong> En el Community Network se rechazan los envíos de comentarios, registros y restablecimientos de contraseña desde direcciones atacantes conocidas."
+
+#. Found in description list item.
+msgid "<strong>Contact Form 7 spam protection</strong> with the same invisible check."
+msgstr "<strong>Protección contra spam para Contact Form 7</strong> con la misma comprobación invisible."
+
+#. Found in description list item.
+msgid "<strong>Password reset spam protection.</strong> The lost-password form carries the same proof."
+msgstr "<strong>Protección contra spam en el restablecimiento de contraseña.</strong> El formulario de contraseña olvidada lleva la misma prueba."
+
+#. Found in description list item.
+msgid "<strong>Registration spam protection</strong> for WordPress, WooCommerce and multisite sign-ups: prohibited usernames, e-mail allow and block rules, a sign-up rate limit and an optional block for sign-ins with unknown usernames. Ten entries per list."
+msgstr "<strong>Protección contra spam en los registros</strong> de WordPress, WooCommerce y multisitio: nombres de usuario prohibidos, reglas para permitir y bloquear correos electrónicos, un límite de frecuencia de altas y un bloqueo opcional de los inicios de sesión con nombres de usuario desconocidos. Diez entradas por lista."
+
+#. Found in description list item.
+msgid "<strong>Comment spam filter.</strong> Scores links in the text and the website field, link density, the number of domains, disposable addresses, throwaway top-level domains, a domain in the author name, foreign script and text without content. Spam goes to the spam folder or is rejected."
+msgstr "<strong>Filtro de spam en comentarios.</strong> Puntúa los enlaces del texto y del campo web, la densidad de enlaces, el número de dominios, las direcciones desechables, los dominios de nivel superior desechables, un dominio en el nombre del autor, la escritura extranjera y los textos sin contenido. El spam va a la carpeta de spam o se rechaza."
+
+#. Found in description list item.
+msgid "<strong>Invisible execution proof.</strong> A hidden decoy field and a short script prove that a real browser filled in the form. A bot that fills the decoy is blocked on the first try and, in the Community Network, reported. The check carries nothing request-specific, so cached pages keep working."
+msgstr "<strong>Prueba de ejecución invisible.</strong> Un campo señuelo oculto y un breve script demuestran que un navegador real ha rellenado el formulario. Un bot que rellena el señuelo se bloquea al primer intento y, en el Community Network, se informa de él. La comprobación no contiene nada específico de la petición, así que las páginas en caché siguen funcionando."
+
+#. Found in description list item.
+msgid "<strong>WP-CLI commands</strong> to enable, reset and audit 2FA per user."
+msgstr "<strong>Comandos de WP-CLI</strong> para activar, restablecer y auditar la 2FA de cada usuario."
+
+#. Found in description list item.
+msgid "<strong>2FA enforcement per user role,</strong> an enrolment wizard, trusted devices for 30 days and a password-reset gate that a stolen mailbox cannot bypass."
+msgstr "<strong>2FA obligatoria por perfil de usuario,</strong> un asistente de alta, dispositivos de confianza durante 30 días y un control en el restablecimiento de contraseña que un buzón de correo robado no puede eludir."
+
+#. Found in description list item.
+msgid "<strong>Authenticator apps (TOTP)</strong> such as Google Authenticator, Microsoft Authenticator, Authy or 1Password."
+msgstr "<strong>Aplicaciones de autenticación (TOTP)</strong> como Google Authenticator, Microsoft Authenticator, Authy o 1Password."
+
+#. Found in description list item.
+msgid "<strong>Password policy</strong> with minimum length, character classes and an optional breach check (off by default)."
+msgstr "<strong>Política de contraseñas</strong> con longitud mínima, tipos de caracteres y una comprobación opcional de filtraciones (desactivada por defecto)."
+
+#. Found in description list item.
+msgid "<strong>Application password protection.</strong> Failed Basic Auth sign-ins count like failed logins, so the REST API is no way around the limit."
+msgstr "<strong>Protección de las contraseñas de aplicación.</strong> Los inicios de sesión Basic Auth fallidos cuentan como inicios de sesión fallidos, así que la API REST no permite saltarse el límite."
+
+#. Found in description list item.
+msgid "<strong>IP blocking and whitelist</strong> for single addresses and CIDR ranges, with incident reference codes on the block page."
+msgstr "<strong>Bloqueo de IP y lista blanca</strong> para direcciones sueltas y rangos CIDR, con códigos de referencia del incidente en la página de bloqueo."
+
+#. Found in description list item.
+msgid "<strong>REST API rate limit</strong>, firewall exceptions per rule, path or IP, and a report-only mode for testing."
+msgstr "<strong>Límite de frecuencia de la API REST</strong>, excepciones del cortafuegos por regla, ruta o IP, y un modo solo informe para hacer pruebas."
+
+#. Found in description list item.
+msgid "<strong>404 and scanner detection.</strong> Requests for bait paths such as <code>.env</code>, <code>.git/config</code> or <code>wp-config.php.bak</code> block the address at once."
+msgstr "<strong>Detección de 404 y escáneres.</strong> Las peticiones a rutas cebo como <code>.env</code>, <code>.git/config</code> o <code>wp-config.php.bak</code> bloquean la dirección al instante."
+
+#. Found in description list item.
+msgid "<strong>Pre-WordPress firewall.</strong> An optional layer (<code>auto_prepend_file</code>) applies the same rules, exceptions, whitelist and IP blocks before WordPress loads. A blocked request costs almost nothing."
+msgstr "<strong>Cortafuegos previo a WordPress.</strong> Una capa opcional (<code>auto_prepend_file</code>) aplica las mismas reglas, excepciones, lista blanca y bloqueos de IP antes de que cargue WordPress. Una petición bloqueada apenas cuesta nada."
+
+#. Found in description list item.
+msgid "<strong>Request inspection</strong> with a bundled ruleset against SQL injection, cross-site scripting (XSS), path traversal, command injection and vulnerability scanners."
+msgstr "<strong>Inspección de peticiones</strong> con un conjunto de reglas incluido contra inyección SQL, cross-site scripting (XSS), path traversal, inyección de comandos y escáneres de vulnerabilidades."
+
+#. Found in description header.
+msgid "ReportedIP Hive Pro add-on"
+msgstr "Complemento ReportedIP Hive Pro"
+
+#. Found in description header.
+msgid "Privacy and GDPR"
+msgstr "Privacidad y RGPD"
+
+#. Found in description header.
+msgid "Community threat intelligence (optional)"
+msgstr "Inteligencia de amenazas de la comunidad (opcional)"
+
+#. Found in description header.
+msgid "WordPress multisite and MainWP"
+msgstr "WordPress multisitio y MainWP"
+
+#. Found in description header.
+msgid "Activity log and operations"
+msgstr "Registro de actividad y operación"
+
+#. Found in description header.
+msgid "Hardening and attack surface"
+msgstr "Refuerzo y superficie de ataque"
+
+#. Found in description header.
+msgid "Anti-spam and form protection without CAPTCHA"
+msgstr "Antispam y protección de formularios sin CAPTCHA"
+
+#. Found in description header.
+msgid "Web application firewall (WAF)"
+msgstr "Cortafuegos de aplicaciones web (WAF)"
+
+#. Screenshot description.
+msgid "Community page: Local Shield or Community Network."
+msgstr "Página de la comunidad: Local Shield o Community Network."
+
+#. Screenshot description.
+msgid "Tools page with the pre-WordPress firewall and the server rules."
+msgstr "Página Herramientas con el cortafuegos previo a WordPress y las reglas del servidor."
+
+#. Found in faq paragraph.
+msgid "Yes, the plugin is free under the GPL and works without any account. A free account at reportedip.com adds the community IP reputation check and synced firewall rulesets."
+msgstr "Sí, el plugin es gratuito bajo la GPL y funciona sin cuenta. Una cuenta gratuita en reportedip.com añade la consulta de reputación de IP de la comunidad y los conjuntos de reglas del cortafuegos sincronizados."
+
+#. Found in description paragraph.
+msgid "ReportedIP Hive does not scan files for malware and does not monitor file integrity. Run a malware scanner next to it if your site needs one."
+msgstr "ReportedIP Hive no analiza archivos en busca de malware ni vigila la integridad de los archivos. Si tu sitio lo necesita, usa un escáner de malware junto a él."
+
+#. Found in description list item.
+msgid "<strong>Community Network</strong> is opt-in. With a free Community Access Key from <a href=\"https://reportedip.com/?rc=hive-wporg\">reportedip.com</a> the plugin checks the IP reputation of attacking addresses during sign-in and on forms, shares the addresses it blocks with the community IP blocklist and receives signed firewall, bot and disposable-domain rulesets."
+msgstr "<strong>Community Network</strong> es opcional. Con un Community Access Key gratuito de <a href=\"https://reportedip.com/?rc=hive-wporg\">reportedip.com</a>, el plugin consulta la reputación de IP de las direcciones atacantes al iniciar sesión y en los formularios, comparte las direcciones que bloquea con la lista de bloqueo de IP de la comunidad y recibe conjuntos de reglas firmados para el cortafuegos, los bots y los dominios desechables."
+
+#. Found in description list item.
+msgid "Feeds, wp-admin for guests, PHP execution in the uploads folder and software version fingerprints, each a switch."
+msgstr "Feeds, wp-admin para invitados, ejecución de PHP en la carpeta uploads y huellas de versión del software, cada uno con su propio interruptor."
+
+#. Found in description list item.
+msgid "REST API for signed-in users or chosen roles only."
+msgstr "API REST solo para usuarios conectados o perfiles elegidos."
+
+#. Found in description list item.
+msgid "<strong>Verified bot detection.</strong> Googlebot, Bingbot and other large crawlers are confirmed through their published address ranges or reverse DNS. A fake Googlebot is treated like any other visitor."
+msgstr "<strong>Detección de bots verificados.</strong> Googlebot, Bingbot y otros grandes rastreadores se confirman mediante sus rangos de direcciones publicados o DNS inverso. Un Googlebot falso se trata como cualquier otro visitante."
+
+#. Found in description list item.
+msgid "<strong>WooCommerce login protection.</strong> My Account sign-in and registration are counted like wp-login.php."
+msgstr "<strong>Protección del acceso en WooCommerce.</strong> El acceso y el registro de Mi cuenta se cuentan igual que wp-login.php."
+
+#. Found in description list item.
+msgid "<strong>Login anomaly detection.</strong> A sign-in from a new country is logged and asks for the second factor again."
+msgstr "<strong>Detección de anomalías en el acceso.</strong> Un inicio de sesión desde un país nuevo se registra y vuelve a pedir el segundo factor."
+
+#. Found in description list item.
+msgid "<strong>Limit login attempts.</strong> Failed sign-ins are counted per IP address. The default blocks an address after 5 failures in 15 minutes."
+msgstr "<strong>Limita los intentos de inicio de sesión.</strong> Los inicios de sesión fallidos se cuentan por dirección IP. Por defecto, una dirección se bloquea tras 5 fallos en 15 minutos."
+
+#. Found in changelog list item.
+msgid "A new plan counts within the same request, and a key check without a plan no longer counts as a downgrade to Free."
+msgstr "Un plan nuevo cuenta ya en la misma petición, y una comprobación de la clave sin plan ya no cuenta como un cambio a Free."
+
+#. Found in changelog list item.
+msgid "Instant alerts when something got through: a new administrator, an administrator signing in from a new place, or protection that failed."
+msgstr "Alertas inmediatas cuando algo ha pasado: un nuevo administrador, un administrador que inicia sesión desde un lugar nuevo o una protección que ha fallado."
+
+#. Found in changelog list item.
+msgid "Blocked attacks arrive as one daily summary instead of one mail per threshold; the setting \"Blocked attacks\" switches back to single mails or off."
+msgstr "Los ataques bloqueados llegan en un resumen diario en lugar de un correo por cada umbral; el ajuste \"Ataques bloqueados\" vuelve a los correos individuales o los desactiva."
+
+#. Found in changelog list item.
+msgid "Translations no longer recurse until the memory runs out when Loco Translate or another plugin loads its own catalog on load_textdomain."
+msgstr "Las traducciones ya no entran en recursión hasta agotar la memoria cuando Loco Translate u otro plugin carga su propio catálogo en load_textdomain."
+
+#. Found in changelog list item.
+msgid "Every link to reportedip.com carries its campaign tag."
+msgstr "Cada enlace a reportedip.com lleva su etiqueta de campaña."
+
+#. Found in changelog list item.
+msgid "German, Austrian and Swiss German translations are complete, in both the informal and the formal form."
+msgstr "Las traducciones al alemán, alemán de Austria y alemán de Suiza están completas, tanto en la forma informal como en la formal."
+
+#. Found in changelog list item.
+msgid "The firewall queue import can no longer run twice at the same time."
+msgstr "La importación de la cola del cortafuegos ya no puede ejecutarse dos veces al mismo tiempo."
+
+#. Found in changelog list item.
+msgid "The pre-WordPress firewall is rewritten after every update, and the settings hash stays stable after the update from 2.1.74."
+msgstr "El cortafuegos previo a WordPress se reescribe tras cada actualización, y el hash de los ajustes se mantiene estable tras actualizar desde 2.1.74."
+
+#. Found in changelog list item.
+msgid "The quickstart applies the same settings as version 2.1.74, and a form plugin installed later is protected on the next admin visit."
+msgstr "El inicio rápido aplica los mismos ajustes que la versión 2.1.74, y un plugin de formularios instalado más tarde queda protegido en la siguiente visita a la administración."
+
+#. Found in changelog list item.
+msgid "\"Apply the password policy to every role\" now covers every user, also next to the roles that must use two-factor; the score item is called \"Password policy\"."
+msgstr "\"Aplicar la política de contraseñas a todos los perfiles\" ahora abarca a todos los usuarios, también junto a los perfiles que deben usar dos factores; el elemento de la puntuación se llama \"Política de contraseñas\"."
+
+#. Found in changelog list item.
+msgid "The password policy and breach check also cover the WooCommerce and Ultimate Member account and registration forms; padding lines of the breach service no longer count as a hit."
+msgstr "La política de contraseñas y la comprobación de filtraciones también abarcan los formularios de cuenta y registro de WooCommerce y Ultimate Member; las líneas de relleno del servicio de filtraciones ya no cuentan como coincidencia."
+
+#. Found in changelog list item.
+msgid "A plan upgrade applies the recommended settings of the new plan also without the Pro add-on."
+msgstr "Un cambio a un plan superior aplica los ajustes recomendados del nuevo plan también sin el complemento Pro."
+
+#. Found in changelog list item.
+msgid "Network activation on Multisite opens the quickstart in the Network Admin."
+msgstr "La activación en red en multisitio abre el inicio rápido en la Administración de la red."

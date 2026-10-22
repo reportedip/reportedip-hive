@@ -1,18 +1,350 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: ReportedIP Hive readme 3.0.0\n"
+"Project-Id-Version: ReportedIP Hive readme 3.0.3\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Source: translate.wordpress.org dev-readme export\n"
 
 #. Short description.
-msgid "Firewall, brute force protection, 2FA with passkeys and spam protection for forms. Optional community IP blocklist. GDPR-first, made in Germany."
+msgid "Firewall, limit login attempts, 2FA with passkeys and anti-spam for comments and forms without CAPTCHA. Optional IP blocklist. GDPR-first."
 msgstr ""
 
 #. Plugin name.
-msgid "ReportedIP Hive: Firewall, Login Security, Brute Force Protection and 2FA"
+msgid "ReportedIP Hive: Firewall, Brute Force Protection, 2FA and Anti-Spam"
+msgstr ""
+
+#. Found in description list item.
+msgid "A daily summary of blocked attacks and instant alerts when something got through, such as a new administrator."
+msgstr ""
+
+#. Found in faq paragraph.
+msgid "The add-on adds SMS 2FA and a managed mail relay, WooCommerce storefront 2FA, adaptive 2FA policies, hardening mode, advanced security headers, a computation proof on forms, Tor blocking, group ban lists, protection for further form plugins, an audit trail, account blocking and fleet management. The list per plan is in the description above."
+msgstr ""
+
+#. Found in faq paragraph.
+msgid "Yes. The plugin is activated network-wide and keeps one set of tables for the whole network. Blocks and the whitelist apply to every site, and each site admin sees the activity of their own site."
+msgstr ""
+
+#. Found in faq paragraph.
+msgid "Wordfence includes a malware scanner and file integrity checks; ReportedIP Hive does not. ReportedIP Hive focuses on the firewall, login security, two-factor authentication and form spam protection without CAPTCHA, sends no data in its default mode and offers an optional community IP blocklist. Many sites run a scanner next to it."
+msgstr ""
+
+#. Found in faq paragraph.
+msgid "On an anonymous page view the plugin runs five database queries of its own. A request from a blocked address is refused by the pre-WordPress firewall in about 1.5 ms. Both figures come from a test site with 500,000 log entries and 5,000 blocked addresses. Community reports are sent in the background by WP-Cron."
+msgstr ""
+
+#. Found in faq paragraph.
+msgid "Yes. The WooCommerce sign-in and registration forms get the same login attempt limits, registration rules and disposable e-mail blocking. Two-factor authentication on the storefront is part of the Pro add-on."
+msgstr ""
+
+#. Found in faq paragraph.
+msgid "The plugin is built for GDPR compliance: logging is minimal, retention is configurable (30 days by default), addresses are anonymised after 7 days and the Community Network is opt-in. In Local Shield mode no data leaves the site."
+msgstr ""
+
+#. Found in faq paragraph.
+msgid "Three layers: the invisible execution proof refuses bots that do not run a browser, the honeypot catches bots that fill every field, and the comment spam filter scores links, domains, disposable addresses and text without content. Spam goes to the spam folder or is rejected."
+msgstr ""
+
+#. Found in faq paragraph.
+msgid "For most sites, yes. The invisible execution proof stops scripted submissions on comments, registrations, password resets and Contact Form 7 without a puzzle for your visitors and without loading a third-party service."
+msgstr ""
+
+#. Found in faq paragraph.
+msgid "ReportedIP Hive is a WordPress security plugin that combines a firewall, brute force protection with limited login attempts, two-factor authentication with passkeys and anti-spam protection for comments and forms. It runs on your own server and works without an account."
+msgstr ""
+
+#. Found in faq header.
+msgid "What is in the Pro add-on?"
+msgstr ""
+
+#. Found in faq header.
+msgid "Does it work on WordPress multisite?"
+msgstr ""
+
+#. Found in faq header.
+msgid "How is it different from Wordfence?"
+msgstr ""
+
+#. Found in faq header.
+msgid "How does it stop comment spam?"
+msgstr ""
+
+#. Found in faq header.
+msgid "Does ReportedIP Hive replace a CAPTCHA or reCAPTCHA?"
+msgstr ""
+
+#. Found in faq header.
+msgid "What is ReportedIP Hive?"
+msgstr ""
+
+#. Found in installation list item.
+msgid "The quickstart opens after activation, on a multisite network in the Network Admin. It lets you pick Local Shield or the Community Network and applies the recommended settings with one click. You find it again under ReportedIP Hive, System Status, Open quickstart."
+msgstr ""
+
+#. Found in installation list item.
+msgid "Install the plugin from the WordPress plugin directory and activate it. On a multisite network, install it in the Network Admin and click Network Activate."
+msgstr ""
+
+#. Found in description paragraph.
+msgid "<strong>api.pwnedpasswords.com.</strong> Only with the breach check switched on: when a user sets a new password (also on the WooCommerce and Ultimate Member account and registration forms), the first five characters of its SHA-1 hash are sent to <code>https://api.pwnedpasswords.com/range/</code>; the password never leaves the site. Service by Have I Been Pwned, privacy: https://haveibeenpwned.com/Privacy."
+msgstr ""
+
+#. Found in description paragraph.
+msgid "<strong>reportedip.com.</strong> In Local Shield (the default) the plugin contacts no external service, even with a key stored; only a click on \"Check\" in the quickstart or on \"Test Connection\" sends one key check. With the Community Network switched on and a Community Access Key entered, the plugin talks to <code>https://reportedip.com/wp-json/reportedip/v2/</code>. It checks the key every six hours, looks up attacking addresses during sign-ins and on forms, reports addresses it blocked (address, event category, attempt count, site name), sends addresses you whitelist as feedback, and downloads signed firewall, bot and disposable-domain rulesets every six hours. With \"Sync alert recipients\" on, it also sends the alert recipient addresses. Every request carries the key, the site address and the plugin and WordPress version. The dashboard shows the reportedip.com news feed (<code>https://reportedip.com/feed/?post_type=news</code>), cached for twelve hours. If the Pro add-on is installed, it checks reportedip.com for its own updates with your key. Terms of use: https://reportedip.com/nutzungsbedingungen/. Privacy policy: https://reportedip.com/datenschutzerklaerung/."
+msgstr ""
+
+#. Found in description paragraph.
+msgid "Paid plans also receive fresher and deeper rulesets through the Community Network. Plans and prices: <a href=\"https://reportedip.com/pricing/?rc=hive-wporg\">reportedip.com pricing</a>."
+msgstr ""
+
+#. Found in description paragraph.
+msgid "Business plan, in addition:"
+msgstr ""
+
+#. Found in description paragraph.
+msgid "Professional plan:"
+msgstr ""
+
+#. Found in description paragraph.
+msgid "ReportedIP Hive Pro is a separate add-on for paid plans. It is not hosted on wordpress.org and adds new features on top of this plugin; nothing in the free plugin is held back for it."
+msgstr ""
+
+#. Found in description paragraph.
+msgid "ReportedIP Hive replaces a CAPTCHA with checks the visitor never sees. No puzzle, no checkbox, no Google reCAPTCHA or other third-party script."
+msgstr ""
+
+#. Found in description paragraph.
+msgid "Everything described here up to the add-on section is free and complete: no trial, no locked switch, no time limit."
+msgstr ""
+
+#. Found in description paragraph.
+msgid "The plugin blocks attacking IP addresses on your own server. It needs no account. Sixteen sensors watch the sign-in form, XML-RPC, the REST API, the comment, registration and password-reset forms and every request. An optional community IP blocklist shares and checks attacking addresses with other sites."
+msgstr ""
+
+#. Found in description paragraph.
+msgid "ReportedIP Hive is a free WordPress security plugin with a web application firewall (WAF), brute force protection, two-factor authentication (2FA) and anti-spam protection for comments, registrations and contact forms. It is built for site owners, agencies and WooCommerce shops that want login security and spam protection in one plugin, without a CAPTCHA and without sending data anywhere by default."
+msgstr ""
+
+#. Found in description list item.
+msgid "Higher mail and SMS quotas (2,500 mails and 75 SMS per month)."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Cloud fleet management</strong> of many sites from the reportedip.com dashboard."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Multiple security keys per account</strong> with model detection."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>User account blocking and session management:</strong> block accounts, end sessions and review active sessions."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Audit trail (activity log for changes):</strong> who changed which setting, plugin, theme, page, menu, file or user account, with old and new values and export."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Spam protection for further form plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator and Ultimate Member."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Group ban lists:</strong> one block list and whitelist shared by all sites of a group."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Unlimited registration rules</strong> with regular expressions and sign-ups restricted to allowlisted IP addresses."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Tor exit node blocking.</strong>"
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Computation proof on forms,</strong> a proof of work the browser solves in the background, as a CAPTCHA alternative that a script cannot copy."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Advanced security headers:</strong> Content Security Policy (CSP) builder, HSTS with preload, Permissions-Policy and Cross-Origin headers."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Hardening mode</strong> that tightens thresholds for one hour during a coordinated attack."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Adaptive 2FA policies per role:</strong> ask again on a new device, IP address, network or country, every N days or sign-ins, or above a session limit."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>WooCommerce two-factor authentication</strong> on My Account, the classic checkout and the WooCommerce Blocks login, inside the shop theme."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Managed 2FA mail relay</strong> (500 mails per month) and <strong>SMS two-factor authentication</strong> through an EU SMS gateway (25 SMS per month)."
+msgstr ""
+
+#. Found in description list item.
+msgid "Made in Germany."
+msgstr ""
+
+#. Found in description list item.
+msgid "A suggested text for your privacy policy is added under Settings, Privacy."
+msgstr ""
+
+#. Found in description list item.
+msgid "Usernames, passwords and form content never leave the site."
+msgstr ""
+
+#. Found in description list item.
+msgid "Minimal logging, retention of 30 days by default, addresses anonymised after 7 days."
+msgstr ""
+
+#. Found in description list item.
+msgid "MainWP dashboards read status counts and push settings through the MainWP Child plugin, with no extra child plugin."
+msgstr ""
+
+#. Found in description list item.
+msgid "Site admins see the activity of their own site; protection is managed by the network admin."
+msgstr ""
+
+#. Found in description list item.
+msgid "Network-activated, one set of tables, IP blocks and whitelist shared by every site."
+msgstr ""
+
+#. Found in description list item.
+msgid "Compatible with WP Rocket, W3 Total Cache, WP Super Cache and LiteSpeed Cache."
+msgstr ""
+
+#. Found in description list item.
+msgid "WP-CLI: <code>wp reportedip block</code>, <code>unblock</code>, <code>whitelist</code>, <code>lookup</code>, <code>status</code> and <code>2fa</code>."
+msgstr ""
+
+#. Found in description list item.
+msgid "Settings import and export."
+msgstr ""
+
+#. Found in description list item.
+msgid "Security activity log with filters by event type, severity and date, CSV and JSON export."
+msgstr ""
+
+#. Found in description list item.
+msgid "Protection score and a readiness check that lists what still needs attention."
+msgstr ""
+
+#. Found in description list item.
+msgid "Security headers: X-Content-Type-Options, X-Frame-Options and Referrer-Policy."
+msgstr ""
+
+#. Found in description list item.
+msgid "XML-RPC and pingbacks off with one switch."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>IP reputation on forms.</strong> In the Community Network, comment, registration and password-reset submissions from known attacking addresses are refused."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Contact Form 7 spam protection</strong> with the same invisible check."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Password reset spam protection.</strong> The lost-password form carries the same proof."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Registration spam protection</strong> for WordPress, WooCommerce and multisite sign-ups: prohibited usernames, e-mail allow and block rules, a sign-up rate limit and an optional block for sign-ins with unknown usernames. Ten entries per list."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Comment spam filter.</strong> Scores links in the text and the website field, link density, the number of domains, disposable addresses, throwaway top-level domains, a domain in the author name, foreign script and text without content. Spam goes to the spam folder or is rejected."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Invisible execution proof.</strong> A hidden decoy field and a short script prove that a real browser filled in the form. A bot that fills the decoy is blocked on the first try and, in the Community Network, reported. The check carries nothing request-specific, so cached pages keep working."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>WP-CLI commands</strong> to enable, reset and audit 2FA per user."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>2FA enforcement per user role,</strong> an enrolment wizard, trusted devices for 30 days and a password-reset gate that a stolen mailbox cannot bypass."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Authenticator apps (TOTP)</strong> such as Google Authenticator, Microsoft Authenticator, Authy or 1Password."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Password policy</strong> with minimum length, character classes and an optional breach check (off by default)."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Application password protection.</strong> Failed Basic Auth sign-ins count like failed logins, so the REST API is no way around the limit."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>IP blocking and whitelist</strong> for single addresses and CIDR ranges, with incident reference codes on the block page."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>REST API rate limit</strong>, firewall exceptions per rule, path or IP, and a report-only mode for testing."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>404 and scanner detection.</strong> Requests for bait paths such as <code>.env</code>, <code>.git/config</code> or <code>wp-config.php.bak</code> block the address at once."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Pre-WordPress firewall.</strong> An optional layer (<code>auto_prepend_file</code>) applies the same rules, exceptions, whitelist and IP blocks before WordPress loads. A blocked request costs almost nothing."
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Request inspection</strong> with a bundled ruleset against SQL injection, cross-site scripting (XSS), path traversal, command injection and vulnerability scanners."
+msgstr ""
+
+#. Found in description header.
+msgid "ReportedIP Hive Pro add-on"
+msgstr ""
+
+#. Found in description header.
+msgid "Privacy and GDPR"
+msgstr ""
+
+#. Found in description header.
+msgid "Community threat intelligence (optional)"
+msgstr ""
+
+#. Found in description header.
+msgid "WordPress multisite and MainWP"
+msgstr ""
+
+#. Found in description header.
+msgid "Activity log and operations"
+msgstr ""
+
+#. Found in description header.
+msgid "Hardening and attack surface"
+msgstr ""
+
+#. Found in description header.
+msgid "Anti-spam and form protection without CAPTCHA"
+msgstr ""
+
+#. Found in description header.
+msgid "Web application firewall (WAF)"
+msgstr ""
+
+#. Screenshot description.
+msgid "Community page: Local Shield or Community Network."
+msgstr ""
+
+#. Screenshot description.
+msgid "Tools page with the pre-WordPress firewall and the server rules."
 msgstr ""
 
 #. Found in faq paragraph.
@@ -28,15 +360,7 @@ msgid "Use a recovery code, or run <code>wp reportedip 2fa reset &lt;user_id&gt;
 msgstr ""
 
 #. Found in faq paragraph.
-msgid "Usually not. The invisible form check stops scripted submissions on comments, registrations, password resets and Contact Form 7 without a puzzle for your visitors."
-msgstr ""
-
-#. Found in faq paragraph.
 msgid "Yes. Any FIDO2 or WebAuthn authenticator works as a second factor, including YubiKey hardware keys and platform passkeys such as Face ID, Touch ID and Windows Hello."
-msgstr ""
-
-#. Found in faq paragraph.
-msgid "Yes. The block page sends no-cache headers that WP Rocket, W3 Total Cache, WP Super Cache and LiteSpeed Cache respect, and the form check contains nothing request-specific, so cached pages keep working."
 msgstr ""
 
 #. Found in faq paragraph.
@@ -48,14 +372,6 @@ msgid "Only the attacking IP address, the event category, the time, your site na
 msgstr ""
 
 #. Found in faq paragraph.
-msgid "The plugin is built for GDPR compliance: logging is minimal, retention is configurable (30 days by default), addresses are anonymised after 7 days and the Community Network is opt-in. A suggested text for your privacy policy is added under Settings, Privacy."
-msgstr ""
-
-#. Found in faq paragraph.
-msgid "Yes. The WooCommerce sign-in and registration forms are protected by the same login attempt limits, the registration rules and disposable e-mail blocking."
-msgstr ""
-
-#. Found in faq paragraph.
 msgid "A cloud firewall filters traffic before it reaches your server, while ReportedIP Hive runs inside WordPress and sees what a cloud firewall cannot: failed sign-ins, usernames tried, form submissions and user roles. Both work well together; set the proxy header so the plugin sees the real visitor address."
 msgstr ""
 
@@ -64,11 +380,7 @@ msgid "Yes, but switch off overlapping features. Two plugins that both limit log
 msgstr ""
 
 #. Found in faq paragraph.
-msgid "No. A blocked address is refused at the very start of the request, before themes and most plugins load, and community reports are sent in the background by WP-Cron."
-msgstr ""
-
-#. Found in faq paragraph.
-msgid "Yes, the plugin is free under the GPL and works without any account. A free account at reportedip.com adds the community IP reputation check and the synced firewall rulesets."
+msgid "Yes, the plugin is free under the GPL and works without any account. A free account at reportedip.com adds the community IP reputation check and synced firewall rulesets."
 msgstr ""
 
 #. Found in faq header.
@@ -76,15 +388,7 @@ msgid "What if I lock myself out?"
 msgstr ""
 
 #. Found in faq header.
-msgid "Do I still need a CAPTCHA?"
-msgstr ""
-
-#. Found in faq header.
 msgid "Does it support passkeys and YubiKeys?"
-msgstr ""
-
-#. Found in faq header.
-msgid "Does it work with caching plugins?"
 msgstr ""
 
 #. Found in faq header.
@@ -127,40 +431,8 @@ msgstr ""
 msgid "Enrol your own second factor on your profile page."
 msgstr ""
 
-#. Found in installation list item.
-msgid "Open ReportedIP Hive in the admin menu. The quickstart lets you pick Local Shield or the Community Network and applies the recommended settings with one click."
-msgstr ""
-
-#. Found in installation list item.
-msgid "Install the plugin from the WordPress plugin directory and activate it. On a multisite network, activate it network-wide."
-msgstr ""
-
 #. Found in description paragraph.
 msgid "Both libraries ship inside the plugin, nothing is loaded from a CDN."
-msgstr ""
-
-#. Found in description paragraph.
-msgid "When a user sets a new password, the first five characters of its SHA-1 hash are sent to <code>https://api.pwnedpasswords.com/range/</code>; the password itself never leaves the site. Service by Have I Been Pwned: https://haveibeenpwned.com/Privacy."
-msgstr ""
-
-#. Found in description paragraph.
-msgid "<strong>api.pwnedpasswords.com (only with the breach check switched on)</strong>"
-msgstr ""
-
-#. Found in description paragraph.
-msgid "Terms of use: https://reportedip.com/nutzungsbedingungen/ and privacy policy: https://reportedip.com/datenschutzerklaerung/."
-msgstr ""
-
-#. Found in description paragraph.
-msgid "Endpoint base: <code>https://reportedip.com/wp-json/reportedip/v2/</code>. Every request carries the key, the site address (<code>X-Rip-Site</code>) and a user agent with the plugin and WordPress version."
-msgstr ""
-
-#. Found in description paragraph.
-msgid "<strong>reportedip.com (Community Network on, only with a Community Access Key you enter)</strong>"
-msgstr ""
-
-#. Found in description paragraph.
-msgid "In Local Shield (the default) the plugin contacts no external service on its own, even with a key stored. Only a click on \"Check\" in the quickstart or on \"Test Connection\" sends one <code>verify-key</code> request."
 msgstr ""
 
 #. Found in description paragraph.
@@ -176,23 +448,7 @@ msgid "Documentation: <a href=\"https://reportedip.com/docs/integrations/wordpre
 msgstr ""
 
 #. Found in description paragraph.
-msgid "A separate add-on, ReportedIP Hive Pro, extends this plugin with a managed EU relay for 2FA mails and SMS codes, two-factor authentication on the WooCommerce storefront, adaptive per-role 2FA policies, a hardening mode during attack waves, advanced security headers, a computation check on forms, form protection for further form plugins, Tor exit node blocking, an audit trail, user account control and fleet management. It is not hosted on wordpress.org and is described on the <a href=\"https://reportedip.com/products/wordpress-plugin/?rc=hive-wporg\">product page</a>."
-msgstr ""
-
-#. Found in description paragraph.
-msgid "ReportedIP Hive does not scan files for malware and does not monitor file integrity. Run a scanner next to it if your site needs one."
-msgstr ""
-
-#. Found in description paragraph.
-msgid "Everything in this plugin is free and complete: no trial, no locked switch, no account requirement. The Community Network and the separate Pro add-on are optional."
-msgstr ""
-
-#. Found in description paragraph.
-msgid "Sixteen sensors watch the sign-in form, XML-RPC, the REST API, the comment, registration and password-reset forms and the request itself. Four two-factor methods keep accounts safe when a password leaks."
-msgstr ""
-
-#. Found in description paragraph.
-msgid "ReportedIP Hive is a WordPress security plugin that combines a web application firewall (WAF), login security with limited login attempts, two-factor authentication with passkeys, and spam protection for comments, registrations and contact forms. It blocks malicious IPs on your own server, works without an account, and can optionally share and check attacking addresses through a community IP blocklist."
+msgid "ReportedIP Hive does not scan files for malware and does not monitor file integrity. Run a malware scanner next to it if your site needs one."
 msgstr ""
 
 #. Found in description list item.
@@ -204,39 +460,7 @@ msgid "Chart.js 4.4.1 (MIT) renders the dashboard charts. Source: https://github
 msgstr ""
 
 #. Found in description list item.
-msgid "<code>https://reportedip.com/feed/?post_type=news</code> (or the localised feed for German, Spanish and French): the dashboard shows the latest reportedip.com news, cached for twelve hours."
-msgstr ""
-
-#. Found in description list item.
-msgid "<code>rules/&lt;ruleset&gt;</code>: receives signed firewall, bot, bait-path and disposable-domain rulesets every six hours. Signatures are verified before use; the bundled baseline is used when the service is unreachable."
-msgstr ""
-
-#. Found in description list item.
-msgid "<code>notification-config</code>: only with the switch \"Sync alert recipients\" on; sends the alert recipient addresses of this site to your account."
-msgstr ""
-
-#. Found in description list item.
-msgid "<code>categories</code>: receives the report category list."
-msgstr ""
-
-#. Found in description list item.
-msgid "<code>whitelist</code>: sends an address marked as legitimate, as positive feedback."
-msgstr ""
-
-#. Found in description list item.
-msgid "<code>report</code>: shares an address the plugin blocked; sends the address, the event category and a one-line description with the site name, site address and attempt count. Queued and sent in batches."
-msgstr ""
-
-#. Found in description list item.
-msgid "<code>check</code>: looks up an attacking address during sign-in attempts and on the comment, registration and password-reset forms; sends the address."
-msgstr ""
-
-#. Found in description list item.
-msgid "<code>verify-key</code>: validates the key when you check it and, while the Community Network is on, every six hours; receives the plan and quotas of your account."
-msgstr ""
-
-#. Found in description list item.
-msgid "<strong>Community Network</strong> is optional. With a free Community Access Key from <a href=\"https://reportedip.com/?rc=hive-wporg\">reportedip.com</a> the plugin checks the IP reputation of attacking addresses during sign-in and on forms, shares the addresses it blocks with the community blocklist, and receives updated firewall rulesets. Every request is listed under External Services below."
+msgid "<strong>Community Network</strong> is opt-in. With a free Community Access Key from <a href=\"https://reportedip.com/?rc=hive-wporg\">reportedip.com</a> the plugin checks the IP reputation of attacking addresses during sign-in and on forms, shares the addresses it blocks with the community IP blocklist and receives signed firewall, bot and disposable-domain rulesets."
 msgstr ""
 
 #. Found in description list item.
@@ -248,31 +472,11 @@ msgid "Works behind Cloudflare and other reverse proxies with a trusted proxy li
 msgstr ""
 
 #. Found in description list item.
-msgid "WordPress multisite: network-activated, one set of tables, per-site logs."
+msgid "Feeds, wp-admin for guests, PHP execution in the uploads folder and software version fingerprints, each a switch."
 msgstr ""
 
 #. Found in description list item.
-msgid "WP-CLI commands for blocks, the whitelist, 2FA and status."
-msgstr ""
-
-#. Found in description list item.
-msgid "Activity log, protection score, CSV and JSON exports, settings import and export."
-msgstr ""
-
-#. Found in description list item.
-msgid "Basic security headers."
-msgstr ""
-
-#. Found in description list item.
-msgid "Feeds, wp-admin for guests, PHP execution in uploads and software version fingerprints, each a switch."
-msgstr ""
-
-#. Found in description list item.
-msgid "REST API for signed-in users or chosen roles."
-msgstr ""
-
-#. Found in description list item.
-msgid "<strong>Registration rules:</strong> prohibited usernames, e-mail allow and block rules and a sign-up rate limit."
+msgid "REST API for signed-in users or chosen roles only."
 msgstr ""
 
 #. Found in description list item.
@@ -284,39 +488,7 @@ msgid "<strong>Comment honeypot.</strong>"
 msgstr ""
 
 #. Found in description list item.
-msgid "<strong>Comment spam filter</strong> that scores links, link density, disposable addresses and other signals."
-msgstr ""
-
-#. Found in description list item.
-msgid "<strong>Contact Form 7 spam protection</strong> through the same check."
-msgstr ""
-
-#. Found in description list item.
-msgid "<strong>Invisible form check instead of a CAPTCHA.</strong> A cache-safe execution proof on the comment, registration and password-reset forms. Visitors see no puzzle, and no third-party CAPTCHA service is loaded."
-msgstr ""
-
-#. Found in description list item.
-msgid "<strong>Firewall exceptions</strong> and a report-only mode for testing."
-msgstr ""
-
-#. Found in description list item.
-msgid "<strong>Verified bot detection.</strong> Googlebot, Bingbot and other large crawlers are confirmed through their published address ranges or reverse DNS. A fake Googlebot gains nothing."
-msgstr ""
-
-#. Found in description list item.
-msgid "<strong>404 and scanner detection.</strong> Requests for bait paths such as .env or .git/config block the address at once."
-msgstr ""
-
-#. Found in description list item.
-msgid "<strong>Pre-WordPress guard.</strong> An optional firewall layer that applies the same rules, exceptions, whitelist and IP blocks before WordPress loads."
-msgstr ""
-
-#. Found in description list item.
-msgid "<strong>Request inspection</strong> with a bundled baseline ruleset against SQL injection, XSS, path traversal and scanner traffic."
-msgstr ""
-
-#. Found in description list item.
-msgid "Trusted devices, an enrolment wizard, 2FA enforcement per user role and a password-reset gate that a stolen mailbox cannot bypass."
+msgid "<strong>Verified bot detection.</strong> Googlebot, Bingbot and other large crawlers are confirmed through their published address ranges or reverse DNS. A fake Googlebot is treated like any other visitor."
 msgstr ""
 
 #. Found in description list item.
@@ -332,23 +504,11 @@ msgid "<strong>Passkeys and hardware security keys (WebAuthn, FIDO2),</strong> f
 msgstr ""
 
 #. Found in description list item.
-msgid "<strong>Authenticator apps (TOTP)</strong> such as Google Authenticator, Authy or 1Password."
+msgid "<strong>WooCommerce login protection.</strong> My Account sign-in and registration are counted like wp-login.php."
 msgstr ""
 
 #. Found in description list item.
-msgid "<strong>Password policy</strong> with an optional breach check (off by default)."
-msgstr ""
-
-#. Found in description list item.
-msgid "<strong>WooCommerce login protection.</strong> The My Account sign-in and registration forms are counted like wp-login.php."
-msgstr ""
-
-#. Found in description list item.
-msgid "<strong>Login anomaly detection.</strong> A sign-in from a new country asks for the second factor again."
-msgstr ""
-
-#. Found in description list item.
-msgid "<strong>XML-RPC and pingback protection,</strong> with a switch to turn XML-RPC off."
+msgid "<strong>Login anomaly detection.</strong> A sign-in from a new country is logged and asks for the second factor again."
 msgstr ""
 
 #. Found in description list item.
@@ -368,7 +528,7 @@ msgid "<strong>Password spraying detection.</strong> Many usernames tried from o
 msgstr ""
 
 #. Found in description list item.
-msgid "<strong>Limit login attempts.</strong> Failed sign-ins are counted per IP address. The default locks an address after 5 failures in 15 minutes."
+msgid "<strong>Limit login attempts.</strong> Failed sign-ins are counted per IP address. The default blocks an address after 5 failures in 15 minutes."
 msgstr ""
 
 #. Found in description header.
@@ -380,31 +540,7 @@ msgid "Privacy Policy"
 msgstr ""
 
 #. Found in description header.
-msgid "ReportedIP Hive Pro"
-msgstr ""
-
-#. Found in description header.
 msgid "What it does not do"
-msgstr ""
-
-#. Found in description header.
-msgid "Two ways to run it"
-msgstr ""
-
-#. Found in description header.
-msgid "Operations"
-msgstr ""
-
-#. Found in description header.
-msgid "Access lockdown"
-msgstr ""
-
-#. Found in description header.
-msgid "Spam protection for forms and comments"
-msgstr ""
-
-#. Found in description header.
-msgid "Web application firewall"
 msgstr ""
 
 #. Found in description header.
@@ -421,14 +557,6 @@ msgstr ""
 
 #. Screenshot description.
 msgid "System status and readiness check."
-msgstr ""
-
-#. Screenshot description.
-msgid "Community page with the connection card."
-msgstr ""
-
-#. Screenshot description.
-msgid "Firewall rules and the pre-WordPress guard on the Tools page."
 msgstr ""
 
 #. Screenshot description.
@@ -453,6 +581,58 @@ msgstr ""
 
 #. Found in description header.
 msgid "External Services"
+msgstr ""
+
+#. Found in changelog list item.
+msgid "A new plan counts within the same request, and a key check without a plan no longer counts as a downgrade to Free."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Instant alerts when something got through: a new administrator, an administrator signing in from a new place, or protection that failed."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Blocked attacks arrive as one daily summary instead of one mail per threshold; the setting \"Blocked attacks\" switches back to single mails or off."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Translations no longer recurse until the memory runs out when Loco Translate or another plugin loads its own catalog on load_textdomain."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Every link to reportedip.com carries its campaign tag."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "German, Austrian and Swiss German translations are complete, in both the informal and the formal form."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "The firewall queue import can no longer run twice at the same time."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "The pre-WordPress firewall is rewritten after every update, and the settings hash stays stable after the update from 2.1.74."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "The quickstart applies the same settings as version 2.1.74, and a form plugin installed later is protected on the next admin visit."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "\"Apply the password policy to every role\" now covers every user, also next to the roles that must use two-factor; the score item is called \"Password policy\"."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "The password policy and breach check also cover the WooCommerce and Ultimate Member account and registration forms; padding lines of the breach service no longer count as a hit."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "A plan upgrade applies the recommended settings of the new plan also without the Pro add-on."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Network activation on Multisite opens the quickstart in the Network Admin."
 msgstr ""
 
 #. Found in changelog list item.

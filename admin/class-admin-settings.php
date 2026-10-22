@@ -1035,8 +1035,9 @@ class ReportedIP_Hive_Admin_Settings {
 			<div class="rip-stat-card__hint rip-stat-card__hint--bundle-negative">
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
 				<?php
+				$listed_reports = (int) ( $reputation['reports'] ?? 0 );
 				/* translators: 1: number of reports, 2: confidence score */
-				$listed_text = _n( 'The address this site connects from is in the community database: %1$s report, confidence %2$s. Check it on reportedip.com under Tools.', 'The address this site connects from is in the community database: %1$s reports, confidence %2$s. Check it on reportedip.com under Tools.', (int) ( $reputation['reports'] ?? 0 ), 'reportedip-hive' );
+				$listed_text = _n( 'The address this site connects from is in the community database: %1$s report, confidence %2$s. Check it on reportedip.com under Tools.', 'The address this site connects from is in the community database: %1$s reports, confidence %2$s. Check it on reportedip.com under Tools.', $listed_reports, 'reportedip-hive' );
 				printf(
 					esc_html( $listed_text ),
 					esc_html( number_format_i18n( (int) ( $reputation['reports'] ?? 0 ) ) ),
@@ -1311,8 +1312,9 @@ class ReportedIP_Hive_Admin_Settings {
 		if ( ReportedIP_Hive_Admin_Notice::is_dismissed( $notice_id ) ) {
 			return;
 		}
+		$reports = (int) ( $reputation['reports'] ?? 0 );
 		/* translators: 1: IP address, 2: number of reports, 3: confidence score */
-		$notice_text = _n( 'Other members of the community have reported %1$s, the address this site connects from: %2$s report, confidence %3$s. A listed address can be refused by other sites and by mail servers. Check the address and the report behind it on reportedip.com under Tools, then clear the cause on this server.', 'Other members of the community have reported %1$s, the address this site connects from: %2$s reports, confidence %3$s. A listed address can be refused by other sites and by mail servers. Check the address and the reports behind it on reportedip.com under Tools, then clear the cause on this server.', (int) ( $reputation['reports'] ?? 0 ), 'reportedip-hive' );
+		$notice_text = _n( 'Other members of the community have reported %1$s, the address this site connects from: %2$s report, confidence %3$s. A listed address can be refused by other sites and by mail servers. Check the address and the report behind it on reportedip.com under Tools, then clear the cause on this server.', 'Other members of the community have reported %1$s, the address this site connects from: %2$s reports, confidence %3$s. A listed address can be refused by other sites and by mail servers. Check the address and the reports behind it on reportedip.com under Tools, then clear the cause on this server.', $reports, 'reportedip-hive' );
 		$body        = sprintf(
 			'%1$s <a href="%2$s" target="_blank" rel="noopener">%3$s</a>',
 			sprintf(
