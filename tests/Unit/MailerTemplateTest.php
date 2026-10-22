@@ -140,7 +140,7 @@ class MailerTemplateTest extends TestCase {
 		$this->assertStringNotContainsString( '<svg', $html, 'Inline SVG is not rendered by GMX/Outlook and must stay out of the email template.' );
 		$this->assertStringContainsString( 'Example Site', $html, 'Site name must appear in header + footer.' );
 		$this->assertStringContainsString( 'Protected by ReportedIP Hive', $html, 'Footer trust line must appear.' );
-		$this->assertStringContainsString( 'This message is protected by ReportedIP, Open Threat Intelligence for a Safer Internet.', $html, 'Footer names the ReportedIP brand.' );
+		$this->assertStringContainsString( 'This message is protected by ReportedIP, a community initiative for a safer internet.', $html, 'Footer names the ReportedIP brand.' );
 		$this->assertStringNotContainsString( 'https://reportedip.com/', $html, 'The free plugin puts no link to its vendor into a mail.' );
 
 		$this->assertStringContainsString( 'Hello Patrick,', $html );

@@ -127,7 +127,7 @@ $site_host       = '' !== $site_host ? preg_replace( '/^www\./i', '', $site_host
 			?>
 		</p>
 		<p style="margin:0;font-size:11px;color:#6B7280;">
-			<?php esc_html_e( 'This message is protected by ReportedIP, Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' ); ?>
+			<?php esc_html_e( 'This message is protected by ReportedIP, a community initiative for a safer internet.', 'reportedip-hive' ); ?>
 		</p>
 	</td></tr>
 </table>

@@ -480,7 +480,7 @@ if ( $grace_deadline > 0 ) {
 					<?php
 					printf(
 						/* translators: 1: opening link tag, 2: closing link tag */
-						esc_html__( 'This page is protected by %1$sReportedIP%2$s, Open Threat Intelligence for a Safer Internet.', 'reportedip-hive' ),
+						esc_html__( 'This page is protected by %1$sReportedIP%2$s, a community initiative for a safer internet.', 'reportedip-hive' ),
 						'<a href="https://reportedip.com/?rc=hive-plugin" target="_blank" rel="noopener">',
 						'</a>'
 					);
