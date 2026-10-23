@@ -391,8 +391,8 @@ msgid "<strong>Audit trail (activity log for changes):</strong> who changed whic
 msgstr "<strong>Journal d'audit (journal d'activité des modifications) :</strong> qui a modifié quel réglage, quelle extension, quel thème, quelle page, quel menu, quel fichier ou quel compte utilisateur, avec anciennes et nouvelles valeurs et export."
 
 #. Found in description list item.
-msgid "<strong>Spam protection for further form plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator and Ultimate Member."
-msgstr "<strong>Protection anti-spam pour d'autres extensions de formulaires :</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator et Ultimate Member."
+msgid "<strong>Spam protection for further form plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator, Ultimate Member and the withdrawal form of EU Order Withdrawal Button (also bundled in Germanized)."
+msgstr "<strong>Protection anti-spam pour d'autres extensions de formulaires :</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator, Ultimate Member et le formulaire de rétractation de EU Order Withdrawal Button (également inclus dans Germanized)."
 
 #. Found in description list item.
 msgid "<strong>Group ban lists:</strong> one block list and whitelist shared by all sites of a group."

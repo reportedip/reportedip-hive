@@ -156,7 +156,7 @@ msgid "<strong>Audit trail (activity log for changes):</strong> who changed whic
 msgstr ""
 
 #. Found in description list item.
-msgid "<strong>Spam protection for further form plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator and Ultimate Member."
+msgid "<strong>Spam protection for further form plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator, Ultimate Member and the withdrawal form of EU Order Withdrawal Button (also bundled in Germanized)."
 msgstr ""
 
 #. Found in description list item.

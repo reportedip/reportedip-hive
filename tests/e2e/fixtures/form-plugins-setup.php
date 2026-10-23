@@ -510,6 +510,12 @@ if ( class_exists( 'Forminator_API' ) ) {
 	rip_e2e_page( 'rip-e2e-forminator-ajax-page', 'RIP E2E Forminator AJAX Page', '[forminator_form id="' . $rip_forminator_ajax . '"]' );
 }
 
+$rip_eu_owb = 0;
+
+if ( class_exists( 'Vendidero\OrderWithdrawalButton\Package' ) ) {
+	$rip_eu_owb = rip_e2e_page( 'rip-e2e-eu-owb-page', 'RIP E2E Withdrawal Page', '[eu_owb_order_withdrawal_request_form]' );
+}
+
 echo 'cf7=' . (int) $rip_cf7
 	. ' frm=' . (int) $rip_frm
 	. ' frm_name=' . (int) $rip_name
@@ -522,4 +528,5 @@ echo 'cf7=' . (int) $rip_cf7
 	. ' wpforms=' . (int) $rip_wpforms
 	. ' wpforms_ajax=' . (int) $rip_wpforms_ajax
 	. ' forminator=' . (int) $rip_forminator
-	. ' forminator_ajax=' . (int) $rip_forminator_ajax;
+	. ' forminator_ajax=' . (int) $rip_forminator_ajax
+	. ' eu_owb=' . (int) $rip_eu_owb;

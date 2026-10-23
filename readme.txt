@@ -118,7 +118,7 @@ Professional plan:
 
 Business plan, in addition:
 
-* **Spam protection for further form plugins:** WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator and Ultimate Member.
+* **Spam protection for further form plugins:** WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator, Ultimate Member and the withdrawal form of EU Order Withdrawal Button (also bundled in Germanized).
 * **Audit trail (activity log for changes):** who changed which setting, plugin, theme, page, menu, file or user account, with old and new values and export.
 * **User account blocking and session management:** block accounts, end sessions and review active sessions.
 * **Multiple security keys per account** with model detection.

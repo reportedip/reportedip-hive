@@ -204,7 +204,7 @@ final class ReportedIP_Hive_Catalog {
 			),
 			'form_adapters_advanced'       => array(
 				'label'       => __( 'Advanced form protection', 'reportedip-hive' ),
-				'description' => __( 'The execution proof on WPForms, Gravity Forms, Forminator, Formidable, Elementor Forms and Ultimate Member.', 'reportedip-hive' ),
+				'description' => __( 'The execution proof on WPForms, Gravity Forms, Forminator, Formidable, Elementor Forms, Ultimate Member and the EU Order Withdrawal Button form.', 'reportedip-hive' ),
 				'tier'        => 'business',
 				'section'     => 'forms',
 				'docs_url'    => self::PRODUCT_URL . '#hive-forms',

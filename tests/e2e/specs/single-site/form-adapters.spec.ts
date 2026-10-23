@@ -48,7 +48,7 @@ let FRM_NAME_FIELD = '0';
 let FRM_TEXT_FIELD = '0';
 
 /**
- * Every adapter switch, the six of the add-on included: they are set here as
+ * Every adapter switch, the seven of the add-on included: they are set here as
  * well, so the cases prove that a stored switch alone arms nothing while the
  * add-on is off.
  */
@@ -60,6 +60,7 @@ const ADAPTER_OPTIONS = [
 	'reportedip_hive_form_proof_gravity',
 	'reportedip_hive_form_proof_wpforms',
 	'reportedip_hive_form_proof_forminator',
+	'reportedip_hive_form_proof_eu_owb',
 ];
 
 /**
