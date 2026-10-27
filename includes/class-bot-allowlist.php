@@ -49,9 +49,9 @@ final class ReportedIP_Hive_Bot_Allowlist {
 	 * to an exemption when the `bot_signatures` ruleset also carries a rule
 	 * with an FCrDNS suffix or an official IP range for it, and that check
 	 * passes ({@see is_exempt_crawler()}). Tokens for crawlers nobody can
-	 * verify, Screaming Frog runs on customer desktops, `facebookexternalhit`
-	 * has neither feed nor reverse DNS, therefore cost nothing to keep, but
-	 * they also buy nothing.
+	 * verify (Screaming Frog runs on customer desktops) cost nothing to keep,
+	 * but they also buy nothing. Meta's crawlers have no reverse DNS; the
+	 * service verifies them against the prefixes Meta announces from AS32934.
 	 *
 	 * Maintenance: when adding a new bot, check that:
 	 *  - the token is unique enough to not collide with a browser UA, and
@@ -87,6 +87,9 @@ final class ReportedIP_Hive_Bot_Allowlist {
 		'Sogou',
 		'Exabot',
 		'facebookexternalhit',
+		'facebookcatalog',
+		'meta-externalads',
+		'meta-webindexer',
 		'Twitterbot',
 		'LinkedInBot',
 		'Pinterest',
