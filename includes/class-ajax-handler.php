@@ -268,12 +268,20 @@ class ReportedIP_Hive_Ajax_Handler {
 	}
 
 	/**
-	 * AJAX: Test API connection
+	 * AJAX: Test API connection.
+	 *
+	 * Tests the key typed into the form when one is posted, so the test
+	 * works before the key is saved; otherwise the stored key.
 	 */
 	public function ajax_test_connection() {
 		check_ajax_referer( 'reportedip_hive_nonce', 'nonce' );
 
 		$this->require_admin_capability();
+
+		$typed_key = isset( $_POST['api_key'] ) ? sanitize_text_field( wp_unslash( $_POST['api_key'] ) ) : '';
+		if ( '' !== $typed_key ) {
+			$this->api_client->set_api_key( $typed_key );
+		}
 
 		$result = $this->api_client->test_connection();
 		wp_send_json( $result );

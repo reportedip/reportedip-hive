@@ -341,7 +341,8 @@
                 type: 'POST',
                 data: {
                     action: 'reportedip_hive_test_connection',
-                    nonce: reportedip_hive_ajax.nonce
+                    nonce: reportedip_hive_ajax.nonce,
+                    api_key: $('input[name="reportedip_hive_api_key"]').val() || ''
                 },
                 success: function(response) {
                     if (response.success) {
