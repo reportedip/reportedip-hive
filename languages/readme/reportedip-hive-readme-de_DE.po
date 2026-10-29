@@ -1,7 +1,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: ReportedIP Hive readme 3.0.4\n"
+"Project-Id-Version: ReportedIP Hive readme 3.0.5\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/reportedip-hive\n"
 "POT-Creation-Date: 2026-10-16T09:32:19+00:00\n"
 "PO-Revision-Date: 2026-10-16T09:32:19+00:00\n"
@@ -391,10 +391,6 @@ msgid "<strong>Audit trail (activity log for changes):</strong> who changed whic
 msgstr "<strong>Audit-Trail (Protokoll der Änderungen):</strong> wer welche Einstellung, welches Plugin, Theme, welche Seite, welches Menü, welche Datei oder welches Benutzerkonto geändert hat, mit altem und neuem Wert und Export."
 
 #. Found in description list item.
-msgid "<strong>Spam protection for further form plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator, Ultimate Member and the withdrawal form of EU Order Withdrawal Button (also bundled in Germanized)."
-msgstr "<strong>Spamschutz für weitere Formular-Plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator, Ultimate Member und das Widerrufsformular von EU Order Withdrawal Button (auch in Germanized enthalten)."
-
-#. Found in description list item.
 msgid "<strong>Group ban lists:</strong> one block list and whitelist shared by all sites of a group."
 msgstr "<strong>Gruppen-Sperrlisten:</strong> eine Sperrliste und Whitelist, die alle Websites einer Gruppe teilen."
 
@@ -477,10 +473,6 @@ msgstr "Sicherheitsprotokoll mit Filtern nach Ereignistyp, Schweregrad und Datum
 #. Found in description list item.
 msgid "Protection score and a readiness check that lists what still needs attention."
 msgstr "Schutz-Score und eine Bereitschaftsprüfung, die auflistet, was noch zu tun ist."
-
-#. Found in description list item.
-msgid "Security headers: X-Content-Type-Options, X-Frame-Options and Referrer-Policy."
-msgstr "Sicherheits-Header: X-Content-Type-Options, X-Frame-Options und Referrer-Policy."
 
 #. Found in description list item.
 msgid "XML-RPC and pingbacks off with one switch."
@@ -697,3 +689,35 @@ msgstr "Schutz-Einstellungen hält Beschriftung und Schalter auf breiten Bildsch
 #. Found in changelog list item.
 msgid "Clearer page names: Protection Settings, Server &amp; Maintenance (always in the menu) and Community &amp; Key with the Community Access Key on its first tab."
 msgstr "Klarere Seitennamen: Schutz-Einstellungen, Server &amp; Wartung (immer im Menü) und Community &amp; Schlüssel mit dem Community Access Key im ersten Tab."
+
+#. Found in description list item.
+msgid "<strong>Spam protection for further form plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator, Ultimate Member and the withdrawal form of EU Order Withdrawal Button (also bundled in Germanized)."
+msgstr "<strong>Spamschutz für weitere Formular-Plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator, Ultimate Member und das Widerrufsformular von EU Order Withdrawal Button (auch in Germanized enthalten)."
+
+#. Found in description list item.
+msgid "Security headers: X-Content-Type-Options, X-Frame-Options and Referrer-Policy, with an example and a plain explanation for each, a generated nginx and Apache configuration and a check that shows which headers really reach a visitor, cached pages included."
+msgstr "Security-Header: X-Content-Type-Options, X-Frame-Options und Referrer-Policy, jeweils mit Beispiel und verständlicher Erklärung, eine erzeugte Konfiguration für nginx und Apache und eine Prüfung, die zeigt, welche Header wirklich bei Besuchern ankommen, auch auf gecachten Seiten."
+
+#. Found in changelog list item.
+msgid "Next steps suggest the advanced security headers where the plan includes them and name cached pages without headers."
+msgstr "Die nächsten Schritte schlagen die erweiterten Security-Header vor, wo der Tarif sie enthält, und nennen gecachte Seiten ohne Header."
+
+#. Found in changelog list item.
+msgid "Protection Settings sections sit in framed blocks; notices keep their text in one column."
+msgstr "Die Abschnitte der Schutz-Einstellungen stehen in eigenen Blöcken mit Rahmen; Hinweise halten ihren Text in einer Spalte."
+
+#. Found in changelog list item.
+msgid "Every security header explains what it protects against, the recommended value and what it can break, with an example."
+msgstr "Jeder Security-Header erklärt, wovor er schützt, welcher Wert empfohlen ist und was er stören kann, mit einem Beispiel."
+
+#. Found in changelog list item.
+msgid "With Extended protection on, pages a caching plugin delivers through PHP carry the security headers too."
+msgstr "Mit eingeschaltetem Erweiterten Schutz tragen auch Seiten, die ein Cache-Plugin über PHP ausliefert, die Security-Header."
+
+#. Found in changelog list item.
+msgid "nginx and Apache configuration for the configured headers next to the settings, with copy buttons."
+msgstr "Konfiguration für nginx und Apache mit den eingestellten Headern direkt neben den Einstellungen, mit Kopier-Buttons."
+
+#. Found in changelog list item.
+msgid "Security headers: a header check shows per header whether it arrives, is missing on cached pages or arrives twice."
+msgstr "Security-Header: Eine Header-Prüfung zeigt je Header, ob er ankommt, auf gecachten Seiten fehlt oder doppelt ankommt."

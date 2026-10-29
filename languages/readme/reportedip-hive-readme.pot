@@ -1,7 +1,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: ReportedIP Hive readme 3.0.4\n"
+"Project-Id-Version: ReportedIP Hive readme 3.0.5\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -13,6 +13,14 @@ msgstr ""
 
 #. Plugin name.
 msgid "ReportedIP Hive: Firewall, Brute Force Protection, 2FA and Anti-Spam"
+msgstr ""
+
+#. Found in description list item.
+msgid "<strong>Spam protection for further form plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator, Ultimate Member and the withdrawal form of EU Order Withdrawal Button (also bundled in Germanized)."
+msgstr ""
+
+#. Found in description list item.
+msgid "Security headers: X-Content-Type-Options, X-Frame-Options and Referrer-Policy, with an example and a plain explanation for each, a generated nginx and Apache configuration and a check that shows which headers really reach a visitor, cached pages included."
 msgstr ""
 
 #. Screenshot description.
@@ -156,10 +164,6 @@ msgid "<strong>Audit trail (activity log for changes):</strong> who changed whic
 msgstr ""
 
 #. Found in description list item.
-msgid "<strong>Spam protection for further form plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator, Ultimate Member and the withdrawal form of EU Order Withdrawal Button (also bundled in Germanized)."
-msgstr ""
-
-#. Found in description list item.
 msgid "<strong>Group ban lists:</strong> one block list and whitelist shared by all sites of a group."
 msgstr ""
 
@@ -241,10 +245,6 @@ msgstr ""
 
 #. Found in description list item.
 msgid "Protection score and a readiness check that lists what still needs attention."
-msgstr ""
-
-#. Found in description list item.
-msgid "Security headers: X-Content-Type-Options, X-Frame-Options and Referrer-Policy."
 msgstr ""
 
 #. Found in description list item.
@@ -581,6 +581,30 @@ msgstr ""
 
 #. Found in description header.
 msgid "External Services"
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Next steps suggest the advanced security headers where the plan includes them and name cached pages without headers."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Protection Settings sections sit in framed blocks; notices keep their text in one column."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Every security header explains what it protects against, the recommended value and what it can break, with an example."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "With Extended protection on, pages a caching plugin delivers through PHP carry the security headers too."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "nginx and Apache configuration for the configured headers next to the settings, with copy buttons."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Security headers: a header check shows per header whether it arrives, is missing on cached pages or arrives twice."
 msgstr ""
 
 #. Found in changelog list item.
