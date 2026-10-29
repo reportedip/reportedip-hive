@@ -132,6 +132,7 @@ class ReportedIP_Hive_Ajax_Handler {
 		add_action( 'wp_ajax_reportedip_hive_registry_save', array( $this, 'ajax_registry_save' ) );
 		add_action( 'wp_ajax_reportedip_hive_clear_queue_lock', array( $this, 'ajax_clear_queue_lock' ) );
 		add_action( 'wp_ajax_reportedip_hive_form_proof_selftest', array( $this, 'ajax_form_proof_selftest' ) );
+		add_action( 'wp_ajax_reportedip_hive_header_check', array( $this, 'ajax_header_check' ) );
 	}
 
 	/**
@@ -389,6 +390,21 @@ class ReportedIP_Hive_Ajax_Handler {
 				'message' => __( 'Test email could not be sent. Check the WordPress mail configuration or your active mail provider.', 'reportedip-hive' ),
 			)
 		);
+	}
+
+	/**
+	 * AJAX: load the home page and compare the security headers that arrive
+	 * with the planned ones.
+	 *
+	 * @return void
+	 * @since  3.0.5
+	 */
+	public function ajax_header_check() {
+		check_ajax_referer( 'reportedip_hive_header_check', 'nonce' );
+
+		$this->require_admin_capability();
+
+		wp_send_json_success( array( 'html' => ReportedIP_Hive_Protection_Page::header_check_markup( ReportedIP_Hive_Security_Headers::probe() ) ) );
 	}
 
 	/**

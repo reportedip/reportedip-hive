@@ -429,6 +429,8 @@ class ReportedIP_Hive_Protection_Page {
 		$id       = self::field_id( $key );
 		$label    = (string) ( $entry['label'] ?? $key );
 		$desc     = (string) ( $entry['description'] ?? '' );
+		$example  = (string) ( $entry['example'] ?? '' );
+		$holder   = '' !== $example ? ' placeholder="' . esc_attr( $example ) . '"' : '';
 		$search   = self::search_terms( $key, $entry );
 		$disabled = $locked ? ' disabled' : '';
 		$kind     = (string) $entry['kind'];
@@ -503,22 +505,24 @@ class ReportedIP_Hive_Protection_Page {
 				break;
 			case 'textarea':
 				$control = sprintf(
-					'<textarea class="rip-textarea" id="%1$s" name="%2$s" rows="4"%3$s>%4$s</textarea>',
+					'<textarea class="rip-textarea" id="%1$s" name="%2$s" rows="4"%3$s%5$s>%4$s</textarea>',
 					esc_attr( $id ),
 					esc_attr( $key ),
 					$disabled,
-					esc_textarea( (string) $value )
+					esc_textarea( (string) $value ),
+					$holder
 				);
 				break;
 			default:
 				$type    = 'email' === $kind ? 'email' : ( 'url' === $kind ? 'url' : 'text' );
 				$control = sprintf(
-					'<input type="%1$s" class="rip-input" id="%2$s" name="%3$s" value="%4$s"%5$s />',
+					'<input type="%1$s" class="rip-input" id="%2$s" name="%3$s" value="%4$s"%5$s%6$s />',
 					$type,
 					esc_attr( $id ),
 					esc_attr( $key ),
 					esc_attr( (string) $value ),
-					$disabled
+					$disabled,
+					$holder
 				);
 		}
 
@@ -554,7 +558,8 @@ class ReportedIP_Hive_Protection_Page {
 			esc_html( $label ),
 			$marker,
 			$control,
-			'' !== $desc ? '<p class="rip-help-text">' . esc_html( $desc ) . '</p>' : '',
+			( '' !== $desc ? '<p class="rip-help-text">' . esc_html( $desc ) . '</p>' : '' )
+				. ( '' !== $example ? '<p class="rip-field-hint">' . esc_html__( 'Example:', 'reportedip-hive' ) . ' <code>' . esc_html( $example ) . '</code></p>' : '' ),
 			$depends
 		);
 	}
@@ -1433,7 +1438,7 @@ class ReportedIP_Hive_Protection_Page {
 		};
 
 		$html = sprintf(
-			'<div class="rip-protection__section" id="%1$s"><div class="rip-protection__section-head"><span class="rip-protection__title">%2$s</span>%3$s%4$s</div>',
+			'<div class="rip-protection__section" id="%1$s"><div class="rip-protection__section-head"><h2 class="rip-protection__title">%2$s</h2>%3$s%4$s</div>',
 			esc_attr( $section ),
 			esc_html( (string) ( $meta['label'] ?? $section ) ),
 			$expert ? '<span class="rip-protection__desc">' . esc_html( (string) ( $meta['description'] ?? '' ) ) . '</span>' : '',
@@ -1443,6 +1448,9 @@ class ReportedIP_Hive_Protection_Page {
 			ob_start();
 			self::render_preset_field( self::current_preset( $current ) );
 			$html .= (string) ob_get_clean();
+		}
+		if ( 'headers' === $section ) {
+			$html .= self::headers_intro_markup();
 		}
 		$html .= $rows( $main );
 		if ( array() !== $rest ) {
@@ -1456,7 +1464,189 @@ class ReportedIP_Hive_Protection_Page {
 		foreach ( self::catalog_rows( $section ) as $feature => $row ) {
 			$html .= self::catalog_row_markup( $feature, $row );
 		}
+		if ( 'headers' === $section ) {
+			$html .= self::headers_tools_markup();
+		}
 		return $html . '</div>';
+	}
+
+	/**
+	 * The three ways a header reaches a visitor, each with its state on this
+	 * site and the way to change it, plus a warning when a page cache
+	 * delivers pages without the headers right now.
+	 *
+	 * Shown in simple mode too: the header rows sit in the technical details,
+	 * and without this list nobody learns that cached pages miss them.
+	 *
+	 * @return string
+	 * @since  3.0.5
+	 */
+	public static function headers_intro_markup() {
+		$manager   = class_exists( 'ReportedIP_Hive_WAF_Dropin_Manager' ) ? ReportedIP_Hive_WAF_Dropin_Manager::get_instance() : null;
+		$guard     = null !== $manager && $manager->is_running();
+		$automatic = null !== $manager && $manager->supports_auto_install();
+		$cache     = ReportedIP_Hive_Security_Headers::page_cache_active();
+		$guard_url = ReportedIP_Hive_Admin_Settings::get_admin_page_url( ReportedIP_Hive_Admin_Aliases::resolve( ReportedIP_Hive_Admin_Aliases::FIREWALL_SLUG, 'server' ) ) . '#rip-waf-dropin';
+
+		$rows = array(
+			array(
+				__( 'Web server configuration', 'reportedip-hive' ),
+				array( 'info', __( 'Most compatible', 'reportedip-hive' ) ),
+				__( 'nginx or Apache send the headers on every response, cached pages and images included.', 'reportedip-hive' ),
+				array( '#rip-headers-tools', __( 'Generate the configuration', 'reportedip-hive' ) ),
+			),
+			array(
+				__( 'Extended protection', 'reportedip-hive' ),
+				$guard ? array( 'success', __( 'Active', 'reportedip-hive' ) ) : array( 'neutral', __( 'Off', 'reportedip-hive' ) ),
+				$automatic
+					? __( 'The firewall before WordPress adds the headers to pages a caching plugin delivers through PHP. Your server supports switching it on with one click.', 'reportedip-hive' )
+					: __( 'The firewall before WordPress adds the headers to pages a caching plugin delivers through PHP. On this server it needs one line in the PHP or web server configuration.', 'reportedip-hive' ),
+				array( $guard_url, $guard ? __( 'Open the setting', 'reportedip-hive' ) : __( 'Switch on', 'reportedip-hive' ) ),
+			),
+			array(
+				__( 'Page cache', 'reportedip-hive' ),
+				$cache ? array( 'warning', __( 'Detected', 'reportedip-hive' ) ) : array( 'neutral', __( 'None found', 'reportedip-hive' ) ),
+				$cache
+					? __( 'Cached pages are delivered before WordPress loads. They carry the headers only through the web server configuration or Extended protection.', 'reportedip-hive' )
+					: __( 'WordPress builds every page itself and adds the headers.', 'reportedip-hive' ),
+				null,
+			),
+		);
+
+		$items = '';
+		foreach ( $rows as $row ) {
+			$items .= sprintf(
+				'<li class="rip-protection__route"><span class="rip-protection__route-name">%1$s</span><span class="rip-badge rip-badge--%2$s rip-protection__route-state">%3$s</span><span class="rip-protection__route-text">%4$s</span>%5$s</li>',
+				esc_html( $row[0] ),
+				esc_attr( $row[1][0] ),
+				esc_html( $row[1][1] ),
+				esc_html( $row[2] ),
+				null === $row[3] ? '' : '<a class="rip-protection__route-action" href="' . esc_url( $row[3][0] ) . '">' . esc_html( $row[3][1] ) . '</a>'
+			);
+		}
+
+		$html = sprintf(
+			'<div class="rip-protection__routes"><p class="rip-protection__routes-title">%1$s</p><ul class="rip-protection__route-list">%2$s</ul><p class="rip-help-text">%3$s</p></div>',
+			esc_html__( 'How the headers reach your visitors', 'reportedip-hive' ),
+			$items,
+			esc_html__( 'Set every header in one place only. A header the web server sets on its own is invisible to WordPress and then arrives twice; the header check below shows it.', 'reportedip-hive' )
+		);
+
+		if ( ReportedIP_Hive_Security_Headers::is_enabled() && $cache && ! $guard ) {
+			$html .= '<div class="rip-alert rip-alert--warning rip-protection__note">'
+				. esc_html__( 'Cached pages go out without these headers right now. Generate the web server configuration below, or switch on Extended protection. On nginx without PHP in front of the cache (for example Rocket-Nginx) only the web server configuration helps.', 'reportedip-hive' )
+				. '</div>';
+		}
+		return $html;
+	}
+
+	/**
+	 * Server configuration generated from the planned headers and the
+	 * button that checks what a visitor really receives.
+	 *
+	 * @return string
+	 * @since  3.0.5
+	 */
+	public static function headers_tools_markup() {
+		$snippets = ReportedIP_Hive_Security_Headers::server_snippets();
+		$body     = '';
+		if ( '' === $snippets['nginx'] ) {
+			$body .= '<p class="rip-help-text">' . esc_html__( 'Switch on "Send security headers" and save; the configuration is generated from the saved settings.', 'reportedip-hive' ) . '</p>';
+		} else {
+			$body .= '<p class="rip-help-text">' . esc_html__( 'Generated from the saved settings. Save first after a change. Once the configuration is live on the web server, switch off "Send security headers" here, otherwise every header is sent twice.', 'reportedip-hive' ) . '</p>';
+			foreach ( array(
+				'nginx'  => __( 'nginx', 'reportedip-hive' ),
+				'apache' => __( 'Apache (.htaccess or virtual host)', 'reportedip-hive' ),
+			) as $server => $label ) {
+				$id    = 'rip-headers-conf-' . $server;
+				$body .= sprintf(
+					'<div class="rip-protection__snippet"><div class="rip-protection__snippet-head"><strong>%1$s</strong><button type="button" class="rip-button rip-button--secondary rip-button--sm" data-rip-copy-target="%2$s" data-copied="%4$s">%3$s</button></div><pre class="rip-code-snippet" id="%2$s"><code>%5$s</code></pre></div>',
+					esc_html( $label ),
+					esc_attr( $id ),
+					esc_html__( 'Copy', 'reportedip-hive' ),
+					esc_attr__( 'Copied', 'reportedip-hive' ),
+					esc_html( $snippets[ $server ] )
+				);
+			}
+		}
+
+		$body .= sprintf(
+			'<div class="rip-protection__probe"><button type="button" class="rip-button rip-button--secondary" data-rip-header-check="%1$s" data-ajax="%2$s" data-busy="%4$s">%3$s</button><p class="rip-help-text">%5$s</p><div class="rip-protection__probe-result" aria-live="polite"></div></div>',
+			esc_attr( wp_create_nonce( 'reportedip_hive_header_check' ) ),
+			esc_url( admin_url( 'admin-ajax.php' ) ),
+			esc_html__( 'Check the headers of the home page', 'reportedip-hive' ),
+			esc_attr__( 'Checking', 'reportedip-hive' ),
+			esc_html__( 'Loads the home page of this site twice like a visitor (the second time a page cache answers) and once past the cache, and compares what arrives with these settings.', 'reportedip-hive' )
+		);
+
+		return sprintf(
+			'<details class="rip-protection__details rip-protection__details--tools" id="rip-headers-tools"><summary><svg class="rip-protection__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><polyline points="6 9 12 15 18 9"/></svg>%1$s</summary>%2$s</details>',
+			esc_html__( 'Server configuration and header check', 'reportedip-hive' ),
+			$body
+		);
+	}
+
+	/**
+	 * Result table of {@see ReportedIP_Hive_Security_Headers::probe()}.
+	 *
+	 * @param array{rows:array<string,array<string,mixed>>,error:string} $result Probe result.
+	 * @return string
+	 * @since  3.0.5
+	 */
+	public static function header_check_markup( array $result ) {
+		if ( '' !== (string) ( $result['error'] ?? '' ) ) {
+			return '<div class="rip-alert rip-alert--error">' . esc_html(
+				sprintf(
+					/* translators: %s: error message of the HTTP request. */
+					__( 'The home page could not be loaded: %s', 'reportedip-hive' ),
+					(string) $result['error']
+				)
+			) . '</div>';
+		}
+		$rows = (array) ( $result['rows'] ?? array() );
+		if ( array() === $rows ) {
+			return '<div class="rip-alert rip-alert--warning">' . esc_html__( 'No security header arrives at the home page, neither from WordPress nor from the web server.', 'reportedip-hive' ) . '</div>';
+		}
+
+		$states = array(
+			'ok'             => array( 'success', __( 'Arrives once, as set here', 'reportedip-hive' ) ),
+			'missing'        => array( 'danger', __( 'Missing on every page', 'reportedip-hive' ) ),
+			'missing_cached' => array( 'warning', __( 'Missing on cached pages', 'reportedip-hive' ) ),
+			'duplicate'      => array( 'danger', __( 'Sent twice, by the web server and here', 'reportedip-hive' ) ),
+			'other_value'    => array( 'warning', __( 'Another value arrives, the web server or a plugin sets it', 'reportedip-hive' ) ),
+			'server_only'    => array( 'info', __( 'Set by the web server or another plugin', 'reportedip-hive' ) ),
+		);
+
+		$body = '';
+		foreach ( $rows as $name => $row ) {
+			$state = $states[ (string) ( $row['status'] ?? '' ) ] ?? array( 'neutral', (string) ( $row['status'] ?? '' ) );
+			$seen  = array_values( array_unique( array_merge( (array) ( $row['cached'] ?? array() ), (array) ( $row['uncached'] ?? array() ) ) ) );
+			$body .= sprintf(
+				'<tr><th scope="row"><code>%1$s</code></th><td><span class="rip-badge rip-badge--%2$s">%3$s</span></td><td>%4$s</td></tr>',
+				esc_html( (string) $name ),
+				esc_attr( $state[0] ),
+				esc_html( $state[1] ),
+				implode( '<br>', array_map( static fn( $v ) => '<code>' . esc_html( (string) $v ) . '</code>', $seen ) )
+			);
+		}
+
+		$advice = array();
+		$status = array_column( $rows, 'status' );
+		if ( in_array( 'missing_cached', $status, true ) ) {
+			$advice[] = __( 'Cached pages go out without some headers: copy the server configuration above into your web server and then switch off "Send security headers" here.', 'reportedip-hive' );
+		}
+		if ( in_array( 'duplicate', $status, true ) || in_array( 'other_value', $status, true ) ) {
+			$advice[] = __( 'The web server already sets some headers: remove them there, or switch them off here, so each header comes from one place.', 'reportedip-hive' );
+		}
+
+		return sprintf(
+			'<table class="rip-table"><thead><tr><th scope="col">%1$s</th><th scope="col">%2$s</th><th scope="col">%3$s</th></tr></thead><tbody>%4$s</tbody></table>%5$s',
+			esc_html__( 'Header', 'reportedip-hive' ),
+			esc_html__( 'Result', 'reportedip-hive' ),
+			esc_html__( 'Value received', 'reportedip-hive' ),
+			$body,
+			implode( '', array_map( static fn( $a ) => '<div class="rip-alert rip-alert--info">' . esc_html( $a ) . '</div>', $advice ) )
+		);
 	}
 
 	/**

@@ -2,6 +2,27 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [3.0.5] - 2026-10-29
+
+### New
+
+- Security headers: a check on the Protection Settings page loads the home page like a visitor, once from the page cache and once past it, and shows per header whether it arrives, is missing on cached pages, arrives twice or with another value.
+- The nginx and Apache configuration for the configured headers sits next to the settings, with copy buttons; nginx lines carry `always`, Apache lines are wrapped in `IfModule` and send HSTS over HTTPS only.
+- With Extended protection on, the pre-WordPress firewall sends the security headers itself, so pages a caching plugin delivers through PHP carry them too.
+
+### Changed
+
+- Every security header explains what it protects against, the recommended value and what it can break, with an example; text fields show the example as placeholder.
+- The sections of the Protection Settings tabs sit in their own framed blocks with a heading, so Firewall & Bots, Access Lockdown and Security Headers are clearly apart.
+- Security Headers shows how the headers reach visitors on this site: web server configuration, Extended protection (with its state and a link to its switch) and whether a page cache was found.
+- Notices keep their text in one column; loose text, links and lists in a notice no longer split into side-by-side columns anywhere in the plugin.
+- Next steps on the dashboard suggest the advanced security headers where the plan includes them, and name cached pages without security headers with the fix the server allows.
+- The Server & Maintenance page no longer claims that WordPress notices headers the web server sets; it cannot, and both arrive.
+
+### Fixes
+
+- The hourly scan hands a single coordinated attack to add-ons as a list, the same as several; before, add-ons received the bare row.
+
 ## [3.0.4] - 2026-10-22
 
 ### Fixes

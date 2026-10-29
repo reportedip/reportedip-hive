@@ -23,7 +23,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Every spec entry is `array{section:string, kind:string, min?:int, max?:int,
  * allowed?:string[], tier?:string, tier_gate?:callable, remote:bool,
  * sanitize?:callable, side_effects?:string[], json_filter?:callable,
- * json_fallback?:string[], label:string, description?:string}`. Defaults are
+ * json_fallback?:string[], label:string, description?:string, example?:string}`.
+ * `example` is shown under the description and as the placeholder of a text
+ * field; it stays local and is not part of {@see export_schema()}. Defaults are
  * deliberately NOT duplicated here, they live in
  * {@see ReportedIP_Hive_Defaults::SAFE_OPTIONS} and are read at runtime; a unit
  * test enforces that every registry key has a default.
@@ -875,14 +877,15 @@ final class ReportedIP_Hive_Settings_Registry {
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'Send security headers', 'reportedip-hive' ),
-				'description' => __( 'Send hardening response headers on every front-end request. A header your server already sets is left alone.', 'reportedip-hive' ),
+				'description' => __( 'Send the headers below on every page WordPress builds. Pages a page cache delivers, static files and everything the web server answers itself go out without them; for those, copy the generated server configuration below into your web server, or turn on Extended protection so the pre-WordPress firewall adds them to cached pages. A header the web server sets on its own is invisible from here and then arrives twice, so set each header in one place only.', 'reportedip-hive' ),
 			),
 			'reportedip_hive_header_xcto'                  => array(
 				'section'     => 'headers',
 				'kind'        => 'bool',
 				'remote'      => true,
 				'label'       => __( 'X-Content-Type-Options', 'reportedip-hive' ),
-				'description' => __( 'Stop the browser from guessing a file type against what you declared, which is how an uploaded image gets treated as a script.', 'reportedip-hive' ),
+				'description' => __( 'Protects against MIME sniffing: the browser stops guessing a file type, so an upload that claims to be an image is never run as a script. Recommended: on. It breaks practically nothing.', 'reportedip-hive' ),
+				'example'     => 'X-Content-Type-Options: nosniff',
 			),
 			'reportedip_hive_header_xfo'                   => array(
 				'section'     => 'headers',
@@ -891,7 +894,8 @@ final class ReportedIP_Hive_Settings_Registry {
 				'sanitize'    => array( 'ReportedIP_Hive_Security_Headers', 'sanitize_xfo' ),
 				'remote'      => true,
 				'label'       => __( 'X-Frame-Options', 'reportedip-hive' ),
-				'description' => __( 'Who may put your pages inside a frame. Same-origin is right for almost every site; deny breaks legitimate embeds.', 'reportedip-hive' ),
+				'description' => __( 'Protects against clickjacking, where a foreign site shows your page in an invisible frame and tricks visitors into clicking. Recommended: SAMEORIGIN, so your own pages may still frame each other. DENY also blocks your own frames; off lets every site frame you. Current browsers follow the frame-ancestors rule of an enforced Content-Security-Policy first, this header stays for older ones.', 'reportedip-hive' ),
+				'example'     => 'X-Frame-Options: SAMEORIGIN',
 			),
 			'reportedip_hive_header_referrer'              => array(
 				'section'     => 'headers',
@@ -899,7 +903,8 @@ final class ReportedIP_Hive_Settings_Registry {
 				'allowed'     => array( 'no-referrer', 'same-origin', 'strict-origin', 'strict-origin-when-cross-origin', 'no-referrer-when-downgrade' ),
 				'remote'      => true,
 				'label'       => __( 'Referrer-Policy', 'reportedip-hive' ),
-				'description' => __( 'How much of the current address is passed on when a visitor follows a link away from your site.', 'reportedip-hive' ),
+				'description' => __( 'Decides how much of the current address the browser passes on when a visitor follows a link or loads a file from another site. Recommended: strict-origin-when-cross-origin, other sites see only your domain, and only over HTTPS. no-referrer sends nothing and hides you from the referral statistics of partner sites. no-referrer-when-downgrade passes the full address with path and parameters to every HTTPS site and is not recommended.', 'reportedip-hive' ),
+				'example'     => 'Referrer-Policy: strict-origin-when-cross-origin',
 			),
 
 			'reportedip_hive_2fa_enabled_global'           => array(

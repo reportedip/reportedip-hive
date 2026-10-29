@@ -824,7 +824,8 @@ button.rip-tier-lock--mode:hover {
     box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
-.rip-input::placeholder {
+.rip-input::placeholder,
+.rip-textarea::placeholder {
     color: var(--rip-gray-400);
 }
 
@@ -1047,12 +1048,32 @@ button.rip-tier-lock--mode:hover {
    Alerts
    ========================================================================== */
 
+/*
+ * An alert is a block with normal text flow: loose text, <strong>, <a>,
+ * <code>, paragraphs and lists run one below the other. It turns into a row
+ * only when it starts with an icon, and then everything else belongs in one
+ * .rip-alert__content wrapper. A flex container around loose content puts
+ * every inline element into a column of its own; never set display on an
+ * alert (locked by ProtectionPageTest).
+ */
 .rip-alert {
-    display: flex;
-    gap: var(--rip-space-3);
+    display: block;
     padding: var(--rip-space-4);
     border-radius: var(--rip-radius-lg);
     margin-bottom: var(--rip-space-4);
+}
+
+.rip-alert:has(> .rip-alert__icon) {
+    display: flex;
+    gap: var(--rip-space-3);
+}
+
+.rip-alert > :first-child {
+    margin-top: 0;
+}
+
+.rip-alert > :last-child {
+    margin-bottom: 0;
 }
 
 .rip-alert__icon {
@@ -1613,24 +1634,122 @@ button.rip-tier-lock--mode:hover {
 }
 .rip-protection__section {
     scroll-margin-top: calc(32px + var(--rip-space-4));
-    padding: var(--rip-space-4) 0;
-    border-top: 1px solid var(--rip-gray-200);
+    margin-bottom: var(--rip-space-6);
+    padding: 0 var(--rip-space-5) var(--rip-space-3);
+    background: var(--rip-white);
+    border: 1px solid var(--rip-gray-200);
+    border-radius: var(--rip-radius);
 }
-.rip-protection__section:first-of-type {
-    border-top: 0;
+.rip-protection__section:last-of-type {
+    margin-bottom: 0;
 }
 .rip-protection__section-head {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas: "title status" "desc status";
     gap: var(--rip-space-1) var(--rip-space-4);
-    margin-bottom: var(--rip-space-2);
+    margin: 0 calc(-1 * var(--rip-space-5)) var(--rip-space-2);
+    padding: var(--rip-space-4) var(--rip-space-5);
+    background: var(--rip-gray-50);
+    border-bottom: 1px solid var(--rip-gray-200);
+    border-radius: var(--rip-radius) var(--rip-radius) 0 0;
 }
 .rip-protection__title {
     grid-area: title;
+    margin: 0;
+    padding: 0;
     font-weight: 600;
-    font-size: var(--rip-text-base);
+    font-size: var(--rip-text-lg);
+    line-height: 1.4;
     color: var(--rip-gray-900);
+}
+.rip-protection__note {
+    margin: var(--rip-space-3) 0;
+}
+.rip-protection__routes {
+    margin: var(--rip-space-3) 0 var(--rip-space-4);
+}
+.rip-protection__routes-title {
+    margin: 0 0 var(--rip-space-2);
+    font-size: var(--rip-text-sm);
+    font-weight: 600;
+    color: var(--rip-gray-700);
+}
+.rip-protection__route-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border: 1px solid var(--rip-gray-200);
+    border-radius: var(--rip-radius);
+}
+.rip-protection__route {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "name state" "text action";
+    gap: var(--rip-space-1) var(--rip-space-4);
+    margin: 0;
+    padding: var(--rip-space-3) var(--rip-space-4);
+    border-top: 1px solid var(--rip-gray-100);
+}
+.rip-protection__route:first-child {
+    border-top: 0;
+}
+.rip-protection__route-name {
+    grid-area: name;
+    font-weight: 600;
+    color: var(--rip-gray-900);
+}
+.rip-protection__route-state {
+    grid-area: state;
+    justify-self: end;
+}
+.rip-protection__route-text {
+    grid-area: text;
+    font-size: var(--rip-text-sm);
+    color: var(--rip-gray-600);
+}
+.rip-protection__route-action {
+    grid-area: action;
+    align-self: end;
+    justify-self: end;
+    font-size: var(--rip-text-sm);
+    font-weight: 600;
+    white-space: nowrap;
+}
+.rip-protection .rip-field-hint {
+    max-width: none;
+}
+.rip-protection__field--row .rip-field-hint {
+    grid-column: 1;
+}
+.rip-protection__snippet {
+    margin: var(--rip-space-3) 0;
+}
+.rip-protection__snippet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--rip-space-3);
+    margin-bottom: var(--rip-space-2);
+}
+.rip-protection__snippet .rip-code-snippet {
+    margin: 0;
+}
+.rip-protection__probe {
+    margin: var(--rip-space-4) 0 var(--rip-space-2);
+}
+.rip-protection__probe-result .rip-table {
+    margin-top: var(--rip-space-3);
+}
+.rip-protection__probe-result code {
+    word-break: break-all;
+}
+.rip-protection__probe-result td:nth-child(2) {
+    min-width: 16rem;
+}
+.rip-protection__snippet .rip-code-snippet code {
+    padding: 0;
+    background: none;
 }
 .rip-protection__desc {
     grid-area: desc;

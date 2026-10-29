@@ -565,17 +565,18 @@ class ReportedIP_Hive_Admin_Firewall {
 		if ( ! class_exists( 'ReportedIP_Hive_Security_Headers' ) ) {
 			return;
 		}
-		$planned = ReportedIP_Hive_Security_Headers::planned_headers();
+		$snippets = ReportedIP_Hive_Security_Headers::server_snippets();
+		$settings = self::tab_url( 'hardening' );
 
-		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Security Headers at the web server (optional)', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
-		echo '<p class="rip-help-text">' . esc_html__( 'Hive already sends the configured headers via PHP on every WordPress response, nothing to do for normal pages. Setting them at the web server additionally covers static files (images, CSS, uploads) that never touch PHP. The snippets mirror the header settings on the Protection Settings page. Optional on Apache and nginx alike: every page WordPress renders is covered without them.', 'reportedip-hive' ) . '</p>';
+		echo '<div class="rip-card"><div class="rip-card__header"><h2>' . esc_html__( 'Security Headers at the web server', 'reportedip-hive' ) . '</h2></div><div class="rip-card__body">';
+		echo '<p class="rip-help-text">' . esc_html__( 'WordPress adds the configured headers only to pages it builds itself. Pages a page cache delivers, images, CSS and uploads go out without them. Set at the web server, they cover every response; this is the most compatible route. Once the configuration is live, switch off "Send security headers" in the Protection Settings, because WordPress cannot see headers the web server sets and would send them a second time.', 'reportedip-hive' ) . '</p>';
 
-		if ( empty( $planned ) ) {
+		if ( '' === $snippets['nginx'] ) {
 			echo '<div class="rip-alert rip-alert--info">';
 			printf(
 				/* translators: 1: opening link tag to the header settings, 2: closing tag. */
 				esc_html__( 'No headers are configured yet. Turn on the security headers on the %1$sProtection Settings page%2$s first, the snippets here update automatically.', 'reportedip-hive' ),
-				'<a href="' . esc_url( self::tab_url( 'hardening' ) ) . '">',
+				'<a href="' . esc_url( $settings ) . '">',
 				'</a>'
 			);
 			echo '</div>';
@@ -583,26 +584,23 @@ class ReportedIP_Hive_Admin_Firewall {
 			return;
 		}
 
-		$nginx_lines  = array();
-		$apache_lines = array();
-		foreach ( $planned as $name => $value ) {
-			$nginx_lines[]  = 'add_header ' . $name . ' "' . str_replace( '"', '\"', $value ) . '" always;';
-			$apache_lines[] = 'Header always set ' . $name . ' "' . str_replace( '"', '\"', $value ) . '"';
-		}
-
 		echo '<details class="rip-form-group"><summary><strong>' . esc_html__( 'Show server snippets (generated from your current header settings)', 'reportedip-hive' ) . '</strong></summary>';
 		self::render_snippet(
 			'rip-headers-snip-nginx',
 			__( 'nginx (server block)', 'reportedip-hive' ),
-			implode( "\n", $nginx_lines ),
-			__( 'When a header is set at the server, Hive detects it and stops sending its own copy, no duplicates.', 'reportedip-hive' )
+			$snippets['nginx']
 		);
 		self::render_snippet(
 			'rip-headers-snip-apache',
 			__( 'Apache (.htaccess or vhost, requires mod_headers)', 'reportedip-hive' ),
-			implode( "\n", $apache_lines )
+			$snippets['apache']
 		);
 		echo '</details>';
+		printf(
+			'<p class="rip-help-text"><a href="%1$s">%2$s</a></p>',
+			esc_url( $settings ),
+			esc_html__( 'Check which headers really arrive: Protection Settings, Security Headers, "Check the headers of the home page".', 'reportedip-hive' )
+		);
 
 		echo '</div></div>';
 	}

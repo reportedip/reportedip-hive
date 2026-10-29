@@ -332,6 +332,24 @@ if ( ! function_exists( 'do_action' ) ) {
 	 * @param mixed  ...$args   Additional arguments which are passed to the functions hooked to the action.
 	 */
 	function do_action( $hook_name, ...$args ) {
+		// Core unwraps a lone argument that is an array holding exactly one
+		// object (back-compat for do_action( 'x', array( &$this ) )). A list
+		// with a single row therefore reaches listeners as the bare object.
+		if ( isset( $args[0] ) && is_array( $args[0] ) && 1 === count( $args[0] ) && isset( $args[0][0] ) && is_object( $args[0][0] ) ) {
+			$args[0] = $args[0][0];
+		}
+		do_action_ref_array( $hook_name, $args );
+	}
+}
+
+if ( ! function_exists( 'do_action_ref_array' ) ) {
+	/**
+	 * Calls the callback functions of an action hook, arguments passed as an array.
+	 *
+	 * @param string $hook_name The name of the action to be executed.
+	 * @param array  $args      Arguments passed to the functions hooked to the action.
+	 */
+	function do_action_ref_array( $hook_name, $args ) {
 		global $wp_actions;
 		if ( ! isset( $wp_actions[ $hook_name ] ) ) {
 			return;

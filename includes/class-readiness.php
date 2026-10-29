@@ -292,6 +292,35 @@ final class ReportedIP_Hive_Readiness {
 	}
 
 	/**
+	 * Advisory: security headers are on, a page cache delivers pages before
+	 * WordPress loads and the guard does not run, so cached pages go out
+	 * without the headers.
+	 *
+	 * The advice follows the server: where Hive can wire the guard itself it
+	 * names Extended protection first, elsewhere the web server configuration.
+	 *
+	 * @param bool $enabled   Security headers master switch.
+	 * @param bool $cache     A page cache drop-in is active.
+	 * @param bool $running   Guard answers requests.
+	 * @param bool $automatic Hive can write the guard directive itself.
+	 * @return array<string,mixed>|null
+	 * @since  3.0.5
+	 */
+	public static function headers_cache_gap( $enabled, $cache, $running, $automatic ) {
+		if ( ! $enabled || ! $cache || $running ) {
+			return null;
+		}
+		return self::issue(
+			'headers_cache_gap',
+			self::SEV_ADVISORY,
+			__( 'Cached pages miss the security headers', 'reportedip-hive' ),
+			$automatic
+				? __( 'A page cache delivers pages before WordPress adds the headers. Switch on Extended protection, it adds them to cached pages too, or set them in the web server configuration.', 'reportedip-hive' )
+				: __( 'A page cache delivers pages before WordPress adds the headers. Copy the generated web server configuration into nginx or Apache, then they reach every page.', 'reportedip-hive' )
+		);
+	}
+
+	/**
 	 * Advisory: the site runs Local Shield.
 	 *
 	 * @param string $mode Operation mode.
@@ -322,19 +351,23 @@ final class ReportedIP_Hive_Readiness {
 	 */
 	public static function score_advisories( array $items ) {
 		$texts = array(
-			'twofa_enforce'    => array(
+			'twofa_enforce'             => array(
 				__( 'Require two-factor sign-in', 'reportedip-hive' ),
 				__( 'A stolen password alone then no longer opens an administrator account. Switch two-factor on and pick the roles that must use it.', 'reportedip-hive' ),
 			),
-			'waf'              => array(
+			'waf'                       => array(
 				__( 'Switch on the firewall', 'reportedip-hive' ),
 				__( 'The firewall refuses SQL injection, script injection and path probing before WordPress handles the request. In test mode it only logs what it would block.', 'reportedip-hive' ),
 			),
-			'security_headers' => array(
+			'security_headers'          => array(
 				__( 'Send security headers', 'reportedip-hive' ),
 				__( 'A few response headers stop browsers from framing your pages and guessing file types. They cost nothing and rarely conflict with a theme.', 'reportedip-hive' ),
 			),
-			'password_hibp'    => array(
+			'security_headers_advanced' => array(
+				__( 'Switch on the advanced security headers', 'reportedip-hive' ),
+				__( 'Your plan includes HSTS, Permissions-Policy and a Content-Security-Policy. HSTS and the Permissions-Policy are the safe start; run the Content-Security-Policy in report-only first.', 'reportedip-hive' ),
+			),
+			'password_hibp'             => array(
 				__( 'Switch on the password policy', 'reportedip-hive' ),
 				__( 'New passwords then need a minimum length and are checked against known leaks, so a reused password does not open the site.', 'reportedip-hive' ),
 			),
@@ -523,6 +556,12 @@ final class ReportedIP_Hive_Readiness {
 			if ( $main_site && 'cli' !== PHP_SAPI ) {
 				$guard    = ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
 				$raised[] = self::dropin_not_running( $guard->supports_auto_install(), $guard->is_running() );
+				$raised[] = self::headers_cache_gap(
+					ReportedIP_Hive_Security_Headers::is_enabled(),
+					ReportedIP_Hive_Security_Headers::page_cache_active(),
+					$guard->is_running(),
+					$guard->supports_auto_install()
+				);
 			}
 			$raised[] = self::community_pending( (string) $mode->get_mode() );
 			if ( class_exists( 'ReportedIP_Hive_Score' ) ) {
@@ -1096,24 +1135,26 @@ final class ReportedIP_Hive_Readiness {
 	 */
 	private static function links() {
 		$links = array(
-			'guard_queue_unwritable' => array( 'reportedip-hive-tools', 'server' ),
-			'cron_stalled'           => array( 'reportedip-hive-debug', '' ),
-			'cron_disabled_stale'    => array( 'reportedip-hive-debug', '' ),
-			'trusted_header_open'    => array( 'reportedip-hive-protection', 'detection' ),
-			'schema_outdated'        => array( 'reportedip-hive-debug', '' ),
-			'api_degraded'           => array( 'reportedip-hive-community', 'community' ),
-			'mail_failures'          => array( 'reportedip-hive-protection', 'notifications' ),
-			'crypto_missing'         => array( 'reportedip-hive-protection', 'account_security' ),
-			'queue_failed'           => array( 'reportedip-hive-security', 'api_queue' ),
-			'queue_backlog'          => array( 'reportedip-hive-security', 'api_queue' ),
-			'hide_login_off'         => array( 'reportedip-hive-protection', 'hide_login' ),
-			'dropin_not_running'     => array( 'reportedip-hive-tools', 'server' ),
-			'community_pending'      => array( 'reportedip-hive-community', 'settings' ),
-			'own_2fa_missing'        => array( 'profile', '' ),
-			'score_twofa_enforce'    => array( 'reportedip-hive-protection', 'account_security' ),
-			'score_waf'              => array( 'reportedip-hive-protection', 'waf' ),
-			'score_security_headers' => array( 'reportedip-hive-protection', 'headers' ),
-			'score_password_hibp'    => array( 'reportedip-hive-protection', 'account_password' ),
+			'guard_queue_unwritable'          => array( 'reportedip-hive-tools', 'server' ),
+			'cron_stalled'                    => array( 'reportedip-hive-debug', '' ),
+			'cron_disabled_stale'             => array( 'reportedip-hive-debug', '' ),
+			'trusted_header_open'             => array( 'reportedip-hive-protection', 'detection' ),
+			'schema_outdated'                 => array( 'reportedip-hive-debug', '' ),
+			'api_degraded'                    => array( 'reportedip-hive-community', 'community' ),
+			'mail_failures'                   => array( 'reportedip-hive-protection', 'notifications' ),
+			'crypto_missing'                  => array( 'reportedip-hive-protection', 'account_security' ),
+			'queue_failed'                    => array( 'reportedip-hive-security', 'api_queue' ),
+			'queue_backlog'                   => array( 'reportedip-hive-security', 'api_queue' ),
+			'hide_login_off'                  => array( 'reportedip-hive-protection', 'hide_login' ),
+			'dropin_not_running'              => array( 'reportedip-hive-tools', 'server' ),
+			'community_pending'               => array( 'reportedip-hive-community', 'settings' ),
+			'own_2fa_missing'                 => array( 'profile', '' ),
+			'score_twofa_enforce'             => array( 'reportedip-hive-protection', 'account_security' ),
+			'score_waf'                       => array( 'reportedip-hive-protection', 'waf' ),
+			'score_security_headers'          => array( 'reportedip-hive-protection', 'headers' ),
+			'score_security_headers_advanced' => array( 'reportedip-hive-protection', 'headers' ),
+			'headers_cache_gap'               => array( 'reportedip-hive-protection', 'headers' ),
+			'score_password_hibp'             => array( 'reportedip-hive-protection', 'account_password' ),
 		);
 
 		foreach ( array_keys( self::form_adapters() ) as $slug ) {

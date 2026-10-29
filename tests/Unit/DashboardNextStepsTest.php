@@ -89,7 +89,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		public function test_step_actions_map_every_advisory_key(): void {
-			foreach ( array( 'hide_login_off', 'dropin_not_running', 'community_pending', 'own_2fa_missing', 'score_twofa_enforce', 'score_waf', 'score_security_headers', 'score_password_hibp' ) as $key ) {
+			foreach ( array( 'hide_login_off', 'dropin_not_running', 'community_pending', 'own_2fa_missing', 'score_twofa_enforce', 'score_waf', 'score_security_headers', 'score_security_headers_advanced', 'headers_cache_gap', 'score_password_hibp' ) as $key ) {
 				$this->assertArrayHasKey( $key, ReportedIP_Hive_Dashboard_Next_Steps::step_actions(), $key );
 			}
 			$this->assertArrayNotHasKey( 'badge_off', ReportedIP_Hive_Dashboard_Next_Steps::step_actions(), 'A credit badge is no security step.' );

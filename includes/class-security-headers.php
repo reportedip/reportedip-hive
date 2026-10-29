@@ -5,9 +5,11 @@
  * Sends a configurable set of response headers on front-end requests: the
  * low-risk basic trio (X-Content-Type-Options, X-Frame-Options,
  * Referrer-Policy) plus whatever an add-on appends through
- * `reportedip_hive_planned_headers`. Headers already set by the server or
- * another plugin are detected via {@see headers_list()} and never
- * overwritten, the conflict is surfaced in the admin status instead.
+ * `reportedip_hive_planned_headers`. Headers another plugin already queued
+ * are detected via {@see headers_list()} and never overwritten. Headers the
+ * web server adds itself are invisible to PHP; {@see probe()} finds them, and
+ * {@see server_snippets()} moves the whole set to the web server, the route
+ * that also covers cached pages and static files.
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -146,6 +148,202 @@ class ReportedIP_Hive_Security_Headers {
 		foreach ( array_keys( self::planned_headers() ) as $name ) {
 			if ( in_array( strtolower( $name ), $present, true ) ) {
 				$out[] = $name;
+			}
+		}
+		return $out;
+	}
+
+	/**
+	 * Security headers the probe reports even when Hive does not plan them,
+	 * so a header the web server sets on its own shows up as well.
+	 *
+	 * @var string[]
+	 */
+	const KNOWN = array(
+		'X-Content-Type-Options',
+		'X-Frame-Options',
+		'Referrer-Policy',
+		'Strict-Transport-Security',
+		'Permissions-Policy',
+		'Content-Security-Policy',
+		'Content-Security-Policy-Report-Only',
+		'Reporting-Endpoints',
+		'Cross-Origin-Opener-Policy',
+		'Cross-Origin-Resource-Policy',
+		'Cross-Origin-Embedder-Policy',
+	);
+
+	/**
+	 * Whether a page cache drop-in is active.
+	 *
+	 * A cache hit is delivered from `advanced-cache.php` before
+	 * `send_headers` fires, so those pages go out without the headers
+	 * WordPress would add.
+	 *
+	 * @return bool
+	 * @since  3.0.5
+	 */
+	public static function page_cache_active() {
+		return defined( 'WP_CACHE' ) && WP_CACHE && defined( 'WP_CONTENT_DIR' ) && file_exists( WP_CONTENT_DIR . '/advanced-cache.php' );
+	}
+
+	/**
+	 * Web server configuration for the planned headers.
+	 *
+	 * The server route covers every response, cached pages and static files
+	 * included, so it is the most compatible one. nginx lines carry `always`
+	 * (error pages too); Apache lines sit inside `IfModule`, so a missing
+	 * mod_headers never turns into a 500, and HSTS is limited to HTTPS.
+	 *
+	 * @return array{nginx:string,apache:string} Empty strings when nothing is planned.
+	 * @since  3.0.5
+	 */
+	public static function server_snippets() {
+		$planned = self::planned_headers();
+		if ( empty( $planned ) ) {
+			return array(
+				'nginx'  => '',
+				'apache' => '',
+			);
+		}
+
+		$nginx  = array(
+			'# ReportedIP Hive: security headers for nginx.',
+			'# Paste into the server { } block that serves HTTPS, then run: nginx -t && systemctl reload nginx',
+			'# A location { } block with its own add_header inherits none of these lines.',
+			'# Repeat them there, or keep them in one file and include it in both places.',
+			'# Afterwards switch off "Send security headers" in Hive, otherwise every header is sent twice.',
+		);
+		$apache = array(
+			'# ReportedIP Hive: security headers for Apache (.htaccess or virtual host).',
+			'# Afterwards switch off "Send security headers" in Hive, otherwise every header is sent twice.',
+			'<IfModule mod_headers.c>',
+		);
+		foreach ( $planned as $name => $value ) {
+			$quoted   = '"' . str_replace( array( '\\', '"' ), array( '\\\\', '\\"' ), $value ) . '"';
+			$nginx[]  = 'add_header ' . $name . ' ' . $quoted . ' always;';
+			$apache[] = "\tHeader always set " . $name . ' ' . $quoted . ( 'Strict-Transport-Security' === $name ? " \"expr=%{HTTPS} == 'on'\"" : '' );
+		}
+		$apache[] = '</IfModule>';
+
+		return array(
+			'nginx'  => implode( "\n", $nginx ),
+			'apache' => implode( "\n", $apache ),
+		);
+	}
+
+	/**
+	 * Fetch the home page twice the way a visitor does (the second time a
+	 * page cache answers) and once past the cache, then judge every header.
+	 *
+	 * Only the site's own address is requested.
+	 *
+	 * @return array{rows:array<string,array{status:string,planned:string,cached:string[],uncached:string[]}>,error:string}
+	 * @since  3.0.5
+	 */
+	public static function probe() {
+		$args = array(
+			'timeout'     => 10,
+			'redirection' => 3,
+			'sslverify'   => apply_filters( 'https_local_ssl_verify', false ), // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound -- core filter for loopback requests, the same one wp-cron uses.
+			'headers'     => array( 'Cache-Control' => 'max-age=0' ),
+		);
+		$home = home_url( '/' );
+
+		wp_remote_get( $home, $args );
+		$cached   = wp_remote_get( $home, $args );
+		$uncached = wp_remote_get( add_query_arg( 'rip-header-check', (string) time(), $home ), $args );
+
+		foreach ( array( $cached, $uncached ) as $response ) {
+			if ( is_wp_error( $response ) ) {
+				return array(
+					'rows'  => array(),
+					'error' => $response->get_error_message(),
+				);
+			}
+		}
+
+		return array(
+			'rows'  => self::evaluate_probe( self::planned_headers(), self::header_values( $cached ), self::header_values( $uncached ) ),
+			'error' => '',
+		);
+	}
+
+	/**
+	 * Judge each header from two responses.
+	 *
+	 * Statuses: `ok` (once, with the planned value, on both paths),
+	 * `missing` (planned, absent everywhere), `missing_cached` (planned,
+	 * absent on the cached page), `duplicate` (sent more than once, usually
+	 * by the server and Hive), `other_value` (one value, not the planned
+	 * one, so something else sets it) and `server_only` (not planned, set by
+	 * the server or another plugin).
+	 *
+	 * @param array<string,string>   $planned  Header name to planned value.
+	 * @param array<string,string[]> $cached   Lower-cased name to values, cached path.
+	 * @param array<string,string[]> $uncached Lower-cased name to values, uncached path.
+	 * @return array<string,array{status:string,planned:string,cached:string[],uncached:string[]}>
+	 * @since  3.0.5
+	 */
+	public static function evaluate_probe( array $planned, array $cached, array $uncached ) {
+		$names = $planned;
+		foreach ( self::KNOWN as $known ) {
+			if ( ! isset( array_change_key_case( $names )[ strtolower( $known ) ] ) ) {
+				$names[ $known ] = null;
+			}
+		}
+
+		$rows = array();
+		foreach ( $names as $name => $want ) {
+			$key = strtolower( (string) $name );
+			$c   = array_values( $cached[ $key ] ?? array() );
+			$u   = array_values( $uncached[ $key ] ?? array() );
+			if ( null === $want && array() === $c && array() === $u ) {
+				continue;
+			}
+			if ( null === $want ) {
+				$status = 'server_only';
+			} elseif ( count( $c ) > 1 || count( $u ) > 1 ) {
+				$status = 'duplicate';
+			} elseif ( array() === $c && array() === $u ) {
+				$status = 'missing';
+			} elseif ( array() === $c ) {
+				$status = 'missing_cached';
+			} elseif ( $c[0] !== $want || ( array() !== $u && $u[0] !== $want ) ) {
+				$status = 'other_value';
+			} else {
+				$status = 'ok';
+			}
+			$rows[ (string) $name ] = array(
+				'status'   => $status,
+				'planned'  => null === $want ? '' : (string) $want,
+				'cached'   => $c,
+				'uncached' => $u,
+			);
+		}
+		return $rows;
+	}
+
+	/**
+	 * Lower-cased header name to every value it was sent with.
+	 *
+	 * @param array|WP_Error $response HTTP API response.
+	 * @return array<string,string[]>
+	 * @since  3.0.5
+	 */
+	private static function header_values( $response ) {
+		$headers = wp_remote_retrieve_headers( $response );
+		$out     = array();
+		if ( is_array( $headers ) ) {
+			$headers = array_change_key_case( $headers );
+		}
+		if ( ! is_array( $headers ) && ! ( $headers instanceof ArrayAccess ) ) {
+			return $out;
+		}
+		foreach ( self::KNOWN as $name ) {
+			$key = strtolower( $name );
+			if ( isset( $headers[ $key ] ) ) {
+				$out[ $key ] = array_map( 'trim', array_map( 'strval', (array) $headers[ $key ] ) );
 			}
 		}
 		return $out;

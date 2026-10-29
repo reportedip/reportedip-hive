@@ -3,8 +3,9 @@
  * on/off text next to a switch, a row that follows another switch
  * (`data-depends`), the preset coupling, two guards (an invalid field
  * inside a closed details block, the reset confirmation) and the marker on
- * the section list that follows the scroll position.
- * No server roundtrip; everything the filter needs is in `data-search`.
+ * the section list that follows the scroll position, the copy buttons of
+ * the server configuration and the header check (the only server roundtrip;
+ * everything the filter needs is in `data-search`).
  *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
@@ -224,4 +225,58 @@
 		});
 		markSection();
 	}
+	root.querySelectorAll('a[href^="#"]').forEach(function (link) {
+		var target = document.getElementById(link.getAttribute('href').slice(1));
+		if (!target || 'DETAILS' !== target.tagName) {
+			return;
+		}
+		link.addEventListener('click', function (event) {
+			event.preventDefault();
+			target.open = true;
+			target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+			target.querySelector('summary').focus();
+		});
+	});
+
+	root.querySelectorAll('[data-rip-copy-target]').forEach(function (button) {
+		button.addEventListener('click', function () {
+			var target = document.getElementById(button.dataset.ripCopyTarget);
+			if (!target || !navigator.clipboard) {
+				return;
+			}
+			navigator.clipboard.writeText(target.textContent).then(function () {
+				var label = button.textContent;
+				button.textContent = button.dataset.copied;
+				window.setTimeout(function () {
+					button.textContent = label;
+				}, 2000);
+			});
+		});
+	});
+
+	root.querySelectorAll('[data-rip-header-check]').forEach(function (button) {
+		var out = button.parentNode.querySelector('.rip-protection__probe-result');
+		button.addEventListener('click', function () {
+			var label = button.textContent;
+			var body = new FormData();
+			body.append('action', 'reportedip_hive_header_check');
+			body.append('nonce', button.dataset.ripHeaderCheck);
+			button.disabled = true;
+			button.textContent = button.dataset.busy;
+			fetch(button.dataset.ajax, { method: 'POST', credentials: 'same-origin', body: body })
+				.then(function (response) {
+					return response.json();
+				})
+				.then(function (json) {
+					out.innerHTML = json && json.success ? json.data.html : '';
+				})
+				.catch(function () {
+					out.textContent = '';
+				})
+				.then(function () {
+					button.disabled = false;
+					button.textContent = label;
+				});
+		});
+	});
 })();

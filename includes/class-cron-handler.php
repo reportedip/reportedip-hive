@@ -311,10 +311,13 @@ class ReportedIP_Hive_Cron_Handler {
 				 *
 				 * Listeners must catch their own exceptions; a throwing listener aborts the rest of this run.
 				 *
+				 * Fired with do_action_ref_array(): do_action() would unwrap a list
+				 * holding a single row into the bare object.
+				 *
 				 * @param array $attacks Rows from Security_Monitor::check_coordinated_attacks().
 				 * @since 3.0.0
 				 */
-				do_action( 'reportedip_hive_coordinated_attacks_found', $coordinated_attacks );
+				do_action_ref_array( 'reportedip_hive_coordinated_attacks_found', array( $coordinated_attacks ) );
 			}
 		} catch ( \Throwable $e ) {
 			$this->logger->critical( 'Reputation sync failed: ' . $e->getMessage(), 'system' );

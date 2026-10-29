@@ -21,6 +21,13 @@ namespace {
 	require_once dirname( __DIR__, 2 ) . '/includes/class-form-adapters.php';
 	require_once dirname( __DIR__, 2 ) . '/includes/class-mode-manager.php';
 	require_once dirname( __DIR__, 2 ) . '/admin/class-admin-settings.php';
+	require_once dirname( __DIR__, 2 ) . '/includes/class-security-headers.php';
+
+	if ( ! function_exists( 'wp_create_nonce' ) ) {
+		function wp_create_nonce( $action = -1 ) {
+			return 'nonce-' . md5( (string) $action );
+		}
+	}
 }
 
 namespace ReportedIP\Hive\Tests\Unit {
@@ -838,6 +845,76 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( 'Contact Form 7 is not active on this site.', $missing, 'a missing form plugin is named in the details' );
 		}
 
+		public function test_the_headers_section_explains_the_three_routes_and_offers_the_server_configuration(): void {
+			list( $current, $statuses, $choices ) = $this->section_fixture();
+
+			$off = ReportedIP_Hive_Protection_Page::section_markup( 'headers', $current, $statuses, false, array(), array(), $choices );
+			$this->assertStringContainsString( '<h2 class="rip-protection__title">', $off, 'a section title is a heading' );
+			$this->assertLessThan( strpos( $off, '<details' ), strpos( $off, 'class="rip-protection__route-list"' ), 'the routes are shown in simple mode too' );
+			$this->assertStringContainsString( '#rip-waf-dropin">Switch on</a>', $off, 'Extended protection links to its switch' );
+			$this->assertStringContainsString( 'href="#rip-headers-tools"', $off );
+			$this->assertStringContainsString( 'id="rip-headers-tools"', $off );
+			$this->assertStringContainsString( 'data-rip-header-check="nonce-', $off );
+			$this->assertStringContainsString( 'Switch on &quot;Send security headers&quot; and save', $off );
+			$this->assertStringContainsString( '<p class="rip-field-hint">Example: <code>X-Frame-Options: SAMEORIGIN</code></p>', $off );
+
+			update_option( 'reportedip_hive_headers_enabled', true );
+			$on = ReportedIP_Hive_Protection_Page::section_markup( 'headers', $current, $statuses, false, array(), array(), $choices );
+			$this->assertStringContainsString( 'id="rip-headers-conf-nginx"', $on );
+			$this->assertStringContainsString( 'add_header X-Content-Type-Options &quot;nosniff&quot; always;', $on );
+			$this->assertStringContainsString( 'id="rip-headers-conf-apache"', $on );
+			delete_option( 'reportedip_hive_headers_enabled' );
+		}
+
+		public function test_an_example_becomes_the_placeholder_of_a_text_field(): void {
+			$html = ReportedIP_Hive_Protection_Page::field_markup(
+				'reportedip_hive_csp_policy',
+				array(
+					'kind'    => 'textarea',
+					'label'   => 'Content-Security-Policy',
+					'example' => "default-src 'self'",
+				),
+				'',
+				array( 'available' => true )
+			);
+			$this->assertStringContainsString( 'placeholder="default-src &#039;self&#039;"', $html );
+			$this->assertStringContainsString( '<code>default-src &#039;self&#039;</code>', $html );
+		}
+
+		public function test_the_header_check_names_the_problem_and_the_fix(): void {
+			$html = ReportedIP_Hive_Protection_Page::header_check_markup(
+				array(
+					'rows'  => array(
+						'Referrer-Policy'    => array(
+							'status'   => 'duplicate',
+							'planned'  => 'strict-origin-when-cross-origin',
+							'cached'   => array( 'no-referrer-when-downgrade', 'strict-origin-when-cross-origin' ),
+							'uncached' => array(),
+						),
+						'Permissions-Policy' => array(
+							'status'   => 'missing_cached',
+							'planned'  => 'camera=()',
+							'cached'   => array(),
+							'uncached' => array( 'camera=()' ),
+						),
+					),
+					'error' => '',
+				)
+			);
+			$this->assertStringContainsString( 'rip-badge--danger', $html );
+			$this->assertStringContainsString( 'Missing on cached pages', $html );
+			$this->assertStringContainsString( 'copy the server configuration above', $html );
+			$this->assertStringContainsString( 'The web server already sets some headers', $html );
+
+			$error = ReportedIP_Hive_Protection_Page::header_check_markup(
+				array(
+					'rows'  => array(),
+					'error' => 'cURL error 28',
+				)
+			);
+			$this->assertStringContainsString( 'rip-alert--error', $error );
+		}
+
 		public function test_section_markup_renders_every_key_of_the_section(): void {
 			list( $current, $statuses, $choices ) = $this->section_fixture();
 			foreach ( array_keys( \ReportedIP_Hive_Settings_Registry::sections() ) as $section ) {
@@ -845,6 +922,22 @@ namespace ReportedIP\Hive\Tests\Unit {
 				foreach ( ReportedIP_Hive_Protection_Page::visible_keys( $section, true, array() ) as $key ) {
 					$this->assertStringContainsString( 'name="' . $key, $html, "{$section} does not render {$key}" );
 				}
+			}
+		}
+
+		public function test_an_alert_keeps_its_content_in_one_column(): void {
+			$css = (string) file_get_contents( dirname( __DIR__, 2 ) . '/assets/css/design-system.css' );
+			$this->assertMatchesRegularExpression( '/\n\.rip-alert \{[^}]*display: block;/s', $css, 'loose text, links and lists in an alert flow one below the other' );
+			$this->assertMatchesRegularExpression( '/\.rip-alert:has\(> \.rip-alert__icon\) \{[^}]*display: flex;/s', $css, 'only an alert with an icon is a row' );
+
+			$rules = array();
+			preg_match_all( '/([^{}]*\.rip-alert[^{}]*)\{([^}]*)\}/', $css, $rules, PREG_SET_ORDER );
+			foreach ( $rules as $rule ) {
+				$selector = trim( $rule[1] );
+				if ( ! preg_match( '/\.rip-alert(--[a-z]+)?(\s*,|\s*$|[.:\s][^_])/', $selector ) || false !== strpos( $selector, ':has(' ) ) {
+					continue;
+				}
+				$this->assertDoesNotMatchRegularExpression( '/display:\s*(flex|grid|inline-flex)/', $rule[2], "{$selector} turns an alert into columns" );
 			}
 		}
 

@@ -65,7 +65,7 @@ Both layers are fail-open: a broken rule or an unwritable directory lets the req
 
 ## Access lockdown
 
-Each a switch: the REST API for signed-in users or chosen roles, XML-RPC and pingbacks, feeds, wp-admin for guests, PHP execution in uploads and software version fingerprints. Basic security headers come on top.
+Each a switch: the REST API for signed-in users or chosen roles, XML-RPC and pingbacks, feeds, wp-admin for guests, PHP execution in uploads and software version fingerprints. Basic security headers come on top, with a generated nginx and Apache configuration and a check of what really arrives on cached and uncached pages.
 
 ## Notifications
 

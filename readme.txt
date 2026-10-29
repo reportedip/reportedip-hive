@@ -4,7 +4,7 @@ Tags: security, firewall, brute-force, 2fa, anti-spam
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 3.0.4
+Stable tag: 3.0.5
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -66,7 +66,7 @@ ReportedIP Hive replaces a CAPTCHA with checks the visitor never sees. No puzzle
 * XML-RPC and pingbacks off with one switch.
 * REST API for signed-in users or chosen roles only.
 * Feeds, wp-admin for guests, PHP execution in the uploads folder and software version fingerprints, each a switch.
-* Security headers: X-Content-Type-Options, X-Frame-Options and Referrer-Policy.
+* Security headers: X-Content-Type-Options, X-Frame-Options and Referrer-Policy, with an example and a plain explanation for each, a generated nginx and Apache configuration and a check that shows which headers really reach a visitor, cached pages included.
 * Protection score and a readiness check that lists what still needs attention.
 
 = Activity log and operations =
@@ -221,6 +221,14 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 
 == Changelog ==
 
+= 3.0.5 =
+* Security headers: a header check shows per header whether it arrives, is missing on cached pages or arrives twice.
+* nginx and Apache configuration for the configured headers next to the settings, with copy buttons.
+* With Extended protection on, pages a caching plugin delivers through PHP carry the security headers too.
+* Every security header explains what it protects against, the recommended value and what it can break, with an example.
+* Protection Settings sections sit in framed blocks; notices keep their text in one column.
+* Next steps suggest the advanced security headers where the plan includes them and name cached pages without headers.
+
 = 3.0.4 =
 * Clearer page names: Protection Settings, Server & Maintenance (always in the menu) and Community & Key with the Community Access Key on its first tab.
 * Protection Settings keeps label and switch together on wide screens and lists the sections of each tab.
@@ -259,6 +267,9 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 * Database schema 25.
 
 == Upgrade Notice ==
+
+= 3.0.5 =
+Using a page cache such as WP Rocket? Run the new header check under Protection Settings, Firewall, Security Headers; cached pages may miss the headers.
 
 = 3.0.4 =
 Pages renamed: Protection Settings, Server & Maintenance and Community & Key (holds the Community Access Key). Nothing to do.

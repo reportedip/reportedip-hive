@@ -168,7 +168,12 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 			),
 		);
 
-		foreach ( array( 'twofa_enforce', 'waf', 'security_headers', 'password_hibp' ) as $item ) {
+		$actions['headers_cache_gap'] = array(
+			'label' => __( 'Open the setting', 'reportedip-hive' ),
+			'write' => false,
+		);
+
+		foreach ( array( 'twofa_enforce', 'waf', 'security_headers', 'security_headers_advanced', 'password_hibp' ) as $item ) {
 			$actions[ 'score_' . $item ] = array(
 				'label' => __( 'Open the setting', 'reportedip-hive' ),
 				'write' => false,

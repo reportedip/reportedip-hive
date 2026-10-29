@@ -131,6 +131,34 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertNull( ReportedIP_Hive_Readiness::dropin_not_running( false, false ), 'no supported server' );
 		}
 
+		public function test_cached_pages_without_headers_are_named_with_the_route_the_server_allows(): void {
+			$auto = ReportedIP_Hive_Readiness::headers_cache_gap( true, true, false, true );
+			$this->assertSame( 'headers_cache_gap', $auto['key'] );
+			$this->assertSame( ReportedIP_Hive_Readiness::SEV_ADVISORY, $auto['severity'] );
+			$this->assertStringContainsString( 'Switch on Extended protection', $auto['message'] );
+
+			$manual = ReportedIP_Hive_Readiness::headers_cache_gap( true, true, false, false );
+			$this->assertStringContainsString( 'web server configuration into nginx or Apache', $manual['message'] );
+
+			$this->assertNull( ReportedIP_Hive_Readiness::headers_cache_gap( false, true, false, true ), 'headers off: the score step asks for them' );
+			$this->assertNull( ReportedIP_Hive_Readiness::headers_cache_gap( true, false, false, true ), 'no page cache' );
+			$this->assertNull( ReportedIP_Hive_Readiness::headers_cache_gap( true, true, true, true ), 'the guard sends them' );
+		}
+
+		public function test_the_advanced_headers_are_suggested_only_where_the_plan_has_them(): void {
+			$row = static function ( bool $available ): array {
+				return array(
+					'key'       => 'security_headers_advanced',
+					'weight'    => 6,
+					'present'   => true,
+					'available' => $available,
+					'enabled'   => false,
+				);
+			};
+			$this->assertSame( array( 'score_security_headers_advanced' ), array_column( ReportedIP_Hive_Readiness::score_advisories( array( $row( true ) ) ), 'key' ) );
+			$this->assertSame( array(), ReportedIP_Hive_Readiness::score_advisories( array( $row( false ) ) ), 'a plan without the feature gets no suggestion' );
+		}
+
 		public function test_own_2fa_missing_is_a_user_issue(): void {
 			$issue = ReportedIP_Hive_Readiness::own_2fa_missing( true, array() );
 			$this->assertSame( 'own_2fa_missing', $issue['key'] );

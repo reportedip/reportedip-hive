@@ -78,7 +78,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	/**
 	 * Generated-guard format version (bump to force a self-heal regenerate).
 	 */
-	const DROPIN_VERSION = 9;
+	const DROPIN_VERSION = 10;
 
 	/**
 	 * Blocklist header magic. Format v1:
@@ -203,6 +203,10 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 			add_action( 'update_option_' . $opt, array( $this, 'queue_resync' ) );
 			add_action( 'update_site_option_' . $opt, array( $this, 'queue_resync' ) );
 		}
+		add_action( 'updated_option', array( $this, 'on_option_updated' ) );
+		add_action( 'update_site_option', array( $this, 'on_option_updated' ) );
+		add_action( 'activated_plugin', array( $this, 'queue_resync' ) );
+		add_action( 'deactivated_plugin', array( $this, 'queue_resync' ) );
 		add_action( 'admin_init', array( $this, 'maybe_self_heal' ) );
 		add_action( 'admin_init', array( $this, 'maybe_drain_queue' ) );
 		add_action( 'reportedip_hive_process_queue', array( $this, 'run_scheduled_drain' ) );
@@ -218,6 +222,25 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 */
 	public function on_ruleset_applied( $key ) {
 		if ( 'waf' === $key ) {
+			$this->queue_resync();
+		}
+	}
+
+	/**
+	 * Rebake when a security-header setting changes, the free keys and the
+	 * add-on's alike: the guard carries the planned headers.
+	 *
+	 * @param string $option Option name.
+	 * @return void
+	 * @since  3.0.5
+	 */
+	public function on_option_updated( $option ) {
+		$option = (string) $option;
+		if ( 0 !== strpos( $option, 'reportedip_hive_' ) || ! class_exists( 'ReportedIP_Hive_Settings_Registry' ) ) {
+			return;
+		}
+		$spec = ReportedIP_Hive_Settings_Registry::spec();
+		if ( 'headers' === ( $spec[ $option ]['section'] ?? '' ) ) {
 			$this->queue_resync();
 		}
 	}
@@ -1015,6 +1038,25 @@ if ( ! function_exists( 'reportedip_hive_dropin_refuse' ) ) {
 		exit;
 	}
 }
+if ( ! function_exists( 'reportedip_hive_dropin_header_lines' ) ) {
+	/* The security headers WordPress would add on send_headers, sent here so a
+	   page served from a cache drop-in carries them too. Front-end requests
+	   only (the front controller outside wp-admin, the same scope as
+	   send_headers); HSTS only over HTTPS, the same test as is_ssl(). */
+	function reportedip_hive_dropin_header_lines( $headers, $server ) {
+		if ( ! is_array( $headers ) || array() === $headers ) { return array(); }
+		$script = isset( $server['SCRIPT_FILENAME'] ) ? str_replace( chr( 92 ), '/', (string) $server['SCRIPT_FILENAME'] ) : '';
+		if ( 'index.php' !== basename( $script ) || false !== strpos( $script, '/wp-admin/' ) ) { return array(); }
+		$https = ( isset( $server['HTTPS'] ) && ( '1' === (string) $server['HTTPS'] || 'on' === strtolower( (string) $server['HTTPS'] ) ) )
+			|| ( isset( $server['SERVER_PORT'] ) && '443' === (string) $server['SERVER_PORT'] );
+		$lines = array();
+		foreach ( $headers as $name => $value ) {
+			if ( 'Strict-Transport-Security' === $name && ! $https ) { continue; }
+			$lines[] = $name . ': ' . $value;
+		}
+		return $lines;
+	}
+}
 if ( ! function_exists( 'reportedip_hive_dropin_has_login_cookie' ) ) {
 	function reportedip_hive_dropin_has_login_cookie( $cookies ) {
 		if ( ! is_array( $cookies ) ) { return false; }
@@ -1032,6 +1074,17 @@ if ( ! function_exists( 'reportedip_hive_dropin_request_has_body' ) ) {
 		$method = isset( $server['REQUEST_METHOD'] ) ? strtoupper( (string) $server['REQUEST_METHOD'] ) : 'GET';
 		return ! in_array( $method, array( 'GET', 'HEAD', 'OPTIONS' ), true );
 	}
+}
+
+try {
+	if ( ! headers_sent() ) {
+		foreach ( reportedip_hive_dropin_header_lines( __RIP_HEADERS__, $_SERVER ) as $reportedip_hive_line ) {
+			header( $reportedip_hive_line );
+		}
+		unset( $reportedip_hive_line );
+	}
+} catch ( \Throwable $e ) {
+	unset( $e );
 }
 
 (function () {
@@ -1174,10 +1227,11 @@ PHP;
 		$queue_export = var_export( $this->queue_path(), true );     // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the queue path literal into a generated PHP file, not debugging.
 		$block_export = var_export( $this->blocklist_path(), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the blocklist path literal into a generated PHP file, not debugging.
 		$cidr_export  = var_export( array_values( $this->blocked_cidr_snapshot() ), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the literal CIDR blocklist into a generated PHP file, not debugging.
+		$hdr_export   = var_export( class_exists( 'ReportedIP_Hive_Security_Headers' ) ? ReportedIP_Hive_Security_Headers::planned_headers() : array(), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the planned security headers into a generated PHP file, not debugging.
 
 		return str_replace(
-			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_EXCEPTIONS__', '__RIP_TRUSTED_HEADER__', '__RIP_TRUSTED_RANGES__', '__RIP_ENGINE_ENABLED__', '__RIP_REPORT_ONLY__', '__RIP_SKIP_AUTHED__', '__RIP_BODY_NEEDED__', '__RIP_QUEUE_MAX__', '__RIP_QUEUE__', '__RIP_BLOCKED_CIDR__', '__RIP_BLOCKLIST__' ),
-			array( (string) $version, $rules_export, $wl_export, $ex_export, $header_export, $ranges_export, $engine_export, $report_export, $skip_export, $body_needed_export, (string) self::QUEUE_MAX_BYTES, $queue_export, $cidr_export, $block_export ),
+			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_EXCEPTIONS__', '__RIP_TRUSTED_HEADER__', '__RIP_TRUSTED_RANGES__', '__RIP_ENGINE_ENABLED__', '__RIP_REPORT_ONLY__', '__RIP_SKIP_AUTHED__', '__RIP_BODY_NEEDED__', '__RIP_QUEUE_MAX__', '__RIP_QUEUE__', '__RIP_BLOCKED_CIDR__', '__RIP_BLOCKLIST__', '__RIP_HEADERS__' ),
+			array( (string) $version, $rules_export, $wl_export, $ex_export, $header_export, $ranges_export, $engine_export, $report_export, $skip_export, $body_needed_export, (string) self::QUEUE_MAX_BYTES, $queue_export, $cidr_export, $block_export, $hdr_export ),
 			$template
 		);
 	}

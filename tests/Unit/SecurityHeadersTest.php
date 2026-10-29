@@ -17,8 +17,18 @@
  * @since      2.1.2
  */
 
+namespace {
+	if ( ! function_exists( 'wp_remote_retrieve_headers' ) ) {
+		function wp_remote_retrieve_headers( $response ) {
+			return is_array( $response ) ? ( $response['headers'] ?? array() ) : array();
+		}
+	}
+}
+
 namespace ReportedIP\Hive\Tests\Unit {
 
+	use ArrayObject;
+	use ReflectionMethod;
 	use ReportedIP\Hive\Tests\TestCase;
 
 	require_once dirname( __DIR__, 2 ) . '/includes/class-option-routing.php';
@@ -128,6 +138,94 @@ namespace ReportedIP\Hive\Tests\Unit {
 				function () {
 					$this->assertSame( array(), \ReportedIP_Hive_Security_Headers::planned_headers() );
 				}
+			);
+		}
+
+		public function test_server_snippets_are_empty_while_nothing_is_planned(): void {
+			$this->assertSame(
+				array(
+					'nginx'  => '',
+					'apache' => '',
+				),
+				\ReportedIP_Hive_Security_Headers::server_snippets()
+			);
+		}
+
+		public function test_server_snippets_cover_error_pages_and_survive_a_missing_module(): void {
+			update_option( 'reportedip_hive_headers_enabled', true );
+			$this->with_filter(
+				static function ( $headers ) {
+					$headers['Strict-Transport-Security'] = 'max-age=31536000';
+					$headers['X-Quote']                   = 'a "b" c\\d';
+					return $headers;
+				},
+				function () {
+					$s = \ReportedIP_Hive_Security_Headers::server_snippets();
+					$this->assertStringContainsString( 'add_header X-Content-Type-Options "nosniff" always;', $s['nginx'] );
+					$this->assertStringContainsString( 'add_header X-Quote "a \\"b\\" c\\\\d" always;', $s['nginx'] );
+					$this->assertStringContainsString( '<IfModule mod_headers.c>', $s['apache'] );
+					$this->assertStringEndsWith( '</IfModule>', $s['apache'] );
+					$this->assertStringContainsString( "Header always set Strict-Transport-Security \"max-age=31536000\" \"expr=%{HTTPS} == 'on'\"", $s['apache'] );
+					$this->assertStringContainsString( 'Header always set Referrer-Policy "strict-origin-when-cross-origin"' . "\n", $s['apache'] );
+				}
+			);
+		}
+
+		public function test_probe_judges_every_header_against_the_plan(): void {
+			$rows = \ReportedIP_Hive_Security_Headers::evaluate_probe(
+				array(
+					'X-Content-Type-Options'  => 'nosniff',
+					'X-Frame-Options'         => 'SAMEORIGIN',
+					'Referrer-Policy'         => 'strict-origin-when-cross-origin',
+					'Permissions-Policy'      => 'camera=()',
+					'Content-Security-Policy' => "default-src 'self'",
+				),
+				array(
+					'x-content-type-options'    => array( 'nosniff' ),
+					'x-frame-options'           => array( 'SAMEORIGIN', 'SAMEORIGIN' ),
+					'referrer-policy'           => array( 'no-referrer-when-downgrade' ),
+					'strict-transport-security' => array( 'max-age=4838400' ),
+				),
+				array(
+					'x-content-type-options'    => array( 'nosniff' ),
+					'x-frame-options'           => array( 'SAMEORIGIN' ),
+					'referrer-policy'           => array( 'no-referrer-when-downgrade' ),
+					'permissions-policy'        => array( 'camera=()' ),
+					'strict-transport-security' => array( 'max-age=4838400' ),
+				)
+			);
+
+			$this->assertSame( 'ok', $rows['X-Content-Type-Options']['status'] );
+			$this->assertSame( 'duplicate', $rows['X-Frame-Options']['status'] );
+			$this->assertSame( 'other_value', $rows['Referrer-Policy']['status'] );
+			$this->assertSame( 'missing_cached', $rows['Permissions-Policy']['status'] );
+			$this->assertSame( 'missing', $rows['Content-Security-Policy']['status'] );
+			$this->assertSame( 'server_only', $rows['Strict-Transport-Security']['status'] );
+			$this->assertArrayNotHasKey( 'Cross-Origin-Opener-Policy', $rows, 'a header nobody sends and nobody plans is not listed' );
+		}
+
+		public function test_header_values_read_the_dictionary_the_http_api_returns(): void {
+			$read = new ReflectionMethod( \ReportedIP_Hive_Security_Headers::class, 'header_values' );
+
+			$dictionary = new ArrayObject(
+				array(
+					'referrer-policy' => array( 'no-referrer-when-downgrade', 'strict-origin-when-cross-origin' ),
+					'x-frame-options' => 'SAMEORIGIN',
+					'content-type'    => 'text/html',
+				)
+			);
+			$this->assertSame(
+				array(
+					'x-frame-options' => array( 'SAMEORIGIN' ),
+					'referrer-policy' => array( 'no-referrer-when-downgrade', 'strict-origin-when-cross-origin' ),
+				),
+				$read->invoke( null, array( 'headers' => $dictionary ) ),
+				'an object with array access, duplicates as a list'
+			);
+			$this->assertSame(
+				array( 'x-content-type-options' => array( 'nosniff' ) ),
+				$read->invoke( null, array( 'headers' => array( 'X-Content-Type-Options' => ' nosniff ' ) ) ),
+				'a plain array with any case'
 			);
 		}
 
