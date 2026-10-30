@@ -297,6 +297,8 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 		$lines[]     = '    RewriteEngine On';
 		$lines[]     = '    RewriteCond %{REQUEST_URI} ^(/[_0-9a-zA-Z-]+)?/(' . $alternation . ')$ [NC]';
 		$lines[]     = '    RewriteRule ^ /index.php [L,QSA]';
+		$lines[]     = '    RewriteCond %{REQUEST_URI} /wp-content/upgrade(-temp-backup)?/.+\.php$ [NC]';
+		$lines[]     = '    RewriteRule ^ /index.php [L,QSA]';
 		$lines[]     = '</IfModule>';
 		return $lines;
 	}
@@ -332,6 +334,7 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 		$lines[]     = 'location ~* ^(/[_0-9a-zA-Z-]+)?/(' . $alternation . ')$ {';
 		$lines[]     = '    rewrite ^ /index.php last;';
 		$lines[]     = '}';
+		$lines       = array_merge( $lines, self::nginx_upgrade_staging_lines() );
 		return implode( "\n", $lines ) . "\n";
 	}
 
@@ -351,7 +354,30 @@ final class ReportedIP_Hive_Decoy_Path_Block {
 		foreach ( self::decoy_paths() as $path ) {
 			$lines[] = 'location = ' . $path . ' { rewrite ^ /index.php last; }';
 		}
+		$lines = array_merge( $lines, self::nginx_upgrade_staging_lines() );
 		return implode( "\n", $lines ) . "\n";
+	}
+
+	/**
+	 * nginx lines that hand the core updater's staging folders to WordPress.
+	 *
+	 * Before WordPress 7.1.4 an unpacked core package under
+	 * `wp-content/upgrade/` could be reached mid-update and its
+	 * `setup-config.php` run against a foreign database. That copy boots
+	 * from its own files, so no plugin sees the request unless the server
+	 * routes it to the real `index.php`, where the WAF rule
+	 * `waf_wp_upgrade_staging` blocks, bans and reports the source. `^~`
+	 * prefix locations win over every regex location, so a host template
+	 * with an earlier `location ~ \.php$` cannot shadow them.
+	 *
+	 * @return string[]
+	 * @since  3.0.6
+	 */
+	private static function nginx_upgrade_staging_lines() {
+		return array(
+			'location ^~ /wp-content/upgrade/ { rewrite ^ /index.php last; }',
+			'location ^~ /wp-content/upgrade-temp-backup/ { rewrite ^ /index.php last; }',
+		);
 	}
 
 	/**

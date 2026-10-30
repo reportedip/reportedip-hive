@@ -139,6 +139,14 @@ return array(
 			'target'   => 'uri',
 		),
 		array(
+			'id'       => 'waf_wp_upgrade_staging',
+			'group'    => 'file_probe',
+			'pattern'  => '(?i)/wp-content/upgrade(?:-temp-backup)?/[^?#\s]*\.php',
+			'paranoia' => 1,
+			'severity' => 'critical',
+			'target'   => 'uri',
+		),
+		array(
 			'id'       => 'waf_cmd_inject',
 			'group'    => 'cmd_injection',
 			'pattern'  => '(?i)[;|`]\s*(?:cat|wget|curl|nc|bash|sh|powershell|whoami|id)\b',

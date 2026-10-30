@@ -126,6 +126,28 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( '\.env\.backup', $snippet );
 		}
 
+		public function test_upgrade_staging_is_routed_to_wordpress_and_matched_by_baseline() {
+			$combined = implode( "\n", \ReportedIP_Hive_Decoy_Path_Block::htaccess_block_lines() );
+			$this->assertStringContainsString( 'RewriteCond %{REQUEST_URI} /wp-content/upgrade(-temp-backup)?/.+\.php$ [NC]', $combined );
+			$this->assertStringContainsString( 'location ^~ /wp-content/upgrade/ { rewrite ^ /index.php last; }', \ReportedIP_Hive_Decoy_Path_Block::nginx_snippet() );
+			$this->assertStringContainsString( 'location ^~ /wp-content/upgrade/ { rewrite ^ /index.php last; }', \ReportedIP_Hive_Decoy_Path_Block::nginx_snippet_exact_match() );
+
+			$baseline = require dirname( __DIR__, 2 ) . '/data/rulesets/waf-baseline.php';
+			$rule     = null;
+			foreach ( $baseline['rules'] as $candidate ) {
+				if ( 'waf_wp_upgrade_staging' === $candidate['id'] ) {
+					$rule = $candidate;
+				}
+			}
+			$this->assertNotNull( $rule );
+			$regex = '~' . $rule['pattern'] . '~';
+			$this->assertSame( 1, preg_match( $regex, '/wp-content/upgrade/wordpress-7.1.3-a1b2c3/wordpress/wp-admin/setup-config.php?step=2' ) );
+			$this->assertSame( 1, preg_match( $regex, '/blog/wp-content/upgrade/wordpress-7.1-de_DE-Xy12ab/wordpress/wp-admin/install.php' ) );
+			$this->assertSame( 0, preg_match( $regex, '/wp-content/upgrade/' ) );
+			$this->assertSame( 0, preg_match( $regex, '/wp-content/uploads/2026/10/photo.jpg' ) );
+			$this->assertSame( 0, preg_match( $regex, '/?s=wp-content/upgrade/x.php' ) );
+		}
+
 		public function test_nginx_exact_match_snippet_emits_one_location_per_path() {
 			$snippet = \ReportedIP_Hive_Decoy_Path_Block::nginx_snippet_exact_match();
 			$this->assertStringContainsString( 'location = /.env.backup { rewrite ^ /index.php last; }', $snippet );

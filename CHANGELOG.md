@@ -2,6 +2,14 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [3.0.6] - 2026-10-30
+
+### Security
+
+- The firewall blocks requests for PHP files in the core updater's staging folders (`wp-content/upgrade/`, `wp-content/upgrade-temp-backup/`). Before WordPress 7.1.4 an unpacked core package there could be reached during an update and its installer run against a foreign database. The source is banned on the first hit and shared with the community.
+- On Apache the decoy block in the root `.htaccess` now routes these requests to WordPress, so the firewall sees them even while an update runs. The nginx snippets on the Firewall page carry the matching `location ^~` lines.
+- The rule is part of the bundled baseline, so sites without a rule feed connection are covered too.
+
 ## [3.0.5] - 2026-10-29
 
 ### New

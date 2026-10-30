@@ -4,7 +4,7 @@ Tags: security, firewall, brute-force, 2fa, anti-spam
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 3.0.5
+Stable tag: 3.0.6
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -221,6 +221,10 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 
 == Changelog ==
 
+= 3.0.6 =
+* Security: the firewall blocks requests for PHP files in the core updater's staging folders (WordPress updater race fixed in 7.1.4) and bans the source on the first hit.
+* On Apache the root .htaccess routes these requests to WordPress, so they are blocked even during an update; nginx snippets carry the matching lines.
+
 = 3.0.5 =
 * Security headers: a header check shows per header whether it arrives, is missing on cached pages or arrives twice.
 * nginx and Apache configuration for the configured headers next to the settings, with copy buttons.
@@ -267,6 +271,9 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 * Database schema 25.
 
 == Upgrade Notice ==
+
+= 3.0.6 =
+Security update: blocks attacks on the WordPress core updater staging folder. Update WordPress to 7.1.4 too. On nginx, add the new lines from Protection Settings, Firewall.
 
 = 3.0.5 =
 Using a page cache such as WP Rocket? Run the new header check under Protection Settings, Firewall, Security Headers; cached pages may miss the headers.
