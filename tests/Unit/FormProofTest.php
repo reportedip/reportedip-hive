@@ -262,6 +262,20 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * An unused-CSS remover empties the inline style block. The anchor has
+		 * to stay off-screen on its own, through an attribute the shared
+		 * allowlist lets pass. The real kses run is in
+		 * {@see ReportedIP_Hive_Optimizer_Compat_Multisite_Test}.
+		 */
+		public function test_anchor_hides_itself_without_the_style_block(): void {
+			$markup = \ReportedIP_Hive_Form_Proof::anchor_markup( self::DECOY, self::PROOF, 'Leave this field empty' );
+			$needle = 'style="' . \ReportedIP_Hive_Form_Proof::HIDE_RULE . '"';
+
+			$this->assertStringContainsString( $needle, $markup );
+			$this->assertTrue( \ReportedIP_Hive_Form_Proof::anchor_kses()['div']['style'] );
+		}
+
+		/**
 		 * Two protected forms on one page each render an anchor. A fixed `id`
 		 * would then be in the document twice, and the `for` of both labels
 		 * would point at the first field.

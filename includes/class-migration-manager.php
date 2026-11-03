@@ -43,7 +43,7 @@ final class ReportedIP_Hive_Migration_Manager {
 	/**
 	 * Highest schema version this build of the plugin understands.
 	 */
-	public const CURRENT_VERSION = 25;
+	public const CURRENT_VERSION = 26;
 
 	/**
 	 * Network option name storing the currently-applied schema version.
@@ -881,6 +881,30 @@ final class ReportedIP_Hive_Migration_Manager {
 			}
 		}
 		ReportedIP_Hive_Database::flush_ip_state_caches();
+	}
+
+	/**
+	 * Migrate to v26: purge the page caches once.
+	 *
+	 * Since 3.0.7 the form anchor hides itself through its own `style`
+	 * attribute, so an optimiser that empties the inline style block no
+	 * longer leaves the decoy visible. Cached pages still carry the old
+	 * anchor until they are rendered again. The purge waits for `wp_loaded`,
+	 * because a cache plugin that sorts after this one is not loaded yet
+	 * while the migration runs.
+	 *
+	 * @return void
+	 * @since  3.0.7
+	 */
+	private static function migrate_to_v26() {
+		if ( ! class_exists( 'ReportedIP_Hive_Cache_Flush' ) ) {
+			return;
+		}
+		if ( did_action( 'wp_loaded' ) ) {
+			ReportedIP_Hive_Cache_Flush::purge_pages();
+			return;
+		}
+		add_action( 'wp_loaded', array( 'ReportedIP_Hive_Cache_Flush', 'purge_pages' ) );
 	}
 
 	/**

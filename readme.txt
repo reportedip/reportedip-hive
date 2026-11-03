@@ -4,7 +4,7 @@ Tags: security, firewall, brute-force, 2fa, anti-spam
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 3.0.6
+Stable tag: 3.0.7
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -118,7 +118,7 @@ Professional plan:
 
 Business plan, in addition:
 
-* **Spam protection for further form plugins:** WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator, Ultimate Member and the withdrawal form of EU Order Withdrawal Button (also bundled in Germanized).
+* **Spam protection for further form plugins:** WPForms, Gravity Forms, Elementor Forms, Divi, Formidable Forms, Forminator, Ultimate Member and the withdrawal form of EU Order Withdrawal Button (also bundled in Germanized).
 * **Audit trail (activity log for changes):** who changed which setting, plugin, theme, page, menu, file or user account, with old and new values and export.
 * **User account blocking and session management:** block accounts, end sessions and review active sessions.
 * **Multiple security keys per account** with model detection.
@@ -175,6 +175,10 @@ Yes. Any FIDO2 or WebAuthn authenticator works as a second factor, including Yub
 
 On an anonymous page view the plugin runs five database queries of its own. A request from a blocked address is refused by the pre-WordPress firewall in about 1.5 ms. Both figures come from a test site with 500,000 log entries and 5,000 blocked addresses. Community reports are sent in the background by WP-Cron.
 
+= Does it work with caching and optimization plugins? =
+
+Yes. The plugin registers its form protection script and the rule that hides its honeypot field with WP Rocket, LiteSpeed Cache, Perfmatters, FlyingPress, Autoptimize, SiteGround Optimizer, Hummingbird, Jetpack Boost, W3 Total Cache, WP-Optimize, Breeze and Cloudflare Rocket Loader, so unused-CSS removal, delayed JavaScript, defer and combining leave them alone. Nothing has to be entered by hand. The honeypot field also hides itself without any stylesheet.
+
 = How is it different from Wordfence? =
 
 Wordfence includes a malware scanner and file integrity checks; ReportedIP Hive does not. ReportedIP Hive focuses on the firewall, login security, two-factor authentication and form spam protection without CAPTCHA, sends no data in its default mode and offers an optional community IP blocklist. Many sites run a scanner next to it.
@@ -220,6 +224,10 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 9. Site view on a multisite network: local activity, protection managed centrally by the network admin.
 
 == Changelog ==
+
+= 3.0.7 =
+* Fix: the honeypot field of protected forms hides itself through its own style attribute, so an optimizer that strips unused CSS no longer leaves it visible.
+* Caching and optimization plugins get the form protection assets as exclusions on their own, and page caches are purged once after the update.
 
 = 3.0.6 =
 * Security: the firewall blocks requests for PHP files in the core updater's staging folders (WordPress updater race fixed in 7.1.4) and bans the source on the first hit.
@@ -271,6 +279,9 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 * Database schema 25.
 
 == Upgrade Notice ==
+
+= 3.0.7 =
+Form protection now works next to caching and optimization plugins without manual exclusions. Page caches are purged once after the update.
 
 = 3.0.6 =
 Security update: blocks attacks on the WordPress core updater staging folder. Update WordPress to 7.1.4 too. On nginx, add the new lines from Protection Settings, Firewall.

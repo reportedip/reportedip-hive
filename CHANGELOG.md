@@ -2,6 +2,17 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [3.0.7] - 2026-11-02
+
+### Fixes
+
+- The honeypot field of protected forms hides itself through its own style attribute. An optimizer that strips "unused" CSS (seen with WP Rocket) emptied the hiding rule, left the field visible under the form, and a visitor whose browser autofilled it was judged a bot.
+
+### New
+
+- Caching and optimization plugins get the form protection assets as exclusions on their own: WP Rocket, LiteSpeed Cache, Perfmatters, FlyingPress, Autoptimize, SiteGround Optimizer, Hummingbird, Jetpack Boost, W3 Total Cache, WP-Optimize, Breeze and Cloudflare Rocket Loader. Unused-CSS removal, delayed JavaScript, defer and combining leave them alone.
+- The page caches are purged once after the update, so cached pages pick up the new field markup.
+
 ## [3.0.6] - 2026-10-30
 
 ### Security

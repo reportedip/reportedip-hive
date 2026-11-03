@@ -171,6 +171,15 @@ class ReportedIP_Hive_Form_Proof {
 	const SECONDS_SEPARATOR = '~';
 
 	/**
+	 * Declarations that move the anchor off-screen. Printed twice, in the
+	 * inline style block and in the anchor's `style` attribute, because
+	 * optimisers empty style blocks but leave attributes alone.
+	 *
+	 * @since 3.0.7
+	 */
+	const HIDE_RULE = 'position:absolute!important;left:-9999px!important;top:-9999px!important;width:1px!important;height:1px!important;overflow:hidden!important';
+
+	/**
 	 * Singleton instance.
 	 *
 	 * @var ReportedIP_Hive_Form_Proof|null
@@ -249,7 +258,6 @@ class ReportedIP_Hive_Form_Proof {
 			}
 		);
 		add_action( 'lostpassword_post', array( $this, 'check_lostpassword' ), 10, 1 );
-		add_filter( 'script_loader_tag', array( __CLASS__, 'script_tag' ), 10, 2 );
 	}
 
 	/**
@@ -265,24 +273,6 @@ class ReportedIP_Hive_Form_Proof {
 	 */
 	public static function forged_agent( $agent ) {
 		return is_string( $agent ) && 1 === preg_match( '/^\s*["\']/', $agent );
-	}
-
-	/**
-	 * Keep the proof script out of Cloudflare's Rocket Loader and WP Rocket's
-	 * combining, both of which reorder scripts. The script survives a delayed
-	 * start on its own; this only spares it a rewrite.
-	 *
-	 * @param string $tag    Script tag.
-	 * @param string $handle Script handle.
-	 * @return string
-	 * @since  2.1.64
-	 */
-	public static function script_tag( $tag, $handle ) {
-		if ( 'reportedip-hive-form-proof' !== $handle ) {
-			return $tag;
-		}
-
-		return str_replace( '<script ', '<script data-cfasync="false" data-nowprocket ', (string) $tag );
 	}
 
 	/**
@@ -646,10 +636,7 @@ class ReportedIP_Hive_Form_Proof {
 		);
 
 		wp_register_style( 'reportedip-hive-form-proof', false, array(), REPORTEDIP_HIVE_VERSION );
-		wp_add_inline_style(
-			'reportedip-hive-form-proof',
-			'.rip-hp-field{position:absolute!important;left:-9999px!important;top:-9999px!important;width:1px!important;height:1px!important;overflow:hidden!important;}'
-		);
+		wp_add_inline_style( 'reportedip-hive-form-proof', '.rip-hp-field{' . self::HIDE_RULE . '}' );
 	}
 
 	/**
@@ -697,7 +684,10 @@ class ReportedIP_Hive_Form_Proof {
 	 * Build the anchor markup. Pure, so the rendered contract is testable
 	 * without the enqueue machinery around it.
 	 *
-	 * The class hides it off-screen, `aria-hidden`, `tabindex="-1"` and
+	 * The class and the `style` attribute hide it off-screen. The attribute
+	 * is the layer that holds: an optimiser that strips "unused" CSS empties
+	 * the inline style block, a visible decoy gets filled by autofill and
+	 * its visitor is judged a certain bot. `aria-hidden`, `tabindex="-1"` and
 	 * `autocomplete="off"` keep it away from assistive tech and password
 	 * managers, and `data-n` carries the proof field name for the script.
 	 *
@@ -732,7 +722,7 @@ class ReportedIP_Hive_Form_Proof {
 			$extra .= ' ' . $name . '="' . esc_attr( (string) $value ) . '"';
 		}
 
-		return '<div class="rip-hp-field" aria-hidden="true">'
+		return '<div class="rip-hp-field" style="' . self::HIDE_RULE . '" aria-hidden="true">'
 			. '<label>' . esc_html( (string) $label )
 			. '<input type="text" name="' . $decoy . '" value=""'
 			. ' class="rip-fp-anchor" data-n="' . esc_attr( (string) $proof ) . '"'
@@ -761,6 +751,7 @@ class ReportedIP_Hive_Form_Proof {
 		return array(
 			'div'   => array(
 				'class'       => true,
+				'style'       => true,
 				'aria-hidden' => true,
 			),
 			'label' => array(),

@@ -61,6 +61,7 @@ const ADAPTER_OPTIONS = [
 	'reportedip_hive_form_proof_wpforms',
 	'reportedip_hive_form_proof_forminator',
 	'reportedip_hive_form_proof_eu_owb',
+	'reportedip_hive_form_proof_divi',
 ];
 
 /**

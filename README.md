@@ -87,6 +87,8 @@ Minimal logging, 30 days retention by default, anonymisation after 7 days, the C
 
 A blocked address is refused at the start of the request, before themes and most plugins load. Community reports leave in the background through WP-Cron. The block page sends no-cache headers that WP Rocket, W3 Total Cache, WP Super Cache and LiteSpeed Cache respect, and the form check contains nothing request-specific, so cached pages keep working.
 
+Optimization plugins get the form check's script and the rule that hides its honeypot field as exclusions on their own: WP Rocket, LiteSpeed Cache, Perfmatters, FlyingPress, Autoptimize, SiteGround Optimizer, Hummingbird, Jetpack Boost, W3 Total Cache, WP-Optimize, Breeze and Cloudflare Rocket Loader leave them out of unused-CSS removal, delayed JavaScript, defer and combining. The honeypot field also hides itself without any stylesheet. Other code can add its own assets through the `reportedip_hive_optimizer_exclusions` filter.
+
 ## What it does not do
 
 ReportedIP Hive does not scan files for malware and does not monitor file integrity. Run a scanner next to it if your site needs one.

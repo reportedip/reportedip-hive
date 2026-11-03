@@ -281,6 +281,44 @@ test.describe('form execution proof', () => {
 	});
 
 	/**
+	 * An unused-CSS remover (WP Rocket, LiteSpeed, Perfmatters) empties the
+	 * inline style block that hides the decoy. Seen live in 3.0.6: the field
+	 * stood visible under the form, and autofill filling it costs a real
+	 * visitor a block. The anchor's own style attribute has to hold.
+	 */
+	test('the decoy stays off-screen when an optimiser empties the style block', async ({ browser }) => {
+		const context = await browser.newContext();
+		const page = await context.newPage();
+
+		clearComments(postId);
+
+		await page.goto('/?p=' + postId);
+		await page.waitForLoadState('domcontentloaded');
+		await page.evaluate(() => {
+			const style = document.getElementById('reportedip-hive-form-proof-inline-css');
+			if (style) {
+				style.textContent = '';
+			}
+		});
+
+		const anchor = page.locator('#commentform .rip-hp-field');
+		await expect(anchor).toHaveCount(1);
+		const box = await anchor.boundingBox();
+		expect(box === null || box.x + box.width <= 0 || box.y + box.height <= 0).toBe(true);
+		await expect(page.locator('#commentform input.rip-fp-anchor')).not.toBeInViewport();
+
+		await page.fill('#comment', 'Noch ein ganz normaler Leserkommentar zum Artikel.');
+		await page.fill('#author', 'E2E Reader');
+		await page.fill('#email', 'e2e-reader@example.com');
+		await page.click('#submit');
+		await page.waitForLoadState('domcontentloaded');
+
+		expect(newestCommentState(postId)).toBe('1');
+
+		await context.close();
+	});
+
+	/**
 	 * Since 2.1.67 the comment form refuses this at the door, the way the
 	 * sign-up form and every form adapter always did. Before that it was worth
 	 * four points on a score, and a bot whose text stayed below the threshold
