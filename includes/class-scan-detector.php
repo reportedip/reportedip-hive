@@ -241,6 +241,18 @@ class ReportedIP_Hive_Scan_Detector {
 			return;
 		}
 
+		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_scan_404_timeframe', 2 );
+
+		/*
+		 * A path-walking scanner probes many different URLs. The same broken
+		 * URL fetched again on every page view (a font folder, a JSON cache
+		 * file) is a defect of the page, not a scan, so the burst trigger
+		 * counts each path once per IP and window.
+		 */
+		if ( ! $is_scan_hit && $this->is_repeat_404( $ip, $path, $timeframe ) ) {
+			return;
+		}
+
 		$client  = ReportedIP_Hive::get_instance();
 		$monitor = $client->get_security_monitor();
 		if ( ! ( $monitor instanceof ReportedIP_Hive_Security_Monitor ) ) {
@@ -250,7 +262,6 @@ class ReportedIP_Hive_Scan_Detector {
 		$threshold = $is_scan_hit
 			? 1
 			: (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_scan_404_threshold', 12 );
-		$timeframe = (int) ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_scan_404_timeframe', 2 );
 
 		$monitor->track_generic_attempt(
 			$ip,
@@ -342,6 +353,26 @@ class ReportedIP_Hive_Scan_Detector {
 	private function is_benign_404_path( string $path ): bool {
 		$benign = (array) apply_filters( 'reportedip_hive_scan_404_benign_paths', self::BENIGN_404_PATHS );
 		return in_array( $path, $benign, true );
+	}
+
+	/**
+	 * Whether this IP already hit the same 404 path inside the burst window.
+	 * The first hit is remembered and counts; every repeat inside the window
+	 * returns true and is kept out of the rate trigger.
+	 *
+	 * @param string $ip        Client IP.
+	 * @param string $path      Lower-case, query-stripped request path.
+	 * @param int    $timeframe Burst window in minutes.
+	 * @return bool             True when the path was already counted.
+	 * @since  3.0.8
+	 */
+	private function is_repeat_404( string $ip, string $path, int $timeframe ): bool {
+		$key = 'rip_404_seen_' . md5( $ip . '|' . $path );
+		if ( false !== get_transient( $key ) ) {
+			return true;
+		}
+		set_transient( $key, 1, max( 1, $timeframe ) * MINUTE_IN_SECONDS );
+		return false;
 	}
 
 	/**

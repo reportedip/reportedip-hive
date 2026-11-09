@@ -293,6 +293,42 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		private function call_is_repeat_404( string $ip, string $path ): bool {
+			$instance   = \ReportedIP_Hive_Scan_Detector::get_instance();
+			$reflection = new ReflectionClass( $instance );
+			$method     = $reflection->getMethod( 'is_repeat_404' );
+			return (bool) $method->invoke( $instance, $ip, $path, 2 );
+		}
+
+		/**
+		 * The same broken URL fetched on every page view counts once per IP and
+		 * window; a different path or a different IP still counts.
+		 */
+		public function test_same_path_counts_once_per_ip() {
+			$GLOBALS['wp_transients'] = array();
+			$ip                       = '198.51.100.7';
+
+			$this->assertFalse( $this->call_is_repeat_404( $ip, '/wp-content/fonts/manrope/font/' ), 'First hit must count' );
+			$this->assertTrue( $this->call_is_repeat_404( $ip, '/wp-content/fonts/manrope/font/' ), 'Repeat of the same path must not count' );
+			$this->assertFalse( $this->call_is_repeat_404( $ip, '/old/wp-login.php' ), 'A different path must count' );
+			$this->assertFalse( $this->call_is_repeat_404( '203.0.113.9', '/wp-content/fonts/manrope/font/' ), 'Another IP must count' );
+		}
+
+		/**
+		 * The repeat guard must sit after the pattern check and before the
+		 * security-monitor handoff, gated on !$is_scan_hit, so honeypot paths
+		 * keep firing on every hit.
+		 */
+		public function test_repeat_guard_is_gated_on_pattern_hit() {
+			$source = file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-scan-detector.php' );
+			$this->assertStringContainsString( '! $is_scan_hit && $this->is_repeat_404(', $source );
+			$this->assertLessThan(
+				strpos( $source, 'track_generic_attempt' ),
+				strpos( $source, '$this->is_repeat_404( $ip' ),
+				'Repeat guard must run before the security-monitor handoff'
+			);
+		}
+
 		public function non_asset_paths(): array {
 			return array(
 				'php probe'      => array( '/old/wp-login.php' ),

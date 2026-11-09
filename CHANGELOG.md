@@ -2,6 +2,12 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [Unreleased]
+
+### Fixes
+
+- The 404 scanner counts each path once per visitor and time window. A broken URL that a page requests on every view (seen with a font folder without file name) added up to the threshold and blocked ordinary shoppers for minutes. Scanners still trip it because they probe many different paths, and honeypot paths still block on the first hit.
+
 ## [3.0.7] - 2026-11-02
 
 ### Fixes
