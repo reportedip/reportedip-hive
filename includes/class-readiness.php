@@ -1173,6 +1173,48 @@ final class ReportedIP_Hive_Readiness {
 	}
 
 	/**
+	 * Where the deep link of an issue leads, in words: page name and, when
+	 * the link targets one, the section or tab. Shown next to the button of
+	 * a next-steps card, so the reader knows the page before the click.
+	 *
+	 * @param string $key Issue key.
+	 * @return string Empty when the target is unknown.
+	 * @since  3.0.8
+	 */
+	public static function destination( $key ) {
+		$link = self::links()[ $key ] ?? null;
+		if ( ! is_array( $link ) ) {
+			return '';
+		}
+		$pages = array(
+			'reportedip-hive-protection' => __( 'Protection Settings', 'reportedip-hive' ),
+			'reportedip-hive-tools'      => __( 'Server & Maintenance', 'reportedip-hive' ),
+			'reportedip-hive-debug'      => __( 'System Status', 'reportedip-hive' ),
+			'reportedip-hive-community'  => __( 'Community & Key', 'reportedip-hive' ),
+			'reportedip-hive-security'   => __( 'Activity', 'reportedip-hive' ),
+			'profile'                    => __( 'Your profile', 'reportedip-hive' ),
+		);
+		$page  = $pages[ (string) $link[0] ] ?? '';
+		if ( '' === $page ) {
+			return '';
+		}
+		$part = (string) $link[1];
+		$name = '';
+		if ( 'reportedip-hive-protection' === $link[0] ) {
+			$name = (string) ( ReportedIP_Hive_Settings_Registry::sections()[ $part ]['label'] ?? '' );
+		} elseif ( 'reportedip-hive-community' === $link[0] && class_exists( 'ReportedIP_Hive_Admin_Settings' ) ) {
+			$name = (string) ( ReportedIP_Hive_Admin_Settings::community_tabs()[ $part ] ?? '' );
+		} elseif ( 'api_queue' === $part ) {
+			$name = __( 'Report Queue', 'reportedip-hive' );
+		}
+		return '' === $name
+			/* translators: %s: name of an admin page. */
+			? sprintf( __( 'Opens %s', 'reportedip-hive' ), $page )
+			/* translators: 1: name of an admin page, 2: section or tab on that page. */
+			: sprintf( __( 'Opens %1$s, %2$s', 'reportedip-hive' ), $page, $name );
+	}
+
+	/**
 	 * Documentation anchor for one issue key.
 	 *
 	 * @param string $key Issue key.

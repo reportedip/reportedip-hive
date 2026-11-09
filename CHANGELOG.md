@@ -4,8 +4,17 @@ All changes to ReportedIP Hive are documented here.
 
 ## [Unreleased]
 
+### Changes
+
+- The page header names the open tab (for example Protection Settings, Forms), on the Protection Settings, Activity, Server & Maintenance and Community & Key pages. The dashboard header now says Dashboard.
+- Every section of the Protection Settings says in plain words what it protects against, in the simple view as well.
+- The header check explains each security header: what can happen without it and what it tells the browser. A short introduction explains why large sites often send few headers.
+- The Community & Key tabs and the Data and Diagnostics tabs open with a short explanation.
+- Next steps cards name the page and section their button opens.
+
 ### Fixes
 
+- Link buttons kept the blue link colour of the WordPress admin on hover and focus, so the white label of a primary button almost vanished on its indigo background.
 - The 404 scanner counts each path once per visitor and time window. A broken URL that a page requests on every view (seen with a font folder without file name) added up to the threshold and blocked ordinary shoppers for minutes. Scanners still trip it because they probe many different paths, and honeypot paths still block on the first hit.
 
 ## [3.0.7] - 2026-11-02

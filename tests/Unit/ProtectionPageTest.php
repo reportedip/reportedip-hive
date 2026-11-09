@@ -816,7 +816,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'a simple key sits before the details'
 			);
 
-			$this->assertStringNotContainsString( 'rip-protection__desc', $closed, 'the registry description is expert text and stays out of the simple view' );
+			$this->assertStringContainsString( '<span class="rip-protection__desc">Automatic blocking', $closed, 'the simple view says what the section protects against' );
 
 			$open = ReportedIP_Hive_Protection_Page::section_markup( 'blocking', $current, $statuses, true, array(), array(), $choices );
 			$this->assertStringContainsString( '<details class="rip-protection__details" open>', $open );
@@ -905,6 +905,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( 'Missing on cached pages', $html );
 			$this->assertStringContainsString( 'copy the server configuration above', $html );
 			$this->assertStringContainsString( 'The web server already sets some headers', $html );
+			$this->assertStringContainsString( '<code>Referrer-Policy</code><p class="rip-help-text">Without it the full address', $html, 'every row says what the header protects' );
 
 			$error = ReportedIP_Hive_Protection_Page::header_check_markup(
 				array(

@@ -12,7 +12,6 @@
  * Text Domain: reportedip-hive
  * Domain Path: /languages
  * Requires at least: 5.9
- * Tested up to: 7.1
  * Requires PHP: 8.1
  * Network: true
  *

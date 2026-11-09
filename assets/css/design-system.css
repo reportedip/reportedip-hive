@@ -203,6 +203,16 @@
     color: white;
 }
 
+.rip-header__context {
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.rip-header__context::before {
+    content: "\203A";
+    margin: 0 0.5rem;
+}
+
 .rip-header__subtitle {
     margin: 0.25rem 0 0;
     font-size: var(--rip-text-sm);
@@ -774,6 +784,50 @@ button.rip-tier-lock--mode:hover {
 
 .rip-button--ghost:hover:not(:disabled) {
     background: var(--rip-gray-100);
+    color: var(--rip-gray-900);
+}
+
+/* Link buttons keep their text colour in every state. The WordPress admin
+   styles a:hover and a:focus with a blue that is more specific than one
+   class and turned the white label of a primary link button nearly
+   invisible on its indigo background. */
+a.rip-button--primary,
+a.rip-button--primary:hover,
+a.rip-button--primary:focus,
+a.rip-button--primary:active,
+a.rip-button--primary:visited,
+a.rip-button--success,
+a.rip-button--success:hover,
+a.rip-button--success:focus,
+a.rip-button--success:active,
+a.rip-button--success:visited,
+a.rip-button--danger,
+a.rip-button--danger:hover,
+a.rip-button--danger:focus,
+a.rip-button--danger:active,
+a.rip-button--danger:visited,
+a.rip-button--copied,
+a.rip-button--copied:hover,
+a.rip-button--copied:focus {
+    color: #fff;
+}
+
+a.rip-button--secondary,
+a.rip-button--secondary:hover,
+a.rip-button--secondary:focus,
+a.rip-button--secondary:active,
+a.rip-button--secondary:visited {
+    color: var(--rip-gray-700);
+}
+
+a.rip-button--ghost,
+a.rip-button--ghost:focus,
+a.rip-button--ghost:active,
+a.rip-button--ghost:visited {
+    color: var(--rip-gray-600);
+}
+
+a.rip-button--ghost:hover {
     color: var(--rip-gray-900);
 }
 

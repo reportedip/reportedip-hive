@@ -24,13 +24,18 @@
 	var panels = root.querySelectorAll('.rip-protection__panel');
 	var input = document.getElementById('rip-protection-search');
 	var empty = document.getElementById('rip-protection-no-results');
+	var context = document.querySelector('[data-rip-header-context]');
 
 	function activate(slug, pushUrl) {
 		panels.forEach(function (panel) {
 			panel.classList.toggle('rip-hidden', panel.dataset.tab !== slug);
 		});
 		tabs.forEach(function (tab) {
-			tab.classList.toggle('rip-nav-tabs__tab--active', tab.dataset.tab === slug);
+			var on = tab.dataset.tab === slug;
+			tab.classList.toggle('rip-nav-tabs__tab--active', on);
+			if (on && context) {
+				context.textContent = tab.dataset.label || tab.textContent.trim();
+			}
 		});
 		if (pushUrl && window.history && window.history.replaceState) {
 			var url = new URL(window.location.href);

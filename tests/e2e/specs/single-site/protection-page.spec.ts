@@ -218,6 +218,10 @@ test.describe('protection page', () => {
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection#privacy_logs');
 		await expect(page.locator('.rip-protection__panel[data-tab="operations"]')).toBeVisible();
 		await expect(page.locator('#privacy_logs')).toBeVisible();
+		await expect(page.locator('[data-rip-header-context]'), 'the page header names the open tab').toHaveText('Operations');
+		await page.locator('.rip-protection__tabs .rip-nav-tabs__tab[data-tab="forms"]').click();
+		await expect(page.locator('[data-rip-header-context]')).toHaveText('Forms');
+		await expect(page.locator('#forms .rip-protection__desc'), 'the simple view says what a section protects against').toContainText('spam bots');
 	});
 
 	test('restore defaults writes the recommendation of the tab and leaves the rest alone', async ({ page }) => {

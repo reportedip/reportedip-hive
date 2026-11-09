@@ -53,6 +53,19 @@ test.describe('dashboard next steps', () => {
 		expect(wp('option get reportedip_hive_auto_footer_enabled')).toBe('0');
 	});
 
+	test('a link button keeps its white label on hover and names its target', async ({ page }) => {
+		await loginAsAdmin(page);
+		await page.goto('/wp-admin/admin.php?page=reportedip-hive');
+		const card = page.locator('.rip-next-steps__card[data-step="community_pending"]');
+		const button = card.locator('a.rip-button--primary');
+		await button.hover();
+		await expect(button).toHaveCSS('color', 'rgb(255, 255, 255)');
+		await button.focus();
+		await expect(button).toHaveCSS('color', 'rgb(255, 255, 255)');
+		await expect(card.locator('.rip-next-steps__where')).toHaveText('Opens Community & Key, Access Key');
+		await expect(page.locator('.rip-header__title')).toHaveText('Dashboard');
+	});
+
 	test('local shield shows the community card and "not now" hides it for a week', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive');

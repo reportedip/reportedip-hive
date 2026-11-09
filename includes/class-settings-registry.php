@@ -74,51 +74,51 @@ final class ReportedIP_Hive_Settings_Registry {
 		$sections = array(
 			'detection'        => array(
 				'label'       => __( 'Detection & Thresholds', 'reportedip-hive' ),
-				'description' => __( 'The sensors that watch for an attack and the counts at which each one reacts. Also holds the proxy settings, because every sensor depends on resolving the visitor address correctly.', 'reportedip-hive' ),
+				'description' => __( 'Protects against password guessing, scans and spam waves. The sensors count suspicious requests per visitor, and here you decide how many it takes before Hive reacts. The proxy settings sit here too, because every count needs the real visitor address.', 'reportedip-hive' ),
 			),
 			'blocking'         => array(
 				'label'       => __( 'Blocking & Escalation', 'reportedip-hive' ),
-				'description' => __( 'Automatic blocking, durations and the escalation ladder.', 'reportedip-hive' ),
+				'description' => __( 'Automatic blocking keeps an attacker out once a sensor reacted. Here you set how long a block lasts and how it grows for an address that comes back.', 'reportedip-hive' ),
 			),
 			'waf'              => array(
 				'label'       => __( 'Firewall & Bots', 'reportedip-hive' ),
-				'description' => __( 'The request-inspecting firewall, its rule feed and the check that a crawler is really the crawler it claims to be.', 'reportedip-hive' ),
+				'description' => __( 'Stops attacks hidden in a request, such as database injection or a call for a file that must not be read. It also checks that a visitor calling itself Google or Bing really is one.', 'reportedip-hive' ),
 			),
 			'registration'     => array(
 				'label'       => __( 'Registration Rules', 'reportedip-hive' ),
-				'description' => __( 'Who may create an account, under which name and with which mail address. Throwaway mail domains and the rate limit for sign-ups belong here too.', 'reportedip-hive' ),
+				'description' => __( 'Keeps fake accounts out. Here you decide who may sign up, which names and throwaway mail addresses are refused, and how many sign-ups an address may send.', 'reportedip-hive' ),
 			),
 			'forms'            => array(
 				'label'       => __( 'Form Protection', 'reportedip-hive' ),
-				'description' => __( 'The checks that sit on the comment form, the sign-up form, the password-reset form and the forms of Contact Form 7, WPForms, Gravity Forms, Forminator, Formidable Forms, Elementor and Ultimate Member. A visitor sees none of it, and nobody has to read a distorted image.', 'reportedip-hive' ),
+				'description' => __( 'Keeps spam bots out of your forms: comments, sign-up, password reset and the forms of Contact Form 7, WPForms, Gravity Forms, Forminator, Formidable Forms, Elementor and Ultimate Member. A visitor sees none of it, and nobody has to read a distorted image.', 'reportedip-hive' ),
 			),
 			'hide_login'       => array(
 				'label'       => __( 'Hide Login', 'reportedip-hive' ),
-				'description' => __( 'Custom login URL and probe monitoring.', 'reportedip-hive' ),
+				'description' => __( 'Moves the login page to an address only you know, so bots that guess passwords at wp-login.php find nothing. Hive also notes who still knocks at the old address.', 'reportedip-hive' ),
 			),
 			'headers'          => array(
 				'label'       => __( 'Security Headers', 'reportedip-hive' ),
-				'description' => __( 'Response headers that tell the browser to refuse risky behaviour: MIME sniffing, framing by foreign sites, referrer leaks and downgrades to HTTP. The basic three are free; HSTS, Content-Security-Policy, Permissions-Policy and the Cross-Origin trio are part of advanced hardening.', 'reportedip-hive' ),
+				'description' => __( 'Instructions to the browser of every visitor that limit what an attack can do there: no foreign site may frame your pages, no uploaded file runs as a script, and less of your addresses leaks to other sites. The basic three are free; HSTS, Content-Security-Policy, Permissions-Policy and the Cross-Origin trio are part of advanced hardening.', 'reportedip-hive' ),
 			),
 			'lockdown'         => array(
 				'label'       => __( 'Access Lockdown', 'reportedip-hive' ),
-				'description' => __( 'Attack-surface switches: REST API access, XML-RPC, feeds, wp-admin for visitors, PHP execution in uploads and software fingerprints.', 'reportedip-hive' ),
+				'description' => __( 'Closes doors attackers use and most sites never need: XML-RPC, open REST API access, feeds, wp-admin for visitors, PHP in the upload folder and the version numbers that tell an attacker what to try.', 'reportedip-hive' ),
 			),
 			'account_security' => array(
 				'label'       => __( 'Two-Factor Authentication', 'reportedip-hive' ),
-				'description' => __( 'Which methods exist, who has to use one, and how long a device stays trusted.', 'reportedip-hive' ),
+				'description' => __( 'A second step after the password, so a stolen or guessed password alone opens no account. Here you choose the methods, who has to use one and how long a device stays trusted.', 'reportedip-hive' ),
 			),
 			'account_password' => array(
 				'label'       => __( 'Password Policy', 'reportedip-hive' ),
-				'description' => __( 'What a password has to look like before WordPress accepts it.', 'reportedip-hive' ),
+				'description' => __( 'Weak and leaked passwords are the most common way into an account. Here you set what a password has to look like before WordPress accepts it.', 'reportedip-hive' ),
 			),
 			'privacy_logs'     => array(
 				'label'       => __( 'Privacy & Logs', 'reportedip-hive' ),
-				'description' => __( 'Logging depth and retention.', 'reportedip-hive' ),
+				'description' => __( 'What Hive writes into its log and how long it keeps it. Shorter is better for privacy, longer helps when you look back at an incident.', 'reportedip-hive' ),
 			),
 			'notifications'    => array(
 				'label'       => __( 'Notifications', 'reportedip-hive' ),
-				'description' => __( 'Admin notification recipients and sender identity.', 'reportedip-hive' ),
+				'description' => __( 'Who gets a mail when something happens, and which sender address those mails carry.', 'reportedip-hive' ),
 			),
 			'performance'      => array(
 				'label'       => __( 'Performance & Footprint', 'reportedip-hive' ),

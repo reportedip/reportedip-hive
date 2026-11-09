@@ -431,6 +431,10 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 								<a class="rip-button rip-button--primary rip-button--sm" href="<?php echo esc_url( (string) $issue['settings_url'] ); ?>"><?php echo esc_html( $action['label'] ); ?></a>
 							<?php endif; ?>
 						<?php endif; ?>
+						<?php $where = $action['write'] || ! empty( $action['url'] ) ? '' : ReportedIP_Hive_Readiness::destination( $key ); ?>
+						<?php if ( '' !== $where ) : ?>
+							<p class="rip-help-text rip-next-steps__where"><?php echo esc_html( $where ); ?></p>
+						<?php endif; ?>
 						<?php if ( ! empty( $action['doc'] ) && ! empty( $action['doc_label'] ) ) : ?>
 							<a class="rip-next-steps__dismiss" href="<?php echo esc_url( (string) $action['doc'] ); ?>" target="_blank" rel="noopener"><?php echo esc_html( (string) $action['doc_label'] ); ?></a>
 						<?php endif; ?>

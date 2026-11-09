@@ -1391,9 +1391,8 @@ class ReportedIP_Hive_Protection_Page {
 	 *
 	 * Every key of the section is rendered, the day-to-day keys as rows
 	 * and the rest inside a `<details>` that starts open in expert mode.
-	 * The registry description of the section is written for the expert
-	 * and only shown there; the simple view keeps the head to the label
-	 * and the status.
+	 * The registry description says in plain words what the section
+	 * protects against and is shown in both views.
 	 * A closed details block still posts its fields, so nothing here can
 	 * come back empty on the next save; a locked field is still dropped by
 	 * {@see writable_values()}.
@@ -1441,7 +1440,7 @@ class ReportedIP_Hive_Protection_Page {
 			'<div class="rip-protection__section" id="%1$s"><div class="rip-protection__section-head"><h2 class="rip-protection__title">%2$s</h2>%3$s%4$s</div>',
 			esc_attr( $section ),
 			esc_html( (string) ( $meta['label'] ?? $section ) ),
-			$expert ? '<span class="rip-protection__desc">' . esc_html( (string) ( $meta['description'] ?? '' ) ) . '</span>' : '',
+			'' === (string) ( $meta['description'] ?? '' ) ? '' : '<span class="rip-protection__desc">' . esc_html( (string) $meta['description'] ) . '</span>',
 			'' === $state['text'] ? '' : '<span class="rip-badge rip-badge--' . esc_attr( $state['tone'] ) . ' rip-protection__status">' . esc_html( $state['text'] ) . '</span>'
 		);
 		if ( 'detection' === $section ) {
@@ -1525,12 +1524,13 @@ class ReportedIP_Hive_Protection_Page {
 			);
 		}
 
-		$html = sprintf(
+		$html  = sprintf(
 			'<div class="rip-protection__routes"><p class="rip-protection__routes-title">%1$s</p><ul class="rip-protection__route-list">%2$s</ul><p class="rip-help-text">%3$s</p></div>',
 			esc_html__( 'How the headers reach your visitors', 'reportedip-hive' ),
 			$items,
 			esc_html__( 'Set every header in one place only. A header the web server sets on its own is invisible to WordPress and then arrives twice; the header check below shows it.', 'reportedip-hive' )
 		);
+		$html .= '<p class="rip-help-text">' . esc_html__( 'Security headers are short instructions your site sends to the browser of every visitor: which sources it may load code from, whether other sites may frame your pages, and that it must use HTTPS. They do not stop an attack on the server, they limit what an attack can do in the browser of your visitors. Large sites often send few of them because a CDN adds them or their pages need exceptions; that does not make them pointless on your site. The header check below explains each one.', 'reportedip-hive' ) . '</p>';
 
 		if ( ReportedIP_Hive_Security_Headers::is_enabled() && $cache && ! $guard ) {
 			$html .= '<div class="rip-alert rip-alert--warning rip-protection__note">'
@@ -1620,13 +1620,15 @@ class ReportedIP_Hive_Protection_Page {
 		$body = '';
 		foreach ( $rows as $name => $row ) {
 			$state = $states[ (string) ( $row['status'] ?? '' ) ] ?? array( 'neutral', (string) ( $row['status'] ?? '' ) );
+			$why   = ReportedIP_Hive_Security_Headers::explain( (string) $name );
 			$seen  = array_values( array_unique( array_merge( (array) ( $row['cached'] ?? array() ), (array) ( $row['uncached'] ?? array() ) ) ) );
 			$body .= sprintf(
-				'<tr><th scope="row"><code>%1$s</code></th><td><span class="rip-badge rip-badge--%2$s">%3$s</span></td><td>%4$s</td></tr>',
+				'<tr><th scope="row"><code>%1$s</code>%5$s</th><td><span class="rip-badge rip-badge--%2$s">%3$s</span></td><td>%4$s</td></tr>',
 				esc_html( (string) $name ),
 				esc_attr( $state[0] ),
 				esc_html( $state[1] ),
-				implode( '<br>', array_map( static fn( $v ) => '<code>' . esc_html( (string) $v ) . '</code>', $seen ) )
+				implode( '<br>', array_map( static fn( $v ) => '<code>' . esc_html( (string) $v ) . '</code>', $seen ) ),
+				'' === $why ? '' : '<p class="rip-help-text">' . esc_html( $why ) . '</p>'
 			);
 		}
 
@@ -1701,7 +1703,8 @@ class ReportedIP_Hive_Protection_Page {
 
 		ReportedIP_Hive_Admin_Settings::render_page_header(
 			__( 'Protection Settings', 'reportedip-hive' ),
-			__( 'Every setting, grouped by area; the technical details fold away', 'reportedip-hive' )
+			__( 'Every setting, grouped by area; the technical details fold away', 'reportedip-hive' ),
+			(string) ( self::tabs()[ $active ]['label'] ?? '' )
 		);
 		?>
 		<div class="rip-content rip-protection">
@@ -1749,7 +1752,7 @@ class ReportedIP_Hive_Protection_Page {
 						$pill = (string) $mode_manager->get_tier_info( $state['plan'] )['label'];
 					}
 					?>
-					<a href="<?php echo esc_url( add_query_arg( self::TAB_PARAM, $slug, $page_url ) ); ?>" class="rip-nav-tabs__tab<?php echo $slug === $active ? ' rip-nav-tabs__tab--active' : ''; ?>" data-tab="<?php echo esc_attr( $slug ); ?>">
+					<a href="<?php echo esc_url( add_query_arg( self::TAB_PARAM, $slug, $page_url ) ); ?>" class="rip-nav-tabs__tab<?php echo $slug === $active ? ' rip-nav-tabs__tab--active' : ''; ?>" data-tab="<?php echo esc_attr( $slug ); ?>" data-label="<?php echo esc_attr( (string) $tab['label'] ); ?>">
 						<?php echo self::tab_icon( $tab['icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static inline SVG ?>
 						<span><?php echo esc_html( $tab['label'] ); ?></span>
 						<?php if ( '' !== $pill ) : ?>

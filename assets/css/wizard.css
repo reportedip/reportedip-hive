@@ -958,6 +958,28 @@ body.rip-wizard-page [hidden] {
     background: var(--rip-primary-50);
 }
 
+a.rip-button--primary,
+a.rip-button--primary:hover,
+a.rip-button--primary:focus,
+a.rip-button--primary:active,
+a.rip-button--primary:visited {
+    color: #fff;
+}
+
+a.rip-button--secondary,
+a.rip-button--secondary:hover,
+a.rip-button--secondary:focus,
+a.rip-button--secondary:visited {
+    color: var(--rip-gray-800);
+}
+
+a.rip-button--ghost,
+a.rip-button--ghost:hover,
+a.rip-button--ghost:focus,
+a.rip-button--ghost:visited {
+    color: var(--rip-primary);
+}
+
 .rip-button--large {
     padding: 1rem 2rem;
     font-size: 1rem;

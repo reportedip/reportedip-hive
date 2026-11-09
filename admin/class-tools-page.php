@@ -47,8 +47,8 @@ class ReportedIP_Hive_Tools_Page {
 		if ( ! isset( $tabs[ $active ] ) ) {
 			$active = 'server';
 		}
-		ReportedIP_Hive_Admin_Settings::render_page_header( __( 'Server & Maintenance', 'reportedip-hive' ), __( 'Server setup, rule delivery, data and diagnostics', 'reportedip-hive' ) );
-		echo '<nav class="rip-nav-tabs">';
+		ReportedIP_Hive_Admin_Settings::render_page_header( __( 'Server & Maintenance', 'reportedip-hive' ), __( 'Server setup, rule delivery, data and diagnostics', 'reportedip-hive' ), $tabs[ $active ] );
+		echo '<nav class="rip-nav-tabs" aria-label="' . esc_attr__( 'Server & Maintenance sections', 'reportedip-hive' ) . '">';
 		foreach ( $tabs as $slug => $label ) {
 			printf(
 				'<a href="%1$s" class="rip-nav-tabs__tab%2$s">%3$s</a>',
@@ -58,6 +58,7 @@ class ReportedIP_Hive_Tools_Page {
 			);
 		}
 		echo '</nav><div class="rip-content">';
+		ReportedIP_Hive_Admin_Settings::render_tab_intro( 'tools_' . $active );
 		$firewall = ReportedIP_Hive_Admin_Firewall::get_instance();
 		switch ( $active ) {
 			case 'rules':

@@ -62,14 +62,14 @@ class ReportedIP_Hive_Bundled_Translations_Test extends WP_UnitTestCase {
 		$this->pack = $dir . '/reportedip-hive-de_DE.mo';
 
 		$mo = new MO();
-		$mo->add_entry( new Translation_Entry( array( 'singular' => 'Security Dashboard', 'translations' => array( 'PACK' ) ) ) );
+		$mo->add_entry( new Translation_Entry( array( 'singular' => 'Protection Settings', 'translations' => array( 'PACK' ) ) ) );
 		$mo->add_entry( new Translation_Entry( array( 'singular' => 'Only in the pack', 'translations' => array( 'Nur im Pack' ) ) ) );
 		$this->assertTrue( $mo->export_to_file( $this->pack ) );
 
 		unload_textdomain( 'reportedip-hive' );
 		load_textdomain( 'reportedip-hive', $this->pack );
 
-		$this->assertSame( 'Sicherheits-Dashboard', __( 'Security Dashboard', 'reportedip-hive' ), 'The bundled catalog must win over the pack.' );
+		$this->assertSame( 'Schutz-Einstellungen', __( 'Protection Settings', 'reportedip-hive' ), 'The bundled catalog must win over the pack.' );
 		$this->assertSame( 'Einstellungen', __( 'Settings', 'reportedip-hive' ), 'A string missing in the pack comes from the bundled catalog.' );
 		$this->assertSame( 'Nur im Pack', __( 'Only in the pack', 'reportedip-hive' ), 'The pack still fills gaps.' );
 	}
@@ -135,7 +135,7 @@ class ReportedIP_Hive_Bundled_Translations_Test extends WP_UnitTestCase {
 		load_textdomain( 'reportedip-hive', $this->pack );
 
 		$this->assertSame( 1, $this->bundled_loads(), 'The bundled catalog is loaded exactly once.' );
-		$this->assertSame( 'Sicherheits-Dashboard', __( 'Security Dashboard', 'reportedip-hive' ), 'The bundled catalog still wins.' );
+		$this->assertSame( 'Schutz-Einstellungen', __( 'Protection Settings', 'reportedip-hive' ), 'The bundled catalog still wins.' );
 		$this->assertSame( 'Nur im Pack', __( 'Only in the pack', 'reportedip-hive' ), 'The pack still fills gaps.' );
 		$this->assertSame( 'Nur in Loco', __( 'Only in Loco', 'reportedip-hive' ), 'The Loco catalog still fills gaps.' );
 	}
@@ -149,6 +149,6 @@ class ReportedIP_Hive_Bundled_Translations_Test extends WP_UnitTestCase {
 		load_textdomain( 'reportedip-hive', $this->pack );
 
 		$this->assertSame( 2, $this->bundled_loads(), 'An unload, as in switch_to_locale(), allows the next load.' );
-		$this->assertSame( 'Sicherheits-Dashboard', __( 'Security Dashboard', 'reportedip-hive' ) );
+		$this->assertSame( 'Schutz-Einstellungen', __( 'Protection Settings', 'reportedip-hive' ) );
 	}
 }

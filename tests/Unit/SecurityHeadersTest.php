@@ -204,6 +204,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertArrayNotHasKey( 'Cross-Origin-Opener-Policy', $rows, 'a header nobody sends and nobody plans is not listed' );
 		}
 
+		public function test_every_known_header_is_explained(): void {
+			foreach ( \ReportedIP_Hive_Security_Headers::KNOWN as $name ) {
+				$this->assertNotSame( '', \ReportedIP_Hive_Security_Headers::explain( $name ), $name . ' needs a plain-language explanation for the header check' );
+			}
+			$this->assertSame( \ReportedIP_Hive_Security_Headers::explain( 'X-Frame-Options' ), \ReportedIP_Hive_Security_Headers::explain( 'x-frame-options' ) );
+			$this->assertSame( '', \ReportedIP_Hive_Security_Headers::explain( 'X-Powered-By' ) );
+		}
+
 		public function test_header_values_read_the_dictionary_the_http_api_returns(): void {
 			$read = new ReflectionMethod( \ReportedIP_Hive_Security_Headers::class, 'header_values' );
 

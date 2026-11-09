@@ -174,6 +174,34 @@ class ReportedIP_Hive_Security_Headers {
 	);
 
 	/**
+	 * Plain-language explanation of a security header: what can go wrong
+	 * without it and what it tells the browser to do instead.
+	 *
+	 * Shown next to every row of the header check, so a reader who compares
+	 * the result with other sites understands what each line protects.
+	 *
+	 * @param string $header Header name, case-insensitive.
+	 * @return string Empty for a header outside {@see self::KNOWN}.
+	 * @since  3.0.8
+	 */
+	public static function explain( $header ) {
+		$texts = array(
+			'x-content-type-options'              => __( 'Without it a browser may guess the file type and run an uploaded file that claims to be an image as a script. The header tells it to trust the declared type only.', 'reportedip-hive' ),
+			'x-frame-options'                     => __( 'Without it a foreign site can load your page in an invisible frame and trick visitors into clicking buttons on it, for example in your shop or your login. The header only lets your own pages frame it.', 'reportedip-hive' ),
+			'referrer-policy'                     => __( 'Without it the full address of the current page, search terms and parameters included, can go to every site a visitor moves on to. The header passes on your domain only.', 'reportedip-hive' ),
+			'strict-transport-security'           => __( 'Without it an attacker in a public network can push a visitor onto an unencrypted copy of your site and read along. The header makes the browser use HTTPS only, from the first click on.', 'reportedip-hive' ),
+			'permissions-policy'                  => __( 'Without it an injected script may ask for the camera, microphone or location. The header switches off browser features your pages do not use.', 'reportedip-hive' ),
+			'content-security-policy'             => __( 'Without it a script smuggled into a page, through a vulnerable plugin for example, runs like your own code and can steal logins or payment data. The header lists the only sources the browser may load code from.', 'reportedip-hive' ),
+			'content-security-policy-report-only' => __( 'A test run of the Content-Security-Policy: nothing is blocked yet, the browser only reports what the policy would stop. Use it until the reports stay clean.', 'reportedip-hive' ),
+			'reporting-endpoints'                 => __( 'Tells the browser where to send reports about policy violations. It protects nothing on its own and only matters together with a Content-Security-Policy.', 'reportedip-hive' ),
+			'cross-origin-opener-policy'          => __( 'Without it a foreign window your site opens, or that opens your site, keeps a link to it and can redirect or probe it. The header cuts that link.', 'reportedip-hive' ),
+			'cross-origin-resource-policy'        => __( 'Without it every site can embed your images and files and use them for side-channel attacks. The header limits who may load them.', 'reportedip-hive' ),
+			'cross-origin-embedder-policy'        => __( 'Only needed for special browser features such as precise timers. It makes every embedded file from another domain confirm the embedding.', 'reportedip-hive' ),
+		);
+		return $texts[ strtolower( (string) $header ) ] ?? '';
+	}
+
+	/**
 	 * Whether a page cache drop-in is active.
 	 *
 	 * A cache hit is delivered from `advanced-cache.php` before

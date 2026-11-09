@@ -213,10 +213,12 @@ class ReportedIP_Hive_Admin_Settings {
 	/**
 	 * Render unified page header for all plugin pages
 	 *
-	 * @param string $title   Page title
+	 * @param string $title    Page title
 	 * @param string $subtitle Page subtitle/description
+	 * @param string $context  Optional label of the active tab, shown after the
+	 *                         title so the reader always sees where they are.
 	 */
-	public static function render_page_header( $title, $subtitle ) {
+	public static function render_page_header( $title, $subtitle, $context = '' ) {
 		?>
 		<div class="wrap rip-wrap">
 			<div class="rip-header">
@@ -229,7 +231,12 @@ class ReportedIP_Hive_Admin_Settings {
 						</svg>
 					</div>
 					<div>
-						<h1 class="rip-header__title"><?php echo esc_html( $title ); ?></h1>
+						<h1 class="rip-header__title">
+							<?php echo esc_html( $title ); ?>
+							<?php if ( '' !== $context ) : ?>
+								<span class="rip-header__context" data-rip-header-context><?php echo esc_html( $context ); ?></span>
+							<?php endif; ?>
+						</h1>
 						<p class="rip-header__subtitle"><?php echo esc_html( $subtitle ); ?></p>
 					</div>
 				</div>
@@ -1609,7 +1616,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$stats = $this->get_site_admin_stats();
 
 		self::render_site_admin_header(
-			__( 'ReportedIP Hive', 'reportedip-hive' ),
+			__( 'Status', 'reportedip-hive' ),
 			__( 'Site security overview', 'reportedip-hive' )
 		);
 		self::render_site_readonly_banner();
@@ -3005,7 +3012,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$mode_manager = ReportedIP_Hive_Mode_Manager::get_instance();
 
-		self::render_page_header( __( 'ReportedIP Hive', 'reportedip-hive' ), __( 'Security Dashboard', 'reportedip-hive' ) );
+		self::render_page_header( __( 'Dashboard', 'reportedip-hive' ), __( 'How well this site is protected, what happened lately and what to do next', 'reportedip-hive' ) );
 		?>
 
 			<div class="rip-dashboard">
@@ -3299,35 +3306,61 @@ class ReportedIP_Hive_Admin_Settings {
 	}
 
 	/**
-	 * Heading and one-paragraph explanation for each tab of the Activity page.
+	 * Heading and one-paragraph explanation for each tab of the Activity page,
+	 * the Community page (`community_*`) and the Server & Maintenance page
+	 * (`tools_*`).
 	 *
-	 * @param string $key Sub-tab (`logs`, `lookup`, `blocked`, `whitelist` or one an add-on adds) or `queue`.
+	 * @param string $key Sub-tab (`logs`, `lookup`, `blocked`, `whitelist` or one an add-on adds), `queue`, `community_<tab>` or `tools_<tab>`.
 	 * @return array{0:string,1:string} Title and text.
 	 * @since  2.1.57
 	 */
 	public static function tab_intro( $key ) {
 		$intros = array(
-			'logs'      => array(
+			'logs'                => array(
 				__( 'Event Log', 'reportedip-hive' ),
 				is_network_admin()
 					? __( 'Every security event Hive recorded in this network, newest first: failed logins, firewall hits, scans, spam and the blocks that followed. Narrow the list with the filters, then block or whitelist an address straight from its row.', 'reportedip-hive' )
 					: __( 'Every security event Hive recorded on this site, newest first: failed logins, firewall hits, scans, spam and the blocks that followed. Narrow the list with the filters, then block or whitelist an address straight from its row.', 'reportedip-hive' ),
 			),
-			'lookup'    => array(
+			'lookup'              => array(
 				__( 'IP Lookup', 'reportedip-hive' ),
 				__( 'Ask the community network about a single IP address before you decide what to do with it. You see the current reputation, the reports behind it and whether the address is already blocked or whitelisted here.', 'reportedip-hive' ),
 			),
-			'blocked'   => array(
+			'blocked'             => array(
 				__( 'Blocked', 'reportedip-hive' ),
 				__( 'Addresses that cannot reach this site right now. Automatic blocks expire on their own, manual blocks stay until you lift them. Add a single address or a CIDR range here, or import a list.', 'reportedip-hive' ),
 			),
-			'whitelist' => array(
+			'whitelist'           => array(
 				__( 'Whitelist', 'reportedip-hive' ),
 				__( 'Addresses Hive never blocks, whatever they do: your office, a monitoring service, a payment provider. Use a CIDR range for a connection whose address changes.', 'reportedip-hive' ),
 			),
-			'queue'     => array(
+			'queue'               => array(
 				__( 'Report Queue', 'reportedip-hive' ),
 				__( 'Reports waiting to be shared with the community network. The queue is sent every fifteen minutes; a failed report is retried three times before it needs your attention here.', 'reportedip-hive' ),
+			),
+			'community_settings'  => array(
+				__( 'Community Access Key', 'reportedip-hive' ),
+				__( 'The key connects this site to the community network. Without it Hive protects the site on its own (Local Shield); with it the site shares attacks and receives the warnings of every other member. The key also tells Hive which plan you have.', 'reportedip-hive' ),
+			),
+			'community_community' => array(
+				__( 'Community', 'reportedip-hive' ),
+				__( 'What this site shares with the network and what it gets back. An address that attacks one member is known to all others before it reaches them.', 'reportedip-hive' ),
+			),
+			'community_badges'    => array(
+				__( 'Badges', 'reportedip-hive' ),
+				__( 'A small sign for your footer that shows visitors the site is protected. It is optional and changes nothing about the protection.', 'reportedip-hive' ),
+			),
+			'community_addon'     => array(
+				__( 'Add-on', 'reportedip-hive' ),
+				__( 'What the ReportedIP Hive Pro add-on brings on top of this plugin and which of it this site has.', 'reportedip-hive' ),
+			),
+			'tools_data'          => array(
+				__( 'Data', 'reportedip-hive' ),
+				__( 'Move settings between sites, clean up old log entries and decide what happens to the data when the plugin is removed.', 'reportedip-hive' ),
+			),
+			'tools_diagnose'      => array(
+				__( 'Diagnostics', 'reportedip-hive' ),
+				__( 'Checks whether Hive works as it should on this server, and a support bundle to send along when something does not.', 'reportedip-hive' ),
 			),
 		);
 
@@ -3352,7 +3385,7 @@ class ReportedIP_Hive_Admin_Settings {
 	 * @return void
 	 * @since  2.1.57
 	 */
-	private static function render_tab_intro( $key ) {
+	public static function render_tab_intro( $key ) {
 		list( $title, $text ) = self::tab_intro( $key );
 		if ( '' === $title ) {
 			return;
@@ -3382,7 +3415,11 @@ class ReportedIP_Hive_Admin_Settings {
 			__( 'Activity', 'reportedip-hive' ),
 			is_network_admin()
 				? __( 'What happened in this network, which addresses are blocked or trusted, and what is on its way to the community', 'reportedip-hive' )
-				: __( 'What happened on this site, which addresses are blocked or trusted, and what is on its way to the community', 'reportedip-hive' )
+				: __( 'What happened on this site, which addresses are blocked or trusted, and what is on its way to the community', 'reportedip-hive' ),
+			array(
+				'ip_lists' => __( 'IP Lists', 'reportedip-hive' ),
+				'advanced' => __( 'Report Queue', 'reportedip-hive' ),
+			)[ $active_tab ] ?? ''
 		);
 		?>
 
@@ -3990,7 +4027,10 @@ class ReportedIP_Hive_Admin_Settings {
 				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
 				<?php esc_html_e( 'Maintenance & exports', 'reportedip-hive' ); ?>
 			</h2>
-			<p class="rip-settings-section__desc"><?php esc_html_e( 'These actions run immediately. Retention and anonymisation thresholds are configured on the Privacy & Logs tab.', 'reportedip-hive' ); ?></p>
+			<p class="rip-settings-section__desc">
+				<?php esc_html_e( 'These actions run immediately. Retention and anonymisation thresholds are set under Protection Settings, tab Operations, section Privacy & Logs.', 'reportedip-hive' ); ?>
+				<a href="<?php echo esc_url( self::get_admin_page_url( 'admin.php?page=reportedip-hive-protection&tab=operations' ) . '#privacy_logs' ); ?>"><?php esc_html_e( 'Open the section', 'reportedip-hive' ); ?></a>
+			</p>
 
 			<div class="rip-card">
 				<div class="rip-card__body">
@@ -4855,7 +4895,7 @@ class ReportedIP_Hive_Admin_Settings {
 			'security_summary'  => $security_summary,
 		);
 
-		self::render_page_header( __( 'Community & Key', 'reportedip-hive' ), __( 'Join the hive, share threats, set a badge, and help every member stay protected', 'reportedip-hive' ) );
+		self::render_page_header( __( 'Community & Key', 'reportedip-hive' ), __( 'Join the hive, share threats, set a badge, and help every member stay protected', 'reportedip-hive' ), (string) ( self::community_tabs()[ $tab ] ?? '' ) );
 		?>
 
 			<nav class="rip-nav-tabs" aria-label="<?php esc_attr_e( 'Community sections', 'reportedip-hive' ); ?>">
@@ -4865,6 +4905,7 @@ class ReportedIP_Hive_Admin_Settings {
 			</nav>
 
 			<div class="rip-content">
+				<?php self::render_tab_intro( 'community_' . $tab ); ?>
 				<?php if ( 'settings' === $tab ) : ?>
 
 					<?php $this->render_connection_card(); ?>
