@@ -4,7 +4,7 @@ Tags: security, firewall, brute-force, 2fa, anti-spam
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 3.0.7
+Stable tag: 3.0.8
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -225,6 +225,12 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 
 == Changelog ==
 
+= 3.0.8 =
+* Fix: the 404 scanner counts each path once per visitor, so a broken URL a page requests on every view no longer blocks ordinary visitors.
+* Fix: primary link buttons keep their white label on hover and focus.
+* Protection Settings, the header check and the Community & Key, Data and Diagnostics tabs explain in plain words what each section and header protects against.
+* Page headers name the open tab; next steps cards name the page and section their button opens.
+
 = 3.0.7 =
 * Fix: the honeypot field of protected forms hides itself through its own style attribute, so an optimizer that strips unused CSS no longer leaves it visible.
 * Caching and optimization plugins get the form protection assets as exclusions on their own, and page caches are purged once after the update.
@@ -279,6 +285,9 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 * Database schema 25.
 
 == Upgrade Notice ==
+
+= 3.0.8 =
+Fixes false blocks by the 404 scanner when a page requests the same broken URL on every view.
 
 = 3.0.7 =
 Form protection now works next to caching and optimization plugins without manual exclusions. Page caches are purged once after the update.
