@@ -1,7 +1,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: ReportedIP Hive readme 3.0.5\n"
+"Project-Id-Version: ReportedIP Hive readme 3.0.8\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -15,8 +15,16 @@ msgstr ""
 msgid "ReportedIP Hive: Firewall, Brute Force Protection, 2FA and Anti-Spam"
 msgstr ""
 
+#. Found in faq paragraph.
+msgid "Yes. The plugin registers its form protection script and the rule that hides its honeypot field with WP Rocket, LiteSpeed Cache, Perfmatters, FlyingPress, Autoptimize, SiteGround Optimizer, Hummingbird, Jetpack Boost, W3 Total Cache, WP-Optimize, Breeze and Cloudflare Rocket Loader, so unused-CSS removal, delayed JavaScript, defer and combining leave them alone. Nothing has to be entered by hand. The honeypot field also hides itself without any stylesheet."
+msgstr ""
+
+#. Found in faq header.
+msgid "Does it work with caching and optimization plugins?"
+msgstr ""
+
 #. Found in description list item.
-msgid "<strong>Spam protection for further form plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator, Ultimate Member and the withdrawal form of EU Order Withdrawal Button (also bundled in Germanized)."
+msgid "<strong>Spam protection for further form plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Divi, Formidable Forms, Forminator, Ultimate Member and the withdrawal form of EU Order Withdrawal Button (also bundled in Germanized)."
 msgstr ""
 
 #. Found in description list item.
@@ -581,6 +589,38 @@ msgstr ""
 
 #. Found in description header.
 msgid "External Services"
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Page headers name the open tab; next steps cards name the page and section their button opens."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Protection Settings, the header check and the Community &amp; Key, Data and Diagnostics tabs explain in plain words what each section and header protects against."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Fix: primary link buttons keep their white label on hover and focus."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Fix: the 404 scanner counts each path once per visitor, so a broken URL a page requests on every view no longer blocks ordinary visitors."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Caching and optimization plugins get the form protection assets as exclusions on their own, and page caches are purged once after the update."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Fix: the honeypot field of protected forms hides itself through its own style attribute, so an optimizer that strips unused CSS no longer leaves it visible."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "On Apache the root .htaccess routes these requests to WordPress, so they are blocked even during an update; nginx snippets carry the matching lines."
+msgstr ""
+
+#. Found in changelog list item.
+msgid "Security: the firewall blocks requests for PHP files in the core updater's staging folders (WordPress updater race fixed in 7.1.4) and bans the source on the first hit."
 msgstr ""
 
 #. Found in changelog list item.

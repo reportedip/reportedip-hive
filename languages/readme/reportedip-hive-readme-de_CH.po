@@ -1,7 +1,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: ReportedIP Hive readme 3.0.7\n"
+"Project-Id-Version: ReportedIP Hive readme 3.0.8\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/reportedip-hive\n"
 "POT-Creation-Date: 2026-10-16T10:11:07+00:00\n"
 "PO-Revision-Date: 2026-10-16T10:11:07+00:00\n"
@@ -691,10 +691,6 @@ msgid "Clearer page names: Protection Settings, Server &amp; Maintenance (always
 msgstr "Klarere Seitennamen: Schutz-Einstellungen, Server &amp; Wartung (immer im Menü) und Community &amp; Schlüssel mit dem Community Access Key im ersten Tab."
 
 #. Found in description list item.
-msgid "<strong>Spam protection for further form plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator, Ultimate Member and the withdrawal form of EU Order Withdrawal Button (also bundled in Germanized)."
-msgstr "<strong>Spamschutz für weitere Formular-Plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Formidable Forms, Forminator, Ultimate Member und das Widerrufsformular von EU Order Withdrawal Button (auch in Germanized enthalten)."
-
-#. Found in description list item.
 msgid "Security headers: X-Content-Type-Options, X-Frame-Options and Referrer-Policy, with an example and a plain explanation for each, a generated nginx and Apache configuration and a check that shows which headers really reach a visitor, cached pages included."
 msgstr "Security-Header: X-Content-Type-Options, X-Frame-Options und Referrer-Policy, jeweils mit Beispiel und verständlicher Erklärung, eine erzeugte Konfiguration für nginx und Apache und eine Prüfung, die zeigt, welche Header wirklich bei Besuchern ankommen, auch auf gecachten Seiten."
 
@@ -721,3 +717,47 @@ msgstr "Konfiguration für nginx und Apache mit den eingestellten Headern direkt
 #. Found in changelog list item.
 msgid "Security headers: a header check shows per header whether it arrives, is missing on cached pages or arrives twice."
 msgstr "Security-Header: Eine Header-Prüfung zeigt je Header, ob er ankommt, auf gecachten Seiten fehlt oder doppelt ankommt."
+
+#. Found in faq paragraph.
+msgid "Yes. The plugin registers its form protection script and the rule that hides its honeypot field with WP Rocket, LiteSpeed Cache, Perfmatters, FlyingPress, Autoptimize, SiteGround Optimizer, Hummingbird, Jetpack Boost, W3 Total Cache, WP-Optimize, Breeze and Cloudflare Rocket Loader, so unused-CSS removal, delayed JavaScript, defer and combining leave them alone. Nothing has to be entered by hand. The honeypot field also hides itself without any stylesheet."
+msgstr "Ja. Das Plugin meldet sein Skript für den Formularschutz und die Regel, die sein Honeypot-Feld versteckt, bei WP Rocket, LiteSpeed Cache, Perfmatters, FlyingPress, Autoptimize, SiteGround Optimizer, Hummingbird, Jetpack Boost, W3 Total Cache, WP-Optimize, Breeze und Cloudflare Rocket Loader an. Das Entfernen ungenutzter CSS, verzögertes JavaScript, defer und das Zusammenfassen von Dateien lassen sie deshalb in Ruhe. Von Hand muss nichts eingetragen werden. Das Honeypot-Feld versteckt sich ausserdem auch ohne Stylesheet."
+
+#. Found in faq header.
+msgid "Does it work with caching and optimization plugins?"
+msgstr "Funktioniert es mit Caching- und Optimierungs-Plugins?"
+
+#. Found in description list item.
+msgid "<strong>Spam protection for further form plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Divi, Formidable Forms, Forminator, Ultimate Member and the withdrawal form of EU Order Withdrawal Button (also bundled in Germanized)."
+msgstr "<strong>Spamschutz für weitere Formular-Plugins:</strong> WPForms, Gravity Forms, Elementor Forms, Divi, Formidable Forms, Forminator, Ultimate Member und das Widerrufsformular von EU Order Withdrawal Button (auch in Germanized enthalten)."
+
+#. Found in changelog list item.
+msgid "Page headers name the open tab; next steps cards name the page and section their button opens."
+msgstr "Seitenköpfe nennen den geöffneten Tab; Karten unter Nächste Schritte nennen Seite und Abschnitt, die ihr Button öffnet."
+
+#. Found in changelog list item.
+msgid "Protection Settings, the header check and the Community &amp; Key, Data and Diagnostics tabs explain in plain words what each section and header protects against."
+msgstr "Schutz-Einstellungen, die Header-Prüfung und die Tabs Community &amp; Schlüssel, Daten und Diagnose erklären in einfachen Worten, wogegen jeder Abschnitt und jeder Header schützt."
+
+#. Found in changelog list item.
+msgid "Fix: primary link buttons keep their white label on hover and focus."
+msgstr "Fix: Primäre Link-Buttons behalten ihre weisse Beschriftung bei Hover und Fokus."
+
+#. Found in changelog list item.
+msgid "Fix: the 404 scanner counts each path once per visitor, so a broken URL a page requests on every view no longer blocks ordinary visitors."
+msgstr "Fix: Der 404-Scanner zählt jeden Pfad nur einmal je Besucher, eine kaputte URL, die eine Seite bei jedem Aufruf anfragt, sperrt also keine normalen Besucher mehr."
+
+#. Found in changelog list item.
+msgid "Caching and optimization plugins get the form protection assets as exclusions on their own, and page caches are purged once after the update."
+msgstr "Caching- und Optimierungs-Plugins erhalten die Dateien des Formularschutzes automatisch als Ausnahmen, und die Seiten-Caches werden nach dem Update einmal geleert."
+
+#. Found in changelog list item.
+msgid "Fix: the honeypot field of protected forms hides itself through its own style attribute, so an optimizer that strips unused CSS no longer leaves it visible."
+msgstr "Fix: Das Honeypot-Feld geschützter Formulare versteckt sich über sein eigenes style-Attribut, ein Optimierer, der ungenutztes CSS entfernt, lässt es also nicht mehr sichtbar stehen."
+
+#. Found in changelog list item.
+msgid "On Apache the root .htaccess routes these requests to WordPress, so they are blocked even during an update; nginx snippets carry the matching lines."
+msgstr "Unter Apache leitet die .htaccess im Wurzelverzeichnis diese Anfragen an WordPress weiter, damit sie auch während eines Updates blockiert werden; die nginx-Snippets enthalten die passenden Zeilen."
+
+#. Found in changelog list item.
+msgid "Security: the firewall blocks requests for PHP files in the core updater's staging folders (WordPress updater race fixed in 7.1.4) and bans the source on the first hit."
+msgstr "Sicherheit: Die Firewall blockiert Anfragen auf PHP-Dateien in den Staging-Ordnern des Core-Updaters (Race Condition im WordPress-Updater, behoben in 7.1.4) und sperrt die Quelle beim ersten Treffer."
