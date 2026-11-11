@@ -633,12 +633,16 @@ class ReportedIP_Hive_WAF {
 			if ( ! is_array( $rule ) || empty( $rule['pattern'] ) ) {
 				continue;
 			}
-			$target  = isset( $rule['target'] ) ? (string) $rule['target'] : 'all';
-			$subject = isset( $subjects[ $target ] ) ? $subjects[ $target ] : '';
-			if ( '' === $subject ) {
-				continue;
+			$target   = isset( $rule['target'] ) ? (string) $rule['target'] : 'all';
+			$fragment = null;
+			foreach ( isset( $subjects[ $target ] ) ? $subjects[ $target ] : array() as $subject ) {
+				if ( '' !== $subject ) {
+					$fragment = self::match_fragment( (string) $rule['pattern'], $subject );
+				}
+				if ( null !== $fragment ) {
+					break;
+				}
 			}
-			$fragment = self::match_fragment( (string) $rule['pattern'], $subject );
 			if ( null !== $fragment ) {
 				$candidate                   = $rule;
 				$candidate['matched']        = $fragment;
@@ -815,8 +819,12 @@ class ReportedIP_Hive_WAF {
 	/**
 	 * Assemble the inspection subjects for the required targets only.
 	 *
+	 * Every target maps to a list of subjects. The URI and `all` targets carry
+	 * one entry per URI variant, so a pattern with a wide span cannot join the
+	 * end of one variant to the start of the next (`?s=select+your+union`).
+	 *
 	 * @param array<string,bool> $targets Required target map.
-	 * @return array<string,string>
+	 * @return array<string,array<int,string>>
 	 * @since  2.1.2
 	 */
 	private function collect_subjects( array $targets, array $server, array $post, $raw_body ) {
@@ -824,47 +832,49 @@ class ReportedIP_Hive_WAF {
 		$want_body = isset( $targets['body'] ) || isset( $targets['all'] );
 		$want_ua   = isset( $targets['ua'] ) || isset( $targets['all'] );
 
-		$uri  = $want_uri ? $this->uri_subject( $server ) : '';
+		$uris = $want_uri ? $this->uri_subjects( $server ) : array( '' );
 		$body = $want_body ? $this->body_subject( $post, $raw_body ) : '';
 		$ua   = $want_ua ? $this->ua_subject( $server ) : '';
 
 		$subjects = array();
 		if ( isset( $targets['uri'] ) ) {
-			$subjects['uri'] = $uri;
+			$subjects['uri'] = $uris;
 		}
 		if ( isset( $targets['body'] ) ) {
-			$subjects['body'] = $body;
+			$subjects['body'] = array( $body );
 		}
 		if ( isset( $targets['ua'] ) ) {
-			$subjects['ua'] = $ua;
+			$subjects['ua'] = array( $ua );
 		}
 		if ( isset( $targets['all'] ) ) {
-			$subjects['all'] = $this->cap( $uri . "\n" . $body . "\n" . $ua );
+			$subjects['all'] = array();
+			foreach ( $uris as $uri ) {
+				$subjects['all'][] = $this->cap( $uri . "\n" . $body . "\n" . $ua );
+			}
 		}
 		return $subjects;
 	}
 
 	/**
-	 * Build the URI subject: the raw request target plus a once-decoded variant
-	 * so both `../` and `%2e%2e` style payloads are visible to a single pattern.
+	 * Build the URI variants: the raw request target plus a once-decoded
+	 * variant so both `../` and `%2e%2e` style payloads are visible.
 	 *
 	 * A form-decoded variant (`+` read as a space, the way PHP fills `$_GET`)
 	 * follows when it differs: `rawurldecode()` keeps the `+`, so a query such
 	 * as `?id=1)+AND+1=0+UNION+ALL+...` slipped past every signature that
 	 * expects whitespace between the keywords. The pre-WordPress guard builds
-	 * the same three variants.
+	 * the same variants and also tests each one on its own.
 	 *
 	 * @param array<string,mixed> $server Unslashed server vars.
-	 * @return string
-	 * @since  2.1.2
+	 * @return array<int,string> Distinct variants, `array( '' )` without a URI.
+	 * @since  3.0.9
 	 */
-	private function uri_subject( array $server ) {
+	private function uri_subjects( array $server ) {
 		$raw = isset( $server['REQUEST_URI'] ) ? (string) $server['REQUEST_URI'] : '';
 		if ( '' === $raw ) {
-			return '';
+			return array( '' );
 		}
-		$parts = array_unique( array( $raw, rawurldecode( $raw ), urldecode( $raw ) ) );
-		return $this->cap( implode( "\n", $parts ) );
+		return array_map( array( $this, 'cap' ), array_values( array_unique( array( $raw, rawurldecode( $raw ), urldecode( $raw ) ) ) ) );
 	}
 
 	/**
@@ -875,7 +885,7 @@ class ReportedIP_Hive_WAF {
 	 * percent-encoded payload smuggled inside a JSON body (e.g. a REST batch
 	 * sub-request whose query string carries `SLEEP%283%29`) is visible to the
 	 * same signatures that already see it in the URL, mirroring
-	 * {@see uri_subject()}. `$post` is already url-decoded by PHP, so only the
+	 * {@see uri_subjects()}. `$post` is already url-decoded by PHP, so only the
 	 * raw stream needs the decode pass.
 	 *
 	 * @param array<string,mixed> $post     Unslashed body params.

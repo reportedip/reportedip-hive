@@ -26,6 +26,11 @@
  * rules cover the Same-Origin-Method-Execution escalation, where the REST JSONP
  * callback carries property traversal instead of a plain function name.
  *
+ * `waf_lfi_proc` covers the `/proc/self/environ` family that LFI scanners try
+ * in the path and in every parameter. `waf_phpcgi_argv` covers the PHP-CGI
+ * argument injection (CVE-2024-4577), where a soft hyphen or a plain `-d`
+ * in the query sets `allow_url_include` and `auto_prepend_file`.
+ *
  * @package   ReportedIP_Hive
  * @author    Patrick Schlesinger <1@reportedip.com>
  * @copyright 2025-2026 Patrick Schlesinger
@@ -144,6 +149,22 @@ return array(
 			'pattern'  => '(?i)/wp-content/upgrade(?:-temp-backup)?/[^?#\s]*\.php',
 			'paranoia' => 1,
 			'severity' => 'critical',
+			'target'   => 'uri',
+		),
+		array(
+			'id'       => 'waf_lfi_proc',
+			'group'    => 'file_probe',
+			'pattern'  => '(?i)/proc/(?:self|thread-self|\d{1,7})/(?:environ|cmdline|cgroup|maps|mounts|status|fd/)',
+			'paranoia' => 1,
+			'severity' => 'high',
+			'target'   => 'uri',
+		),
+		array(
+			'id'       => 'waf_phpcgi_argv',
+			'group'    => 'php_injection',
+			'pattern'  => '(?i)\bd[\s+]+(?:allow_url_include|auto_prepend_file|cgi\.force_redirect|cgi\.redirect_status_env)\b',
+			'paranoia' => 1,
+			'severity' => 'high',
 			'target'   => 'uri',
 		),
 		array(

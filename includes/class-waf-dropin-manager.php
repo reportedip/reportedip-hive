@@ -1137,7 +1137,7 @@ try {
 		foreach ( $exceptions as $ex ) {
 			if ( 'all' === ( isset( $ex['scope'] ) ? $ex['scope'] : '' ) && reportedip_hive_dropin_loc_match( $ex, $req_path, $ip ) ) { return; }
 		}
-		$uri_subject = implode( "\n", array_unique( array( $uri, $dec, urldecode( $uri ) ) ) );
+		$uri_subjects = array_values( array_unique( array( $uri, $dec, urldecode( $uri ) ) ) );
 		$ua  = isset( $_SERVER['HTTP_USER_AGENT'] ) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
 		$body = '';
 		$skip_body = __RIP_SKIP_AUTHED__ && reportedip_hive_dropin_has_login_cookie( $_COOKIE );
@@ -1150,7 +1150,8 @@ try {
 				if ( $raw_decoded !== $raw ) { $body .= "\n" . $raw_decoded; }
 			}
 		}
-		$all = $uri_subject . "\n" . $body . "\n" . $ua;
+		$all = array();
+		foreach ( $uri_subjects as $one ) { $all[] = $one . "\n" . $body . "\n" . $ua; }
 
 		$prev = ini_get( 'pcre.backtrack_limit' );
 		if ( false !== $prev ) { @ini_set( 'pcre.backtrack_limit', '100000' ); }
@@ -1158,14 +1159,17 @@ try {
 		foreach ( $rules as $rule ) {
 			if ( empty( $rule['pattern'] ) ) { continue; }
 			$target = isset( $rule['target'] ) ? $rule['target'] : 'all';
-			if ( 'uri' === $target ) { $subject = $uri_subject; }
-			elseif ( 'body' === $target ) { $subject = $body; }
-			elseif ( 'ua' === $target ) { $subject = $ua; }
-			else { $subject = $all; }
-			if ( '' === $subject ) { continue; }
+			if ( 'uri' === $target ) { $list = $uri_subjects; }
+			elseif ( 'body' === $target ) { $list = array( $body ); }
+			elseif ( 'ua' === $target ) { $list = array( $ua ); }
+			else { $list = $all; }
 			$compiled = '~' . str_replace( '~', '\~', (string) $rule['pattern'] ) . '~';
 			$found    = array();
-			if ( 1 === @preg_match( $compiled, $subject, $found ) ) {
+			$matched  = false;
+			foreach ( $list as $subject ) {
+				if ( '' !== $subject && 1 === @preg_match( $compiled, $subject, $found ) ) { $matched = true; break; }
+			}
+			if ( $matched ) {
 				if ( reportedip_hive_dropin_excepted( $exceptions, $rule, $req_path, $ip ) ) { continue; }
 				$hit                   = $rule;
 				$hit['matched']        = isset( $found[0] ) ? (string) $found[0] : '';

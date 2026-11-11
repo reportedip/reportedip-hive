@@ -173,6 +173,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 				$this->assertIsArray( $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => $uri ), array(), null ), "$uri must trip the boolean rule" );
 			}
 			$this->assertNull( $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => '/?s=rock+and+roll' ), array(), null ), 'A plain search must pass' );
+
+			$union = array_values( array_filter( $baseline['rules'], static fn( $r ) => 'waf_sqli_union' === $r['id'] ) );
+			foreach ( array( '/?s=select+your+union', '/?s=select%20your%20union' ) as $uri ) {
+				$this->assertNull( $this->waf()->evaluate( $union, array( 'REQUEST_URI' => $uri ), array(), null ), "$uri must not match across two decoded variants" );
+			}
 		}
 
 		/**
@@ -483,6 +488,32 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$legit = array( '/?s=extract+value', '/blog/how-to-update-xml-files/', '/?s=updatexml' );
 			foreach ( $legit as $uri ) {
 				$this->assertNull( $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => $uri ), array(), null ), "Ordinary request '{$uri}' must not trip the rule." );
+			}
+		}
+
+		/**
+		 * The /proc/self family and the PHP-CGI argument injection come straight
+		 * from fleet access logs. Both rules read the URI only, so an article
+		 * about either topic stays untouched.
+		 */
+		public function test_baseline_blocks_proc_self_and_phpcgi_argv(): void {
+			$rules = array( $this->baseline_rule( 'waf_lfi_proc' ), $this->baseline_rule( 'waf_phpcgi_argv' ) );
+
+			$attacks = array(
+				'/proc/self/environ',
+				'/userfiles/?path=../../../../proc/self/environ',
+				'/api/fs/read?allowOutsideWorkspace=true&path=/proc/self/cmdline',
+				'/proc/self/cgroup/',
+				'/index.php?%ADd+cgi.force_redirect%3D0+%ADd+allow_url_include%3D1+%ADd+auto_prepend_file%3Dphp://input',
+				'/php-cgi/php-cgi.exe?-d allow_url_include=1 -d auto_prepend_file=php://input',
+			);
+			foreach ( $attacks as $uri ) {
+				$this->assertIsArray( $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => $uri ), array(), null ), "Probe '{$uri}' must be blocked." );
+			}
+
+			$legit = array( '/blog/linux-proc-filesystem/', '/?s=proc+self+environ', '/?s=allow_url_include', '/produkte/self-service/', '/?d=allow' );
+			foreach ( $legit as $uri ) {
+				$this->assertNull( $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => $uri ), array(), null ), "Ordinary request '{$uri}' must not trip the rules." );
 			}
 		}
 
