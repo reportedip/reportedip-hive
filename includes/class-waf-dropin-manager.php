@@ -1137,7 +1137,7 @@ try {
 		foreach ( $exceptions as $ex ) {
 			if ( 'all' === ( isset( $ex['scope'] ) ? $ex['scope'] : '' ) && reportedip_hive_dropin_loc_match( $ex, $req_path, $ip ) ) { return; }
 		}
-		$uri_subject = ( $uri === $dec ) ? $uri : $uri . "\n" . $dec;
+		$uri_subject = implode( "\n", array_unique( array( $uri, $dec, urldecode( $uri ) ) ) );
 		$ua  = isset( $_SERVER['HTTP_USER_AGENT'] ) ? (string) $_SERVER['HTTP_USER_AGENT'] : '';
 		$body = '';
 		$skip_body = __RIP_SKIP_AUTHED__ && reportedip_hive_dropin_has_login_cookie( $_COOKIE );

@@ -848,6 +848,12 @@ class ReportedIP_Hive_WAF {
 	 * Build the URI subject: the raw request target plus a once-decoded variant
 	 * so both `../` and `%2e%2e` style payloads are visible to a single pattern.
 	 *
+	 * A form-decoded variant (`+` read as a space, the way PHP fills `$_GET`)
+	 * follows when it differs: `rawurldecode()` keeps the `+`, so a query such
+	 * as `?id=1)+AND+1=0+UNION+ALL+...` slipped past every signature that
+	 * expects whitespace between the keywords. The pre-WordPress guard builds
+	 * the same three variants.
+	 *
 	 * @param array<string,mixed> $server Unslashed server vars.
 	 * @return string
 	 * @since  2.1.2
@@ -857,8 +863,8 @@ class ReportedIP_Hive_WAF {
 		if ( '' === $raw ) {
 			return '';
 		}
-		$decoded = rawurldecode( $raw );
-		return $this->cap( $raw === $decoded ? $raw : $raw . "\n" . $decoded );
+		$parts = array_unique( array( $raw, rawurldecode( $raw ), urldecode( $raw ) ) );
+		return $this->cap( implode( "\n", $parts ) );
 	}
 
 	/**

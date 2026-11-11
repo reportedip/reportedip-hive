@@ -160,6 +160,22 @@ namespace ReportedIP\Hive\Tests\Unit {
 		}
 
 		/**
+		 * A form-encoded query carries its spaces as `+`. Signatures that expect
+		 * whitespace between keywords never saw `?id=1+or+1=1--`, while the same
+		 * payload with `%20` was blocked; 1,300 such REST probes reached
+		 * WordPress in one week.
+		 */
+		public function test_evaluate_reads_plus_as_space_in_the_query(): void {
+			$baseline = include dirname( __DIR__, 2 ) . '/data/rulesets/waf-baseline.php';
+			$rules    = array_values( array_filter( $baseline['rules'], static fn( $r ) => 'waf_sqli_bool' === $r['id'] ) );
+
+			foreach ( array( '/?id=1+or+1=1--', '/?rest_route=/wp/v2/posts/1&author_exclude=1)+AND+1=0+--' ) as $uri ) {
+				$this->assertIsArray( $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => $uri ), array(), null ), "$uri must trip the boolean rule" );
+			}
+			$this->assertNull( $this->waf()->evaluate( $rules, array( 'REQUEST_URI' => '/?s=rock+and+roll' ), array(), null ), 'A plain search must pass' );
+		}
+
+		/**
 		 * The baseline traversal rule must see every encoding an attacker can put
 		 * on the wire, the double-encoded one included: PHP decodes the query
 		 * once and WordPress decoded `pagename` a second time (CVE-2026-87902),

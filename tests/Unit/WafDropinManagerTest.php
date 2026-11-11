@@ -494,6 +494,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'Forbidden', $verdict, 'URL-based attacks must be caught even for authenticated sessions.' );
 		}
 
+		public function test_guard_reads_plus_as_space_in_the_query(): void {
+			$this->assertSame( 'Forbidden', $this->run_guard( array( 'REQUEST_URI' => '/?id=1+or+1=1--' ) ), 'A form-encoded boolean injection must be blocked before WordPress.' );
+			$this->assertSame( 'PASS', $this->run_guard( array( 'REQUEST_URI' => '/?s=rock+and+roll' ) ), 'A plain search must pass the guard.' );
+		}
+
 		public function test_guard_inspects_body_when_skip_disabled(): void {
 			$GLOBALS['wp_options'][ \ReportedIP_Hive_WAF::OPT_DROPIN_SKIP_AUTHENTICATED ] = false;
 			$verdict = $this->run_guard(
