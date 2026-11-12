@@ -2,6 +2,12 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [3.0.9] - unreleased
+
+### Changed
+- The middle plan is called Pro in the tier badge, the plan labels and the readme; the Business description names the audit trail, account blocking and the higher mail and SMS quotas instead of features that do not ship.
+- The key test on the Community page lists only the features it knows; raw feature flags of the account are no longer printed.
+
 ## [3.0.8] - 2026-11-10
 
 ### Fixes

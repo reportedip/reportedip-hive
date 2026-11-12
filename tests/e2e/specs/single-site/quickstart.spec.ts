@@ -140,7 +140,7 @@ test.describe('quickstart', () => {
 
 		await page.fill('#rip-api-key', PRO_KEY);
 		await page.locator('#rip-validate-key').click();
-		await expect(page.locator('#rip-api-key-status .rip-input-status--success')).toContainText('Professional');
+		await expect(page.locator('#rip-api-key-status .rip-input-status--success')).toContainText('Pro');
 		if (WITH_ADD_ON) {
 			await expect(page.locator('#rip-quickstart-features li[data-rank="1"]').first()).not.toHaveClass(/rip-quickstart__feature--locked/);
 			await expect(page.locator('#rip-quickstart-features li[data-rank="2"]').first()).toHaveClass(/rip-quickstart__feature--locked/);

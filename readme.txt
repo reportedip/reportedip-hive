@@ -104,7 +104,7 @@ ReportedIP Hive does not scan files for malware and does not monitor file integr
 
 ReportedIP Hive Pro is a separate add-on for paid plans. It is not hosted on wordpress.org and adds new features on top of this plugin; nothing in the free plugin is held back for it.
 
-Professional plan:
+Pro plan:
 
 * **Managed 2FA mail relay** (500 mails per month) and **SMS two-factor authentication** through an EU SMS gateway (25 SMS per month).
 * **WooCommerce two-factor authentication** on My Account, the classic checkout and the WooCommerce Blocks login, inside the shop theme.

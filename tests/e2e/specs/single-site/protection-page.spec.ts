@@ -199,7 +199,7 @@ test.describe('protection page', () => {
 		const rows = page.locator('.rip-protection__field--catalog');
 		await expect(rows).toHaveCount(14);
 		const tor = page.locator('#blocking .rip-protection__field--catalog[data-feature="tor_blocking"]');
-		await expect(tor).toContainText('Available in the ReportedIP Hive Pro add-on (Professional plan).');
+		await expect(tor).toContainText('Available in the ReportedIP Hive Pro add-on (Pro plan).');
 		await expect(tor.locator('a')).toHaveAttribute('href', 'https://reportedip.com/products/wordpress-plugin/?rc=hive-plugin#hive-response');
 		await expect(tor.locator('input')).toHaveCount(0);
 		await expect(page.locator('.rip-protection')).not.toContainText(/€|upgrade|unl[o]ck/i);

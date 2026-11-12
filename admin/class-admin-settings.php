@@ -4740,7 +4740,7 @@ class ReportedIP_Hive_Admin_Settings {
 		$labels = array(
 			'free'         => 'Free',
 			'contributor'  => 'Contributor',
-			'professional' => 'Professional',
+			'professional' => 'Pro',
 			'business'     => 'Business',
 			'enterprise'   => 'Enterprise',
 			'honeypot'     => 'Honeypot',

@@ -386,12 +386,14 @@
                             const featureLabels = {
                                 'canCheck': 'IP Reputation Check',
                                 'canReport': 'Report IPs',
-                                'canBulkCheck': 'Bulk IP Check',
-                                'hasWhiteLabel': 'White Label'
+                                'canBulkCheck': 'Bulk IP Check'
                             };
-                            
+
                             for (const [key, value] of Object.entries(features)) {
-                                const label = featureLabels[key] || key;
+                                const label = featureLabels[key];
+                                if (!label) {
+                                    continue;
+                                }
                                 const icon = value ? 'yes' : '✗';
                                 const color = value ? '#28a745' : '#6c757d';
                                 html += '<div class="feature-item" style="color: ' + color + ';">' + icon + ' ' + escapeHtml(label) + '</div>';

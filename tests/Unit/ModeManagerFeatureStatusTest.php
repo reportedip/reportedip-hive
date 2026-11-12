@@ -168,7 +168,7 @@ class ModeManagerFeatureStatusTest extends TestCase {
 		$info = \ReportedIP_Hive_Mode_Manager::get_instance()->get_tier_info( 'professional' );
 
 		$this->assertSame( 'professional', $info['key'] );
-		$this->assertSame( 'PRO', $info['short_label'] );
+		$this->assertSame( 'Pro', $info['short_label'] );
 		$this->assertSame( 'rip-tier-badge--professional', $info['badge_class'] );
 		$this->assertStringContainsString( '<svg', $info['icon'] );
 	}

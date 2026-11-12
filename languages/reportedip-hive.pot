@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2026-11-10T20:54:34+00:00\n"
+"POT-Creation-Date: 2026-11-12T13:29:29+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
 "X-Domain: reportedip-hive\n"
@@ -6623,11 +6623,8 @@ msgid "Honeypot operator, community contributor."
 msgstr ""
 
 #: includes/class-mode-manager.php:722
-msgid "Professional"
-msgstr ""
-
 #: includes/class-mode-manager.php:723
-msgid "PRO"
+msgid "Pro"
 msgstr ""
 
 #: includes/class-mode-manager.php:724
@@ -6640,7 +6637,7 @@ msgid "Business"
 msgstr ""
 
 #: includes/class-mode-manager.php:733
-msgid "Agency-grade: 15 domains per licence (bookable x2, x20), whitelabel, WooCommerce, full WP-CLI."
+msgid "For agencies: 15 domains per licence (bookable x2 to x20), audit trail, account blocking and more mail and SMS."
 msgstr ""
 
 #: includes/class-mode-manager.php:740

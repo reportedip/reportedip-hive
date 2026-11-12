@@ -323,7 +323,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 
 			$blocking = ReportedIP_Hive_Protection_Page::section_markup( 'blocking', $current, $statuses, false, array(), array(), $choices );
 			$this->assertStringContainsString( 'data-feature="tor_blocking"', $blocking );
-			$this->assertStringContainsString( 'Available in the ReportedIP Hive Pro add-on (Professional plan).', $blocking );
+			$this->assertStringContainsString( 'Available in the ReportedIP Hive Pro add-on (Pro plan).', $blocking );
 			$this->assertStringContainsString( 'Needs the Community Network.', $blocking, 'a community-only feature says so' );
 			$this->assertStringContainsString( 'href="https://reportedip.com/products/wordpress-plugin/?rc=hive-plugin#hive-response"', $blocking );
 			$this->assertStringNotContainsString( 'pricing', $blocking );
