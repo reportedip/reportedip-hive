@@ -10,6 +10,7 @@ All changes to ReportedIP Hive are documented here.
 - Extended Protection guard version 11: the guard loads modules from add-ons and passes their queue lines on. Sites rebuild the guard on their own after the update.
 
 ### New
+- WP-CLI: `wp reportedip settings list`, `get <key>` and `set <key> <value>` read and write the settings with the same validation as the admin pages.
 - Hooks for add-on guard modules: the filter `reportedip_hive_guard_modules`, the actions `reportedip_hive_guard_rebake` and `reportedip_hive_guard_queue_entry`, plus the helpers `WAF_Dropin_Manager::build_ip_list()` and `WAF_Dropin_Manager::guard_dir()`.
 - The actions `reportedip_hive_fake_bot_detected` (a fake bot was flagged) and `reportedip_hive_waf_would_block` (a report-only firewall hit).
 - The filters `reportedip_hive_protection_enum_label` (labels of choice values on the Protection Settings page) and `reportedip_hive_mainwp_sync_data` (extra figures in the MainWP sync).

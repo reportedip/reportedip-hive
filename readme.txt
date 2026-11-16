@@ -74,7 +74,7 @@ ReportedIP Hive replaces a CAPTCHA with checks the visitor never sees. No puzzle
 * Security activity log with filters by event type, severity and date, CSV and JSON export.
 * A daily summary of blocked attacks and instant alerts when something got through, such as a new administrator.
 * Settings import and export.
-* WP-CLI: `wp reportedip block`, `unblock`, `whitelist`, `lookup`, `status` and `2fa`.
+* WP-CLI: `wp reportedip block`, `unblock`, `whitelist`, `lookup`, `status`, `settings` and `2fa`.
 * Works behind Cloudflare and other reverse proxies with a trusted proxy list.
 * Compatible with WP Rocket, W3 Total Cache, WP Super Cache and LiteSpeed Cache.
 
@@ -230,6 +230,7 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 * Extended Protection guard version 11 with hooks for add-on modules (`reportedip_hive_guard_modules`, `reportedip_hive_guard_rebake`, `reportedip_hive_guard_queue_entry`).
 * New hooks for add-ons: `reportedip_hive_fake_bot_detected`, `reportedip_hive_waf_would_block`, `reportedip_hive_protection_enum_label`, `reportedip_hive_mainwp_sync_data`.
 * The middle plan is called Pro in the tier badge and the plan labels.
+* New: `wp reportedip settings list`, `get` and `set` read and write the settings from WP-CLI.
 
 = 3.0.8 =
 * Fix: the 404 scanner counts each path once per visitor, so a broken URL a page requests on every view no longer blocks ordinary visitors.

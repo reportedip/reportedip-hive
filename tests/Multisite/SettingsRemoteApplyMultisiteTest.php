@@ -109,4 +109,37 @@ class ReportedIP_Hive_Settings_Remote_Apply_Multisite_Test extends WP_UnitTestCa
 			$result['results']['reportedip_hive_2fa_frontend_slug_site_override']['status']
 		);
 	}
+
+	/**
+	 * The WP-CLI channel writes the network option from a sub-site, reads it
+	 * back and hands the refusal of the pipeline through.
+	 */
+	public function test_cli_channel_writes_the_network_option_and_reports_refusals() {
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-settings-cli.php';
+		$key     = 'reportedip_hive_failed_login_threshold';
+		$site_id = self::factory()->blog->create();
+		switch_to_blog( $site_id );
+		$written = ReportedIP_Hive_Settings_CLI::write( $key, '17' );
+		$again   = ReportedIP_Hive_Settings_CLI::write( $key, '17' );
+		$row     = ReportedIP_Hive_Settings_CLI::rows( $key );
+		restore_current_blog();
+
+		$this->assertSame( 'applied', $written['status'] );
+		$this->assertSame( 'unchanged', $again['status'] );
+		$this->assertSame( 17, (int) get_site_option( $key ) );
+		$this->assertSame( array( array( 'key' => $key, 'kind' => 'int', 'value' => '17' ) ), $row );
+
+		$this->assertSame( 'unknown_key', ReportedIP_Hive_Settings_CLI::write( 'reportedip_hive_no_such_key', '1' )['status'] );
+		$this->assertSame( array(), ReportedIP_Hive_Settings_CLI::rows( 'reportedip_hive_no_such_key' ) );
+
+		$invalid = ReportedIP_Hive_Settings_CLI::write( 'reportedip_hive_rest_access_mode', 'bogus' );
+		$this->assertSame( 'invalid', $invalid['status'] );
+		$this->assertNotSame( '', $invalid['message'], 'the reason travels to the shell' );
+
+		$this->assertSame(
+			array_keys( ReportedIP_Hive_Settings_Registry::remote_spec() ),
+			array_column( ReportedIP_Hive_Settings_CLI::rows(), 'key' ),
+			'list shows every key the pipeline accepts'
+		);
+	}
 }

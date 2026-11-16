@@ -173,6 +173,16 @@ wp reportedip status [--format=<format>]
 wp reportedip support-bundle [--days=<1-30>] [--events=<n>] [--full-ips] [--output=<file>]
 ```
 
+**Settings**
+
+```
+wp reportedip settings list [--format=<table|json>]
+wp reportedip settings get <key> [--format=<table|json>]
+wp reportedip settings set <key> <value>
+```
+
+`set` runs the same validation and plan limits as the admin pages and ends with an error when the value is refused. Switches take `1` or `0`.
+
 **Two-factor administration**
 
 ```

@@ -428,6 +428,7 @@ class ReportedIP_Hive {
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-status-cli.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-support-bundle-cli.php';
 			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-account-block-cli.php';
+			require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-settings-cli.php';
 		}
 
 		if ( is_admin() ) {
