@@ -78,7 +78,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	/**
 	 * Generated-guard format version (bump to force a self-heal regenerate).
 	 */
-	const DROPIN_VERSION = 10;
+	const DROPIN_VERSION = 11;
 
 	/**
 	 * Blocklist header magic. Format v1:
@@ -191,6 +191,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		add_action( 'reportedip_hive_tier_changed', array( $this, 'queue_resync' ) );
 		add_action( 'reportedip_hive_ip_blocked', array( $this, 'on_ip_blocked' ), 10, 3 );
 		add_action( 'reportedip_hive_ip_unblocked', array( $this, 'on_ip_unblocked' ) );
+		add_action( 'reportedip_hive_guard_rebake', array( $this, 'queue_resync' ) );
 		foreach ( array(
 			ReportedIP_Hive_WAF::OPT_ENABLED,
 			ReportedIP_Hive_WAF::OPT_REPORT_ONLY,
@@ -1112,7 +1113,6 @@ try {
 		$exceptions = __RIP_EXCEPTIONS__;
 		$block_cidr = __RIP_BLOCKED_CIDR__;
 		$blocklist  = __RIP_BLOCKLIST__;
-		if ( __RIP_REPORT_ONLY__ ) { return; }
 
 		$ip      = '';
 		$trusted = __RIP_TRUSTED_HEADER__;
@@ -1138,14 +1138,43 @@ try {
 			if ( reportedip_hive_dropin_ip_match( $ip, (string) $entry ) ) { return; }
 		}
 
-		foreach ( $block_cidr as $entry ) {
-			if ( reportedip_hive_dropin_ip_match( $ip, (string) $entry ) ) {
-				reportedip_hive_dropin_refuse( 'X-RIP-BLOCK', 'range' );
+		if ( ! __RIP_REPORT_ONLY__ ) {
+			foreach ( $block_cidr as $entry ) {
+				if ( reportedip_hive_dropin_ip_match( $ip, (string) $entry ) ) {
+					reportedip_hive_dropin_refuse( 'X-RIP-BLOCK', 'range' );
+				}
+			}
+			if ( reportedip_hive_dropin_is_blocked( $blocklist, $ip ) ) {
+				reportedip_hive_dropin_refuse( 'X-RIP-BLOCK', 'ip' );
 			}
 		}
-		if ( reportedip_hive_dropin_is_blocked( $blocklist, $ip ) ) {
-			reportedip_hive_dropin_refuse( 'X-RIP-BLOCK', 'ip' );
+
+		/* Add-on modules run after whitelist and blocklist and before the
+		   rules, also in report-only mode (the module reads report_only from
+		   $env and must not refuse then). Each one is fail-open on its own. */
+		$modules = __RIP_MODULES__;
+		if ( ! empty( $modules ) ) {
+			$env = array(
+				'queue'       => __RIP_QUEUE__,
+				'queue_max'   => __RIP_QUEUE_MAX__,
+				'report_only' => __RIP_REPORT_ONLY__,
+				'https'       => ( ! empty( $_SERVER['HTTPS'] ) && 'off' !== strtolower( (string) $_SERVER['HTTPS'] ) ) || ( isset( $_SERVER['SERVER_PORT'] ) && '443' === (string) $_SERVER['SERVER_PORT'] ),
+			);
+			foreach ( $modules as $module ) {
+				try {
+					$fn = 'reportedip_hive_guard_module_' . $module['id'];
+					if ( ! function_exists( $fn ) ) {
+						if ( ! is_readable( $module['file'] ) ) { continue; }
+						include_once $module['file'];
+					}
+					if ( function_exists( $fn ) ) { $fn( $ip, $module['config'], $env ); }
+				} catch ( \Throwable $module_error ) {
+					continue;
+				}
+			}
 		}
+
+		if ( __RIP_REPORT_ONLY__ ) { return; }
 
 		if ( ! __RIP_ENGINE_ENABLED__ || empty( $rules ) ) { return; }
 
@@ -1251,11 +1280,43 @@ PHP;
 		$cidr_export  = var_export( array_values( $this->blocked_cidr_snapshot() ), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the literal CIDR blocklist into a generated PHP file, not debugging.
 		$hdr_export   = var_export( class_exists( 'ReportedIP_Hive_Security_Headers' ) ? ReportedIP_Hive_Security_Headers::planned_headers() : array(), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the planned security headers into a generated PHP file, not debugging.
 
+		$modules_export = var_export( $this->modules_snapshot(), true ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_var_export -- Baking the add-on guard module list into a generated PHP file, not debugging.
+
 		return str_replace(
-			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_EXCEPTIONS__', '__RIP_TRUSTED_HEADER__', '__RIP_TRUSTED_RANGES__', '__RIP_ENGINE_ENABLED__', '__RIP_REPORT_ONLY__', '__RIP_SKIP_AUTHED__', '__RIP_BODY_NEEDED__', '__RIP_QUEUE_MAX__', '__RIP_QUEUE__', '__RIP_BLOCKED_CIDR__', '__RIP_BLOCKLIST__', '__RIP_HEADERS__' ),
-			array( (string) $version, $rules_export, $wl_export, $ex_export, $header_export, $ranges_export, $engine_export, $report_export, $skip_export, $body_needed_export, (string) self::QUEUE_MAX_BYTES, $queue_export, $cidr_export, $block_export, $hdr_export ),
+			array( '__RIP_VERSION__', '__RIP_RULES__', '__RIP_WHITELIST__', '__RIP_EXCEPTIONS__', '__RIP_TRUSTED_HEADER__', '__RIP_TRUSTED_RANGES__', '__RIP_ENGINE_ENABLED__', '__RIP_REPORT_ONLY__', '__RIP_SKIP_AUTHED__', '__RIP_BODY_NEEDED__', '__RIP_QUEUE_MAX__', '__RIP_QUEUE__', '__RIP_BLOCKED_CIDR__', '__RIP_BLOCKLIST__', '__RIP_HEADERS__', '__RIP_MODULES__' ),
+			array( (string) $version, $rules_export, $wl_export, $ex_export, $header_export, $ranges_export, $engine_export, $report_export, $skip_export, $body_needed_export, (string) self::QUEUE_MAX_BYTES, $queue_export, $cidr_export, $block_export, $hdr_export, $modules_export ),
 			$template
 		);
+	}
+
+	/**
+	 * Guard modules registered by add-ons, validated for baking.
+	 *
+	 * Each row is `id` (a-z, 0-9, underscore), `file` (absolute path to a
+	 * plain PHP file without WordPress dependencies) and `config` (array of
+	 * scalars and arrays, baked with var_export). The guard calls
+	 * `reportedip_hive_guard_module_<id>( $ip, $config, $env )`.
+	 *
+	 * @return array<int,array{id:string,file:string,config:array<mixed>}>
+	 * @since  3.1.0
+	 */
+	public function modules_snapshot() {
+		$raw = apply_filters( 'reportedip_hive_guard_modules', array() );
+		$out = array();
+		foreach ( is_array( $raw ) ? $raw : array() as $row ) {
+			if ( ! is_array( $row ) || empty( $row['id'] ) || empty( $row['file'] ) || ! is_string( $row['id'] ) || ! is_string( $row['file'] ) ) {
+				continue;
+			}
+			if ( ! preg_match( '/^[a-z0-9_]{1,32}$/', $row['id'] ) ) {
+				continue;
+			}
+			$out[] = array(
+				'id'     => $row['id'],
+				'file'   => $row['file'],
+				'config' => isset( $row['config'] ) && is_array( $row['config'] ) ? $row['config'] : array(),
+			);
+		}
+		return $out;
 	}
 
 	/**

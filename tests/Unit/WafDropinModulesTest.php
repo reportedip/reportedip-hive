@@ -144,4 +144,189 @@ class WafDropinModulesTest extends TestCase {
 		$this->assertDirectoryExists( $dir );
 		$this->assertSame( $dir, dirname( $this->mgr()->queue_path() ) );
 	}
+
+	/**
+	 * Register guard modules through the documented filter.
+	 *
+	 * @param array $modules Module rows.
+	 * @return void
+	 */
+	private function register_modules( array $modules ): void {
+		add_filter(
+			'reportedip_hive_guard_modules',
+			static function () use ( $modules ) {
+				return $modules;
+			}
+		);
+	}
+
+	/**
+	 * Write a throwaway module file.
+	 *
+	 * @param string $code PHP code after the open tag.
+	 * @return string Path.
+	 */
+	private function module_file( string $code ): string {
+		$file = tempnam( sys_get_temp_dir(), 'rip-module-' );
+		file_put_contents( $file, "<?php\n" . $code );
+		return $file;
+	}
+
+	/**
+	 * A registered module is baked with its id, file and config.
+	 */
+	public function test_modules_are_baked_into_the_guard() {
+		$file = $this->module_file( '' );
+		$this->register_modules(
+			array(
+				array(
+					'id'     => 'demo',
+					'file'   => $file,
+					'config' => array( 'x' => 1 ),
+				),
+			)
+		);
+		$src = $this->guard_source();
+		unlink( $file );
+		$this->assertStringContainsString( "'id' => 'demo'", $src );
+		$this->assertStringContainsString( var_export( $file, true ), $src );
+		$this->assertStringContainsString( 'reportedip_hive_guard_module_', $src );
+		$this->assertStringNotContainsString( '__RIP_MODULES__', $src );
+	}
+
+	/**
+	 * Malformed rows never reach the guard.
+	 */
+	public function test_malformed_modules_are_dropped() {
+		$this->register_modules(
+			array(
+				array(
+					'id'   => 'bad id!',
+					'file' => '/nope.php',
+				),
+				'x',
+				array( 'file' => '/a.php' ),
+				array(
+					'id'   => 'ok',
+					'file' => array( '/a.php' ),
+				),
+			)
+		);
+		$this->assertSame( array(), $this->mgr()->modules_snapshot() );
+	}
+
+	/**
+	 * Without modules the guard bakes an empty list.
+	 */
+	public function test_no_modules_bake_an_empty_list() {
+		$this->assertSame( array(), $this->mgr()->modules_snapshot() );
+		$this->assertStringContainsString( '$modules = array (' . "\n" . ')', $this->guard_source() );
+	}
+
+	/**
+	 * The guard format version moved with the new placeholder.
+	 */
+	public function test_dropin_version_is_eleven() {
+		$this->assertSame( 11, \ReportedIP_Hive_WAF_Dropin_Manager::DROPIN_VERSION );
+	}
+
+	/**
+	 * The documented rebake action queues a resync.
+	 */
+	public function test_rebake_action_is_wired() {
+		$ctor = new \ReflectionMethod( \ReportedIP_Hive_WAF_Dropin_Manager::class, '__construct' );
+		$ctor->invoke( $this->mgr() );
+		$callbacks = array_column( (array) ( $GLOBALS['wp_actions']['reportedip_hive_guard_rebake'] ?? array() ), 'callback' );
+		$this->assertContains( array( $this->mgr(), 'queue_resync' ), $callbacks );
+		$GLOBALS['wp_actions'] = array();
+	}
+
+	/**
+	 * The guard calls the module with the client IP, its config and the env.
+	 */
+	public function test_guard_runs_the_module() {
+		$file = $this->module_file(
+			'function reportedip_hive_guard_module_probe( $ip, $config, $env ) { echo json_encode( array( $ip, $config, $env["report_only"], isset( $env["queue"], $env["queue_max"], $env["https"] ) ) ); }'
+		);
+		$this->register_modules(
+			array(
+				array(
+					'id'     => 'probe',
+					'file'   => $file,
+					'config' => array( 'limit' => 5 ),
+				),
+			)
+		);
+		$out = $this->run_after_guard( "echo 'PASS';" );
+		unlink( $file );
+		$this->assertSame( '["203.0.113.50",{"limit":5},false,true]PASS', $out );
+	}
+
+	/**
+	 * Report-only still runs modules, the module decides from $env.
+	 */
+	public function test_guard_runs_modules_in_report_only_mode() {
+		$GLOBALS['wp_options']['reportedip_hive_report_only_mode'] = true;
+		$file = $this->module_file( 'function reportedip_hive_guard_module_ro( $ip, $config, $env ) { echo $env["report_only"] ? "RO" : "LIVE"; }' );
+		$this->register_modules(
+			array(
+				array(
+					'id'   => 'ro',
+					'file' => $file,
+				),
+			)
+		);
+		$out = $this->run_after_guard( "echo 'PASS';" );
+		unlink( $file );
+		$this->assertSame( 'ROPASS', $out );
+	}
+
+	/**
+	 * A throwing or missing module never takes the request down.
+	 */
+	public function test_broken_modules_fail_open() {
+		$boom = $this->module_file( 'function reportedip_hive_guard_module_boom( $ip, $config, $env ) { throw new RuntimeException( "x" ); }' );
+		$ok   = $this->module_file( 'function reportedip_hive_guard_module_after( $ip, $config, $env ) { echo "OK"; }' );
+		$this->register_modules(
+			array(
+				array(
+					'id'   => 'missing',
+					'file' => sys_get_temp_dir() . '/rip-no-such-module.php',
+				),
+				array(
+					'id'   => 'boom',
+					'file' => $boom,
+				),
+				array(
+					'id'   => 'after',
+					'file' => $ok,
+				),
+			)
+		);
+		$out = $this->run_after_guard( "echo 'PASS';" );
+		unlink( $boom );
+		unlink( $ok );
+		$this->assertSame( 'OKPASS', $out );
+	}
+
+	/**
+	 * A blocked IP is refused before any module sees it.
+	 */
+	public function test_blocked_ip_never_reaches_a_module() {
+		$this->mgr()->guard_dir();
+		file_put_contents( $this->mgr()->blocklist_path(), \ReportedIP_Hive_WAF_Dropin_Manager::build_ip_list( array( '198.51.100.60' => 0 ) ) );
+		$file = $this->module_file( 'function reportedip_hive_guard_module_seen( $ip, $config, $env ) { echo "SEEN"; }' );
+		$this->register_modules(
+			array(
+				array(
+					'id'   => 'seen',
+					'file' => $file,
+				),
+			)
+		);
+		$out = $this->run_after_guard( "echo 'PASS';", array( 'REMOTE_ADDR' => '198.51.100.60' ) );
+		unlink( $file );
+		unlink( $this->mgr()->blocklist_path() );
+		$this->assertSame( 'Forbidden', $out );
+	}
 }
