@@ -1373,7 +1373,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$body = sprintf(
 			'<strong>%1$s</strong> %2$s',
-			esc_html__( 'ReportedIP Hive - Domain limit:', 'reportedip-hive' ),
+			esc_html__( 'ReportedIP Hive, domain limit:', 'reportedip-hive' ),
 			sprintf(
 				/* translators: 1: domains in use, 2: domain limit of the account, 3: link to the reportedip.com dashboard */
 				esc_html__( 'Your Community Access Key is used on %1$d domains, but your account includes %2$d. See your account in the %3$s.', 'reportedip-hive' ),

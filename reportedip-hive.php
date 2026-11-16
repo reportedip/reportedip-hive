@@ -1836,7 +1836,7 @@ class ReportedIP_Hive {
 			if ( $pending_count >= $critical_threshold ) {
 				$body = sprintf(
 					'<strong>%1$s</strong> %2$s',
-					esc_html__( 'ReportedIP Hive - Queue Critical:', 'reportedip-hive' ),
+					esc_html__( 'ReportedIP Hive, queue critical:', 'reportedip-hive' ),
 					sprintf(
 						/* translators: %1$d: number of pending reports, %2$s: link to community page, %3$s: link to queue page */
 						esc_html__( '%1$d reports pending processing. Your API quota may not be sufficient. %2$s or %3$s.', 'reportedip-hive' ),

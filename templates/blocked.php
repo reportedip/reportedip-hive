@@ -34,7 +34,7 @@ $reportedip_hive_block_strings = 'hide_login' === $reportedip_hive_block_context
 		'reason'    => __( 'Login endpoint protected', 'reportedip-hive' ),
 	)
 	: array(
-		'doc_title' => __( 'Access Denied - IP Blocked', 'reportedip-hive' ),
+		'doc_title' => __( 'Access denied: IP blocked', 'reportedip-hive' ),
 		'title'     => __( 'Access Denied', 'reportedip-hive' ),
 		'message'   => __( 'Your IP address has been temporarily blocked due to suspicious activity detected on this website.', 'reportedip-hive' ),
 		'reason'    => __( 'Security policy violation', 'reportedip-hive' ),

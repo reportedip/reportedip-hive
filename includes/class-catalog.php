@@ -139,7 +139,7 @@ final class ReportedIP_Hive_Catalog {
 			),
 			'sms_relay_via_api'            => array(
 				'label'          => __( 'SMS codes via the managed relay', 'reportedip-hive' ),
-				'description'    => __( 'A second factor by text message, delivered through the EU gateway, no SMS provider account needed.', 'reportedip-hive' ),
+				'description'    => __( 'A second factor by text message, delivered through the EU gateway, no contract with an SMS provider.', 'reportedip-hive' ),
 				'tier'           => 'professional',
 				'section'        => 'account_security',
 				'docs_url'       => self::PRODUCT_URL . '#hive-identity',
@@ -161,7 +161,7 @@ final class ReportedIP_Hive_Catalog {
 			),
 			'hardening_mode'               => array(
 				'label'       => __( 'Hardening mode during attack waves', 'reportedip-hive' ),
-				'description' => __( 'Tightens the sign-in and reputation thresholds for an hour when a coordinated attack is detected.', 'reportedip-hive' ),
+				'description' => __( 'When a coordinated attack is detected, the limits tighten for an hour: 2 failed logins instead of 5 and a block threshold of 60 percent instead of 75.', 'reportedip-hive' ),
 				'tier'        => 'professional',
 				'section'     => 'hardening_mode',
 				'docs_url'    => self::PRODUCT_URL . '#hive-response',

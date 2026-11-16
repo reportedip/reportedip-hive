@@ -14,27 +14,27 @@ msgstr ""
 "X-Domain: reportedip-hive\n"
 
 #. Plugin Name of the plugin
-#: reportedip-hive.php:3
+#: reportedip-hive.php
 msgid "ReportedIP Hive: Firewall, Brute Force Protection, 2FA and Anti-Spam"
 msgstr "ReportedIP Hive: cortafuegos, protección contra fuerza bruta, 2FA y antispam"
 
 #. Plugin URI of the plugin
-#: reportedip-hive.php:4
+#: reportedip-hive.php
 msgid "https://reportedip.com/products/wordpress-plugin/?rc=hive-plugin"
 msgstr "https://reportedip.com/products/wordpress-plugin/?rc=hive-plugin"
 
 #. Description of the plugin
-#: reportedip-hive.php:5
+#: reportedip-hive.php
 msgid "Community-powered WordPress security, real-time threat intelligence"
 msgstr "Seguridad para WordPress respaldada por la comunidad, inteligencia de amenazas en tiempo real"
 
 #. Author of the plugin
-#: reportedip-hive.php:8
+#: reportedip-hive.php
 msgid "Patrick Schlesinger, ReportedIP"
 msgstr "Patrick Schlesinger, ReportedIP"
 
 #. Author URI of the plugin
-#: reportedip-hive.php:9
+#: reportedip-hive.php
 msgid "https://reportedip.com/?rc=hive-plugin"
 msgstr "https://reportedip.com/?rc=hive-plugin"
 
@@ -934,10 +934,6 @@ msgstr "Comprobar la dirección"
 #: admin/class-admin-settings.php:1339
 msgid "The address of this site is listed in the community database"
 msgstr "La dirección de este sitio figura en la base de datos de la comunidad"
-
-#: admin/class-admin-settings.php:1376
-msgid "ReportedIP Hive - Domain limit:"
-msgstr "ReportedIP Hive - Límite de dominios:"
 
 #. translators: 1: domains in use, 2: domain limit of the account, 3: link to the reportedip.com dashboard
 #: admin/class-admin-settings.php:1379
@@ -5463,10 +5459,6 @@ msgstr "Respuesta de la API no válida o error del servidor."
 msgid "API reports disabled in Local Mode"
 msgstr "Informes a la API desactivados en el modo local"
 
-#: includes/class-api-client.php:1392
-msgid "Quota status unknown - will attempt API calls"
-msgstr "Estado de la cuota desconocido, se intentarán las llamadas a la API"
-
 #: includes/class-api-client.php:1416
 msgid "Your API key currently has no report permission. Report permission comes with a Contributor account; see your account on reportedip.com."
 msgstr "Tu clave de API no tiene ahora permiso para enviar informes. El permiso de informe viene con una cuenta Contributor; consulta tu cuenta en reportedip.com."
@@ -5511,10 +5503,6 @@ msgstr "Envía los correos de 2FA y las alertas a través de un servidor de retr
 msgid "SMS codes via the managed relay"
 msgstr "Códigos SMS mediante la retransmisión gestionada"
 
-#: includes/class-catalog.php:142
-msgid "A second factor by text message, delivered through the EU gateway, no SMS provider account needed."
-msgstr "Un segundo factor por mensaje de texto, entregado a través de la pasarela de la UE, sin necesidad de cuenta en un proveedor de SMS."
-
 #: includes/class-catalog.php:149
 msgid "Storefront 2FA for WooCommerce"
 msgstr "2FA en la tienda para WooCommerce"
@@ -5534,10 +5522,6 @@ msgstr "Vuelve a pedir el segundo factor ante un nuevo dispositivo, dirección, 
 #: includes/class-catalog.php:163
 msgid "Hardening mode during attack waves"
 msgstr "Modo de refuerzo durante oleadas de ataques"
-
-#: includes/class-catalog.php:164
-msgid "Tightens the sign-in and reputation thresholds for an hour when a coordinated attack is detected."
-msgstr "Endurece durante una hora los umbrales de acceso y de reputación cuando se detecta un ataque coordinado."
 
 #: includes/class-catalog.php:170
 msgid "Computation check on forms"
@@ -6629,10 +6613,6 @@ msgstr "Operador de honeypot, colaborador de la comunidad."
 msgid "Pro"
 msgstr "Pro"
 
-#: includes/class-mode-manager.php:724
-msgid "Up to 3 domains, managed mail and SMS relay, priority sync."
-msgstr "Hasta 3 dominios, relé gestionado de correo y SMS, sincronización prioritaria."
-
 #: includes/class-mode-manager.php:731
 #: includes/class-mode-manager.php:732
 msgid "Business"
@@ -6646,10 +6626,6 @@ msgstr "Para agencias: 15 dominios por licencia (contratable de 2 a 20 veces), r
 #: includes/class-mode-manager.php:741
 msgid "Enterprise"
 msgstr "Enterprise"
-
-#: includes/class-mode-manager.php:742
-msgid "Unlimited domains, AVV, dedicated onboarding, priority phone support."
-msgstr "Dominios ilimitados, AVV, incorporación dedicada, soporte telefónico prioritario."
 
 #: includes/class-mode-manager.php:749
 msgid "Honeypot Operator"
@@ -9786,10 +9762,6 @@ msgstr "Ver cola"
 msgid "Retry all"
 msgstr "Reintentar todos"
 
-#: reportedip-hive.php:1839
-msgid "ReportedIP Hive - Queue Critical:"
-msgstr "ReportedIP Hive, cola en estado crítico:"
-
 #. translators: %1$d: number of pending reports, %2$s: link to community page, %3$s: link to queue page
 #: reportedip-hive.php:1842
 #, php-format
@@ -9836,10 +9808,6 @@ msgstr "El administrador del sitio ha desactivado este endpoint."
 #: templates/blocked.php:34
 msgid "Login endpoint protected"
 msgstr "Punto de acceso protegido"
-
-#: templates/blocked.php:37
-msgid "Access Denied - IP Blocked"
-msgstr "Acceso denegado: IP bloqueada"
 
 #: templates/blocked.php:38
 msgid "Access Denied"
@@ -10296,3 +10264,35 @@ msgstr "En tu próximo acceso se te pedirá el segundo factor."
 #, php-format
 msgid "This page is protected by %1$sReportedIP%2$s, a community initiative for a safer internet."
 msgstr "Esta página está protegida por %1$sReportedIP%2$s, una iniciativa comunitaria para un internet más seguro."
+
+#: admin/class-admin-settings.php:1376
+msgid "ReportedIP Hive, domain limit:"
+msgstr "ReportedIP Hive, límite de dominios:"
+
+#: includes/class-api-client.php:1392
+msgid "Quota status unknown, API calls will still be attempted"
+msgstr "Estado de la cuota desconocido, se intentarán igualmente las llamadas a la API"
+
+#: includes/class-catalog.php:142
+msgid "A second factor by text message, delivered through the EU gateway, no contract with an SMS provider."
+msgstr "Un segundo factor por SMS, entregado a través de la pasarela de la UE, sin contrato con un proveedor de SMS."
+
+#: includes/class-catalog.php:164
+msgid "When a coordinated attack is detected, the limits tighten for an hour: 2 failed logins instead of 5 and a block threshold of 60 percent instead of 75."
+msgstr "Cuando se detecta un ataque coordinado, los límites se endurecen durante una hora: 2 intentos fallidos en lugar de 5 y un umbral de bloqueo del 60 en lugar del 75 por ciento."
+
+#: includes/class-mode-manager.php:724
+msgid "Up to 3 sites, 2FA codes that reach the inbox by mail and SMS, automatic lockdown during attacks."
+msgstr "Hasta 3 sitios, códigos 2FA por correo y SMS que llegan, bloqueo automático durante los ataques."
+
+#: includes/class-mode-manager.php:742
+msgid "Unlimited domains, custom data processing agreement, dedicated onboarding, phone support."
+msgstr "Dominios ilimitados, acuerdo de tratamiento de datos a medida, incorporación dedicada, soporte telefónico."
+
+#: reportedip-hive.php:1839
+msgid "ReportedIP Hive, queue critical:"
+msgstr "ReportedIP Hive, cola crítica:"
+
+#: templates/blocked.php:37
+msgid "Access denied: IP blocked"
+msgstr "Acceso denegado: IP bloqueada"
