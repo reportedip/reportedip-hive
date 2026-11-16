@@ -81,7 +81,7 @@ class ReportedIP_Hive_MainWP_Integration {
 		if ( isset( $data['reportedip_hive_sync'] ) ) {
 			$days    = isset( $data['reportedip_hive_sync']['days'] ) ? (int) $data['reportedip_hive_sync']['days'] : 30;
 			$days    = $days > 0 ? $days : 30;
-			$payload = array_merge( $payload, self::collect_metrics( $days ) );
+			$payload = array_merge( $payload, self::sync_data( self::collect_metrics( $days ), $days ) );
 		}
 
 		if ( isset( $data['reportedip_hive_provision']['api_key'] ) ) {
@@ -132,6 +132,28 @@ class ReportedIP_Hive_MainWP_Integration {
 		}
 
 		return $information;
+	}
+
+	/**
+	 * Let add-ons append aggregate values to the sync answer.
+	 *
+	 * @param array $metrics Free metrics.
+	 * @param int   $days    Time window for the period metrics.
+	 * @return array Filtered metrics; a non-array result keeps the Free metrics.
+	 * @since  3.1.0
+	 */
+	public static function sync_data( array $metrics, $days ) {
+		/**
+		 * Filter the figures a site sends to the MainWP dashboard on sync.
+		 *
+		 * Only aggregate values: no IP addresses, usernames or log contents.
+		 *
+		 * @since 3.1.0
+		 * @param array $metrics Metrics keyed by name.
+		 * @param int   $days    Time window for the period metrics.
+		 */
+		$filtered = apply_filters( 'reportedip_hive_mainwp_sync_data', $metrics, (int) $days );
+		return is_array( $filtered ) ? $filtered : $metrics;
 	}
 
 	/**
