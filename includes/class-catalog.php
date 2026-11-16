@@ -173,6 +173,13 @@ final class ReportedIP_Hive_Catalog {
 				'section'     => 'forms',
 				'docs_url'    => self::PRODUCT_URL . '#hive-forms',
 			),
+			'load_shield'                  => array(
+				'label'       => __( 'Load shield', 'reportedip-hive' ),
+				'description' => __( 'Answers floods of uncached requests before WordPress loads, so crawlers cannot fill the PHP workers. Needs Extended Protection.', 'reportedip-hive' ),
+				'tier'        => 'professional',
+				'section'     => 'waf',
+				'docs_url'    => self::PRODUCT_URL . '#hive-firewall',
+			),
 			'tor_blocking'                 => array(
 				'label'          => __( 'Tor exit node blocking', 'reportedip-hive' ),
 				'description'    => __( 'Refuses sign-in attempts from known Tor exit nodes using a signed list refreshed twice a day.', 'reportedip-hive' ),
