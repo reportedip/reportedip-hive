@@ -408,6 +408,14 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 1, $this->count_shutdown_syncs(), 'Multiple triggers in one request must queue exactly one rebake.' );
 		}
 
+		public function test_own_deactivation_does_not_rebake_the_removed_dropin(): void {
+			$GLOBALS['wp_options'][ \ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED ] = true;
+			$this->mgr()->on_plugin_deactivated( REPORTEDIP_HIVE_PLUGIN_BASENAME );
+			$this->assertSame( 0, $this->count_shutdown_syncs(), 'Deactivating Hive must not write the guard back after remove().' );
+			$this->mgr()->on_plugin_deactivated( 'wordfence/wordfence.php' );
+			$this->assertSame( 1, $this->count_shutdown_syncs(), 'Another plugin going away still triggers a rebake.' );
+		}
+
 		public function test_ruleset_applied_other_keys_do_not_queue(): void {
 			$GLOBALS['wp_options'][ \ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED ] = true;
 			foreach ( array( 'bot_signatures', 'disposable_domains', 'scan_paths', 'tor_exits' ) as $key ) {

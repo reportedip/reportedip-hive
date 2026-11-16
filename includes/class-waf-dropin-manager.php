@@ -206,7 +206,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		add_action( 'updated_option', array( $this, 'on_option_updated' ) );
 		add_action( 'update_site_option', array( $this, 'on_option_updated' ) );
 		add_action( 'activated_plugin', array( $this, 'queue_resync' ) );
-		add_action( 'deactivated_plugin', array( $this, 'queue_resync' ) );
+		add_action( 'deactivated_plugin', array( $this, 'on_plugin_deactivated' ) );
 		add_action( 'admin_init', array( $this, 'maybe_self_heal' ) );
 		add_action( 'admin_init', array( $this, 'maybe_drain_queue' ) );
 		add_action( 'reportedip_hive_process_queue', array( $this, 'run_scheduled_drain' ) );
@@ -243,6 +243,24 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		if ( 'headers' === ( $spec[ $option ]['section'] ?? '' ) ) {
 			$this->queue_resync();
 		}
+	}
+
+	/**
+	 * Rebake when another plugin is deactivated. Hive's own deactivation is
+	 * skipped: the deactivation hook has just removed the drop-in, and a
+	 * shutdown rebake would write guard and directive back, leaving the WAF
+	 * running for an inactive plugin and pushing its line below another
+	 * plugin's auto_prepend_file (Wordfence Extended Protection).
+	 *
+	 * @param string $plugin Basename of the deactivated plugin.
+	 * @return void
+	 * @since  3.0.9
+	 */
+	public function on_plugin_deactivated( $plugin = '' ) {
+		if ( defined( 'REPORTEDIP_HIVE_PLUGIN_BASENAME' ) && REPORTEDIP_HIVE_PLUGIN_BASENAME === (string) $plugin ) {
+			return;
+		}
+		$this->queue_resync();
 	}
 
 	/**
