@@ -1487,6 +1487,39 @@ PHP;
 	}
 
 	/**
+	 * Serialise IP rows into the guard's list format: the fixed-width bitmap
+	 * header followed by `ip<TAB>epoch` lines, 0 meaning permanent. Shared by
+	 * the blocklist and by add-on lists the guard reads with the same matcher.
+	 *
+	 * @param array<string,int> $rows IP address to expiry epoch.
+	 * @return string File contents.
+	 * @since  3.1.0
+	 */
+	public static function build_ip_list( array $rows ) {
+		$lines  = array();
+		$bitmap = str_repeat( "\0", self::BLOCKLIST_BITMAP_BITS / 8 );
+		foreach ( $rows as $ip => $expires ) {
+			$ip = (string) $ip;
+			if ( '' === $ip || false !== strpos( $ip, '/' ) ) {
+				continue;
+			}
+			$lines[]                = $ip . "\t" . (int) $expires;
+			$bucket                 = crc32( $ip ) % self::BLOCKLIST_BITMAP_BITS;
+			$bitmap[ $bucket >> 3 ] = chr( ord( $bitmap[ $bucket >> 3 ] ) | ( 1 << ( $bucket & 7 ) ) );
+			if ( count( $lines ) >= self::BLOCKLIST_MAX_ENTRIES ) {
+				break;
+			}
+		}
+		$body = empty( $lines ) ? '' : implode( "\n", $lines ) . "\n";
+		return sprintf(
+			'%sD=0 L=%010d %s' . "\n",
+			self::BLOCKLIST_MAGIC,
+			self::BLOCKLIST_HEADER_LEN + strlen( $body ),
+			bin2hex( $bitmap )
+		) . $body;
+	}
+
+	/**
 	 * Rewrite the blocklist from the database, dropping expired and duplicated
 	 * entries that the append path accumulates.
 	 *
@@ -1499,37 +1532,22 @@ PHP;
 			return false;
 		}
 
-		$lines  = array();
-		$bitmap = str_repeat( "\0", self::BLOCKLIST_BITMAP_BITS / 8 );
+		$rows = array();
 		foreach ( $this->active_blocks() as $row ) {
 			$ip = is_object( $row ) ? (string) ( $row->ip_address ?? '' ) : '';
-			if ( '' === $ip || false !== strpos( $ip, '/' ) ) {
+			if ( '' === $ip ) {
 				continue;
 			}
-			$lines[] = $ip . "\t" . self::expiry_stamp( $row->blocked_until ?? null );
-
-			$bucket                 = crc32( $ip ) % self::BLOCKLIST_BITMAP_BITS;
-			$bitmap[ $bucket >> 3 ] = chr( ord( $bitmap[ $bucket >> 3 ] ) | ( 1 << ( $bucket & 7 ) ) );
-
-			if ( count( $lines ) >= self::BLOCKLIST_MAX_ENTRIES ) {
-				break;
-			}
+			$rows[ $ip ] = self::expiry_stamp( $row->blocked_until ?? null );
 		}
 
-		$body   = empty( $lines ) ? '' : implode( "\n", $lines ) . "\n";
-		$header = sprintf(
-			'%sD=0 L=%010d %s' . "\n",
-			self::BLOCKLIST_MAGIC,
-			self::BLOCKLIST_HEADER_LEN + strlen( $body ),
-			bin2hex( $bitmap )
-		);
 		/*
 		 * LOCK_EX serialises this rewrite against the LOCK_EX append in
 		 * on_ip_blocked(). Without it a block appended between the database
 		 * read above and this truncating write was lost, and readers could
 		 * catch a half-written header.
 		 */
-		return false !== @file_put_contents( $path, $header . $body, LOCK_EX ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged -- Writing the same-host lookup file the pre-WordPress guard reads. Silenced: an unwritable path must degrade fail-open, never print a warning into the response.
+		return false !== @file_put_contents( $path, self::build_ip_list( $rows ), LOCK_EX ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged -- Writing the same-host lookup file the pre-WordPress guard reads. Silenced: an unwritable path must degrade fail-open, never print a warning into the response.
 	}
 
 	/**
@@ -1620,6 +1638,17 @@ PHP;
 			return '';
 		}
 		return rtrim( (string) $uploads['basedir'], '/\\' ) . '/' . self::QUEUE_DIRNAME;
+	}
+
+	/**
+	 * Directory the guard reads and writes (queue, blocklist, add-on files),
+	 * created on demand. Empty when uploads are unavailable.
+	 *
+	 * @return string Absolute path without trailing slash, or ''.
+	 * @since  3.1.0
+	 */
+	public function guard_dir() {
+		return $this->ensure_queue_dir() ? $this->queue_dir() : '';
 	}
 
 	/**
