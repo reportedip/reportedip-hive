@@ -570,7 +570,8 @@ class ReportedIP_Hive_Bot_Verifier {
 
 	/**
 	 * Act on a confirmed spoofer: always log, then block when the action is
-	 * `block`. The `flag` action logs only, keeping the sensor SEO-safe.
+	 * `block`. The `flag` action logs only, keeping the sensor SEO-safe, and
+	 * tells listeners about the address.
 	 *
 	 * @param array<string,mixed> $bot Matched bot rule.
 	 * @param string              $ip  Client IP.
@@ -601,6 +602,15 @@ class ReportedIP_Hive_Bot_Verifier {
 
 		if ( 'block' === $action ) {
 			ReportedIP_Hive::serve_blocked_page( 'fake_bot' );
+			return;
 		}
+
+		/**
+		 * A confirmed spoofer was flagged and let through (action `flag`).
+		 *
+		 * @since 3.1.0
+		 * @param string $ip Client IP.
+		 */
+		do_action( 'reportedip_hive_fake_bot_detected', $ip );
 	}
 }
