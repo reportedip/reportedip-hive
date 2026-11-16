@@ -1097,6 +1097,14 @@ class ReportedIP_Hive_WAF {
 		}
 
 		if ( $report_only ) {
+			/**
+			 * A rule matched while report-only mode let the request through.
+			 *
+			 * @since 3.1.0
+			 * @param string $ip      Client IP.
+			 * @param string $rule_id Matched rule id.
+			 */
+			do_action( 'reportedip_hive_waf_would_block', $ip, $rule_id );
 			return;
 		}
 

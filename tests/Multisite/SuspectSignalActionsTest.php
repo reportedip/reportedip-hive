@@ -12,7 +12,7 @@
  */
 
 /**
- * A flagged fake bot is announced to listeners.
+ * A flagged fake bot and a report-only WAF hit are announced to listeners.
  *
  * @group ms-required
  */
@@ -36,6 +36,7 @@ class ReportedIP_Hive_Suspect_Signal_Actions_Test extends WP_UnitTestCase {
 		ReportedIP_Hive_Schema::ensure_tables();
 		$this->seen = array();
 		add_action( 'reportedip_hive_fake_bot_detected', array( $this, 'record' ) );
+		add_action( 'reportedip_hive_waf_would_block', array( $this, 'record' ) );
 	}
 
 	/**
@@ -64,5 +65,20 @@ class ReportedIP_Hive_Suspect_Signal_Actions_Test extends WP_UnitTestCase {
 		update_site_option( ReportedIP_Hive_Bot_Verifier::OPT_ACTION, 'flag' );
 		$this->handle_fake( '203.0.113.9' );
 		$this->assertSame( array( '203.0.113.9' ), $this->seen );
+	}
+
+	public function test_report_only_waf_hit_is_announced() {
+		update_site_option( ReportedIP_Hive_WAF::OPT_REPORT_ONLY, true );
+		$method = new ReflectionMethod( ReportedIP_Hive_WAF::class, 'handle_hit' );
+		$method->setAccessible( true );
+		$method->invoke(
+			ReportedIP_Hive_WAF::get_instance(),
+			array(
+				'id'    => 'sqli_test',
+				'group' => 'sqli',
+			),
+			'203.0.113.10'
+		);
+		$this->assertSame( array( '203.0.113.10' ), $this->seen );
 	}
 }
