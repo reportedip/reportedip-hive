@@ -16,6 +16,7 @@ All changes to ReportedIP Hive are documented here.
 
 ### Fixes
 - On a multisite network the guard directory is always the one of the main site, so a block set from a subsite lands in the files the guard reads.
+- The Extended Protection guard file is written to a temporary file and then renamed into place, so a request that arrives during a rebuild never loads a half written guard.
 
 ## [3.0.8] - 2026-11-10
 

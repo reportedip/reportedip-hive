@@ -359,8 +359,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		}
 
 		$content = $this->generate_prepend();
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged -- Generating a same-host PHP guard outside the plugin dir; WP_Filesystem cannot place an auto_prepend_file target reliably. Silenced because a permission race after the writability probe must degrade to the fail-open false return, never emit a warning into the response (headers already sent on admin screens).
-		if ( false === @file_put_contents( $prepend, $content ) ) {
+		if ( ! $this->write_atomic( $prepend, $content ) ) {
 			return false;
 		}
 
@@ -381,7 +380,36 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	}
 
 	/**
+	 * Write a file in one step: the content goes to a temporary file in the
+	 * same directory, which is renamed over the target. Every request loads
+	 * the guard file, and a plain write leaves it empty or half written for
+	 * a moment, which a concurrent request would run (or fail on).
+	 *
+	 * @param string $path    Target file.
+	 * @param string $content New content.
+	 * @return bool True when the target holds the new content.
+	 * @since  3.1.0
+	 */
+	private function write_atomic( $path, $content ) {
+		$tmp = $path . '.tmp-' . getmypid() . '-' . bin2hex( random_bytes( 4 ) );
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPress.PHP.NoSilencedErrors.Discouraged -- Generating a same-host PHP guard outside the plugin dir; WP_Filesystem cannot place an auto_prepend_file target reliably. Silenced because a permission race after the writability probe must degrade to the fail-open false return, never emit a warning into the response (headers already sent on admin screens).
+		if ( false === @file_put_contents( $tmp, $content ) ) {
+			return false;
+		}
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.rename_rename, WordPress.PHP.NoSilencedErrors.Discouraged -- Atomic same-directory replace; WP_Filesystem::move() is not atomic. Silenced: a failed rename must degrade to the fail-open false return.
+		if ( ! @rename( $tmp, $path ) ) {
+			wp_delete_file( $tmp );
+			return false;
+		}
+		if ( function_exists( 'opcache_invalidate' ) ) {
+			@opcache_invalidate( $path, true ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- Restricted opcache API must not print a warning.
+		}
+		return true;
+	}
+
+	/**
 	 * Remove the drop-in. Strips the directive from BOTH plugin-controlled
+
 	 * targets FIRST, then *neutralises* the guard to an inert stub instead of
 	 * deleting it.
 	 *

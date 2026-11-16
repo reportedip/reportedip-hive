@@ -1120,5 +1120,26 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertStringContainsString( 'denied', (string) file_get_contents( $dir . '/.htaccess' ) );
 			$this->assertMatchesRegularExpression( '/waf-hits-[0-9a-f]{16}\.ndjson$/', $this->mgr()->queue_path(), 'The file name must carry a per-site token so it cannot be guessed.' );
 		}
+
+		/**
+		 * The guard file is replaced in one step: a request that loads it
+		 * while it is written sees the old or the new guard, never half of
+		 * one. No temporary file stays behind.
+		 */
+		public function test_guard_file_is_replaced_atomically(): void {
+			$dir  = sys_get_temp_dir() . '/rip-atomic-' . uniqid();
+			$file = $dir . '/guard.php';
+			mkdir( $dir );
+			file_put_contents( $file, 'old' );
+			$this->assertTrue( $this->call_private( 'write_atomic', array( $file, 'new' ) ) );
+			$this->assertSame( 'new', file_get_contents( $file ) );
+			$this->assertSame( array( $file ), glob( $dir . '/*' ) );
+			$this->assertFalse( $this->call_private( 'write_atomic', array( $dir . '/missing/guard.php', 'x' ) ) );
+			unlink( $file );
+			rmdir( $dir );
+			$source = (string) file_get_contents( REPORTEDIP_HIVE_PLUGIN_DIR . 'includes/class-waf-dropin-manager.php' );
+			$sync   = substr( $source, (int) strpos( $source, 'public function sync()' ), 3000 );
+			$this->assertStringContainsString( '$this->write_atomic( $prepend, $content )', $sync );
+		}
 	}
 }
