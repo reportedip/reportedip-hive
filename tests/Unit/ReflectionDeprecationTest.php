@@ -29,7 +29,9 @@ namespace ReportedIP\Hive\Tests\Unit {
 	class ReflectionDeprecationTest extends TestCase {
 
 		/**
-		 * Every PHP file under tests/ and the shipped source directories.
+		 * Every PHP file under tests/ and the shipped source directories,
+		 * plus the load shield tests of the add-on when it sits next to
+		 * this plugin in the monorepo.
 		 *
 		 * @return string[]
 		 */
@@ -51,6 +53,11 @@ namespace ReportedIP\Hive\Tests\Unit {
 					}
 					$files[] = $file->getPathname();
 				}
+			}
+
+			$addon = dirname( $root ) . '/reportedip-hive-pro/tests';
+			foreach ( array_merge( (array) glob( $addon . '/Unit/LoadShield*.php' ), (array) glob( $addon . '/Multisite/LoadShield*.php' ) ) as $path ) {
+				$files[] = (string) $path;
 			}
 
 			return $files;
