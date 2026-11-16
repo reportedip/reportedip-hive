@@ -30,17 +30,64 @@ require_once dirname( __DIR__, 2 ) . '/includes/class-proxy-trust.php';
 class WafDropinModulesTest extends TestCase {
 
 	/**
+	 * Throwaway files removed in tearDown().
+	 *
+	 * @var string[]
+	 */
+	private $temp_files = array();
+
+	/**
 	 * Reset the hook and option doubles.
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-		$GLOBALS['wp_options'] = array();
-		$GLOBALS['wp_filters'] = array();
-		$GLOBALS['wp_actions'] = array();
+		$this->reset_globals();
 		if ( ! defined( 'WP_CONTENT_DIR' ) ) {
 			define( 'WP_CONTENT_DIR', sys_get_temp_dir() . '/rip-wp-content' );
 		}
 		\ReportedIP_Hive_Rule_Store::flush_cache();
+		$this->clear_guard_files();
+	}
+
+	/**
+	 * Remove every file a test left behind and reset the doubles.
+	 */
+	protected function tearDown(): void {
+		foreach ( $this->temp_files as $file ) {
+			if ( file_exists( $file ) ) {
+				unlink( $file );
+			}
+		}
+		$this->temp_files = array();
+		$this->clear_guard_files();
+		$this->reset_globals();
+		parent::tearDown();
+	}
+
+	/**
+	 * Empty the option and hook doubles.
+	 *
+	 * @return void
+	 */
+	private function reset_globals(): void {
+		$GLOBALS['wp_options'] = array();
+		$GLOBALS['wp_filters'] = array();
+		$GLOBALS['wp_actions'] = array();
+	}
+
+	/**
+	 * Remove the live queue, a leftover rotation, the lock and the blocklist.
+	 *
+	 * @return void
+	 */
+	private function clear_guard_files(): void {
+		$queue = $this->mgr()->queue_path();
+		$files = array( $queue, $queue . '.processing', $queue . '.lock', $this->mgr()->blocklist_path() );
+		foreach ( $files as $file ) {
+			if ( '' !== $queue && file_exists( $file ) ) {
+				unlink( $file );
+			}
+		}
 	}
 
 	/**
@@ -50,6 +97,20 @@ class WafDropinModulesTest extends TestCase {
 	 */
 	private function mgr(): \ReportedIP_Hive_WAF_Dropin_Manager {
 		return \ReportedIP_Hive_WAF_Dropin_Manager::get_instance();
+	}
+
+	/**
+	 * A temp file that tearDown() removes.
+	 *
+	 * @param string $prefix Name prefix.
+	 * @param string $body   Contents.
+	 * @return string Path.
+	 */
+	private function temp_file( string $prefix, string $body ): string {
+		$file = tempnam( sys_get_temp_dir(), $prefix );
+		file_put_contents( $file, $body );
+		$this->temp_files[] = $file;
+		return $file;
 	}
 
 	/**
@@ -77,11 +138,9 @@ class WafDropinModulesTest extends TestCase {
 			'HTTP_USER_AGENT' => 'Mozilla/5.0',
 			'REQUEST_METHOD'  => 'GET',
 		);
-		$guard  = tempnam( sys_get_temp_dir(), 'rip-mod-guard-' );
-		file_put_contents( $guard, null === $source ? $this->guard_source() : $source );
-		$boot = tempnam( sys_get_temp_dir(), 'rip-mod-boot-' );
-		file_put_contents(
-			$boot,
+		$guard  = $this->temp_file( 'rip-mod-guard-', null === $source ? $this->guard_source() : $source );
+		$boot   = $this->temp_file(
+			'rip-mod-boot-',
 			"<?php\n"
 				. '$_SERVER = ' . var_export( $server, true ) . ";\n"
 				. "\$_COOKIE = array();\n\$_POST = array();\n"
@@ -90,9 +149,18 @@ class WafDropinModulesTest extends TestCase {
 		);
 		$output = array();
 		exec( escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( $boot ) . ' 2>&1', $output );
-		unlink( $guard );
-		unlink( $boot );
 		return trim( implode( '', $output ) );
+	}
+
+	/**
+	 * Run the guard and print PASS when it lets the request through.
+	 *
+	 * @param array       $server Request superglobal.
+	 * @param string|null $source Guard source, null for a fresh one.
+	 * @return string Trimmed output.
+	 */
+	private function run_guard( array $server = array(), ?string $source = null ): string {
+		return $this->run_after_guard( "echo 'PASS';", $server, $source );
 	}
 
 	/**
@@ -103,13 +171,68 @@ class WafDropinModulesTest extends TestCase {
 	 * @return string One 1/0 per address.
 	 */
 	private function guard_lookup( string $body, array $ips ): string {
-		$file = tempnam( sys_get_temp_dir(), 'rip-list-' );
-		file_put_contents( $file, $body );
+		$file = $this->temp_file( 'rip-list-', $body );
 		$tail = '$ips = ' . var_export( $ips, true ) . ";\n"
-			. "foreach ( \$ips as \$one ) { echo reportedip_hive_dropin_is_blocked( " . var_export( $file, true ) . ', $one ) ? 1 : 0; }';
-		$out  = $this->run_after_guard( $tail );
-		unlink( $file );
-		return $out;
+			. 'foreach ( $ips as $one ) { echo reportedip_hive_dropin_is_blocked( ' . var_export( $file, true ) . ', $one ) ? 1 : 0; }';
+		return $this->run_after_guard( $tail );
+	}
+
+	/**
+	 * Register guard modules through the documented filter.
+	 *
+	 * @param array $modules Module rows.
+	 * @return void
+	 */
+	private function register_modules( array $modules ): void {
+		add_filter(
+			'reportedip_hive_guard_modules',
+			static function () use ( $modules ) {
+				return $modules;
+			}
+		);
+	}
+
+	/**
+	 * Register one module whose body is the given code.
+	 *
+	 * @param string $id   Module id.
+	 * @param string $body Function body, `$ip`, `$config`, `$env` in scope.
+	 * @param array  $config Module config.
+	 * @return string Module file path.
+	 */
+	private function register_module( string $id, string $body, array $config = array() ): string {
+		$file = $this->module_file( 'function reportedip_hive_guard_module_' . $id . '( $ip, $config, $env ) { ' . $body . ' }' );
+		$this->register_modules(
+			array(
+				array(
+					'id'     => $id,
+					'file'   => $file,
+					'config' => $config,
+				),
+			)
+		);
+		return $file;
+	}
+
+	/**
+	 * Write a throwaway module file.
+	 *
+	 * @param string $code PHP code after the open tag.
+	 * @return string Path.
+	 */
+	private function module_file( string $code ): string {
+		return $this->temp_file( 'rip-module-', "<?php\n" . $code );
+	}
+
+	/**
+	 * Seed the guard's blocklist.
+	 *
+	 * @param string $ip Address to block permanently.
+	 * @return void
+	 */
+	private function seed_blocklist( string $ip ): void {
+		$this->mgr()->guard_dir();
+		file_put_contents( $this->mgr()->blocklist_path(), \ReportedIP_Hive_WAF_Dropin_Manager::build_ip_list( array( $ip => 0 ) ) );
 	}
 
 	/**
@@ -147,48 +270,11 @@ class WafDropinModulesTest extends TestCase {
 	}
 
 	/**
-	 * Register guard modules through the documented filter.
-	 *
-	 * @param array $modules Module rows.
-	 * @return void
-	 */
-	private function register_modules( array $modules ): void {
-		add_filter(
-			'reportedip_hive_guard_modules',
-			static function () use ( $modules ) {
-				return $modules;
-			}
-		);
-	}
-
-	/**
-	 * Write a throwaway module file.
-	 *
-	 * @param string $code PHP code after the open tag.
-	 * @return string Path.
-	 */
-	private function module_file( string $code ): string {
-		$file = tempnam( sys_get_temp_dir(), 'rip-module-' );
-		file_put_contents( $file, "<?php\n" . $code );
-		return $file;
-	}
-
-	/**
 	 * A registered module is baked with its id, file and config.
 	 */
 	public function test_modules_are_baked_into_the_guard() {
-		$file = $this->module_file( '' );
-		$this->register_modules(
-			array(
-				array(
-					'id'     => 'demo',
-					'file'   => $file,
-					'config' => array( 'x' => 1 ),
-				),
-			)
-		);
-		$src = $this->guard_source();
-		unlink( $file );
+		$file = $this->register_module( 'demo', '', array( 'x' => 1 ) );
+		$src  = $this->guard_source();
 		$this->assertStringContainsString( "'id' => 'demo'", $src );
 		$this->assertStringContainsString( var_export( $file, true ), $src );
 		$this->assertStringContainsString( 'reportedip_hive_guard_module_', $src );
@@ -217,6 +303,31 @@ class WafDropinModulesTest extends TestCase {
 	}
 
 	/**
+	 * The first row of an id wins, a second row with the same id is dropped.
+	 */
+	public function test_duplicate_module_ids_keep_the_first_row() {
+		$this->register_modules(
+			array(
+				array(
+					'id'   => 'dup',
+					'file' => '/first.php',
+				),
+				array(
+					'id'   => 'other',
+					'file' => '/other.php',
+				),
+				array(
+					'id'   => 'dup',
+					'file' => '/second.php',
+				),
+			)
+		);
+		$snapshot = $this->mgr()->modules_snapshot();
+		$this->assertSame( array( 'dup', 'other' ), array_column( $snapshot, 'id' ) );
+		$this->assertSame( '/first.php', $snapshot[0]['file'] );
+	}
+
+	/**
 	 * Without modules the guard bakes an empty list.
 	 */
 	public function test_no_modules_bake_an_empty_list() {
@@ -225,10 +336,10 @@ class WafDropinModulesTest extends TestCase {
 	}
 
 	/**
-	 * The guard format version moved with the new placeholder.
+	 * The generated guard carries format version 11.
 	 */
-	public function test_dropin_version_is_eleven() {
-		$this->assertSame( 11, \ReportedIP_Hive_WAF_Dropin_Manager::DROPIN_VERSION );
+	public function test_generated_guard_carries_version_eleven() {
+		$this->assertStringContainsString( "define( 'REPORTEDIP_HIVE_WAF_DROPIN', 11 );", $this->guard_source() );
 	}
 
 	/**
@@ -239,58 +350,52 @@ class WafDropinModulesTest extends TestCase {
 		$ctor->invoke( $this->mgr() );
 		$callbacks = array_column( (array) ( $GLOBALS['wp_actions']['reportedip_hive_guard_rebake'] ?? array() ), 'callback' );
 		$this->assertContains( array( $this->mgr(), 'queue_resync' ), $callbacks );
-		$GLOBALS['wp_actions'] = array();
 	}
 
 	/**
 	 * The guard calls the module with the client IP, its config and the env.
 	 */
 	public function test_guard_runs_the_module() {
-		$file = $this->module_file(
-			'function reportedip_hive_guard_module_probe( $ip, $config, $env ) { echo json_encode( array( $ip, $config, $env["report_only"], isset( $env["queue"], $env["queue_max"], $env["https"] ) ) ); }'
+		$this->register_module(
+			'probe',
+			'echo json_encode( array( $ip, $config, $env["report_only"], isset( $env["queue"], $env["queue_max"], $env["https"] ) ) );',
+			array( 'limit' => 5 )
 		);
-		$this->register_modules(
-			array(
-				array(
-					'id'     => 'probe',
-					'file'   => $file,
-					'config' => array( 'limit' => 5 ),
-				),
-			)
-		);
-		$out = $this->run_after_guard( "echo 'PASS';" );
-		unlink( $file );
-		$this->assertSame( '["203.0.113.50",{"limit":5},false,true]PASS', $out );
+		$this->assertSame( '["203.0.113.50",{"limit":5},false,true]PASS', $this->run_guard() );
 	}
 
 	/**
-	 * Report-only still runs modules, the module decides from $env.
+	 * The env carries the same HTTPS verdict as the guard's header logic.
+	 */
+	public function test_env_https_follows_the_shared_test() {
+		$this->register_module( 'tls', 'echo $env["https"] ? "S" : "P";' );
+		$this->assertSame( 'SPASS', $this->run_guard( array( 'HTTPS' => 'on' ) ) );
+		$this->assertSame( 'SPASS', $this->run_guard( array( 'HTTPS' => 'ON' ) ) );
+		$this->assertSame( 'SPASS', $this->run_guard( array( 'HTTPS' => '1' ) ) );
+		$this->assertSame( 'SPASS', $this->run_guard( array( 'SERVER_PORT' => '443' ) ) );
+		$this->assertSame( 'PPASS', $this->run_guard( array( 'HTTPS' => 'off' ) ) );
+		$this->assertSame( 'PPASS', $this->run_guard() );
+	}
+
+	/**
+	 * Report-only still runs modules, lets a blocklisted IP and a rule match
+	 * through, and the module decides from $env.
 	 */
 	public function test_guard_runs_modules_in_report_only_mode() {
 		$GLOBALS['wp_options']['reportedip_hive_report_only_mode'] = true;
-		$file = $this->module_file( 'function reportedip_hive_guard_module_ro( $ip, $config, $env ) { echo $env["report_only"] ? "RO" : "LIVE"; }' );
-		$this->register_modules(
-			array(
+		$this->register_module( 'ro', 'echo $env["report_only"] ? "RO" : "LIVE";' );
+		$this->seed_blocklist( '198.51.100.63' );
+		$this->assertSame( 'ROPASS', $this->run_guard() );
+		$this->assertSame(
+			'ROPASS',
+			$this->run_guard(
 				array(
-					'id'   => 'ro',
-					'file' => $file,
-				),
-			)
+					'REMOTE_ADDR' => '198.51.100.63',
+					'REQUEST_URI' => '/?f=../../etc/passwd',
+				)
+			),
+			'Report-only lets a blocklisted IP and a rule match through, the module still runs.'
 		);
-		$this->mgr()->guard_dir();
-		file_put_contents( $this->mgr()->blocklist_path(), \ReportedIP_Hive_WAF_Dropin_Manager::build_ip_list( array( '198.51.100.63' => 0 ) ) );
-		$plain   = $this->run_after_guard( "echo 'PASS';" );
-		$blocked = $this->run_after_guard(
-			"echo 'PASS';",
-			array(
-				'REMOTE_ADDR' => '198.51.100.63',
-				'REQUEST_URI' => '/?f=../../etc/passwd',
-			)
-		);
-		unlink( $file );
-		unlink( $this->mgr()->blocklist_path() );
-		$this->assertSame( 'ROPASS', $plain );
-		$this->assertSame( 'ROPASS', $blocked, 'Report-only lets a blocklisted IP and a rule match through, the module still runs.' );
 	}
 
 	/**
@@ -315,52 +420,95 @@ class WafDropinModulesTest extends TestCase {
 				),
 			)
 		);
-		$out = $this->run_after_guard( "echo 'PASS';" );
-		unlink( $boom );
-		unlink( $ok );
-		$this->assertSame( 'OKPASS', $out );
+		$this->assertSame( 'OKPASS', $this->run_guard() );
+	}
+
+	/**
+	 * A module file that defines no entry function fails open, the rules still run.
+	 */
+	public function test_included_file_without_function_fails_open() {
+		$this->register_modules(
+			array(
+				array(
+					'id'   => 'empty',
+					'file' => $this->module_file( 'return;' ),
+				),
+			)
+		);
+		$this->assertSame( 'PASS', $this->run_guard() );
+		$this->assertSame( 'Forbidden', $this->run_guard( array( 'REQUEST_URI' => '/?f=../../etc/passwd' ) ) );
 	}
 
 	/**
 	 * A blocked IP is refused before any module sees it.
 	 */
 	public function test_blocked_ip_never_reaches_a_module() {
-		$this->mgr()->guard_dir();
-		file_put_contents( $this->mgr()->blocklist_path(), \ReportedIP_Hive_WAF_Dropin_Manager::build_ip_list( array( '198.51.100.60' => 0 ) ) );
-		$file = $this->module_file( 'function reportedip_hive_guard_module_seen( $ip, $config, $env ) { echo "SEEN"; }' );
-		$this->register_modules(
-			array(
-				array(
-					'id'   => 'seen',
-					'file' => $file,
-				),
-			)
-		);
-		$out = $this->run_after_guard( "echo 'PASS';", array( 'REMOTE_ADDR' => '198.51.100.60' ) );
-		unlink( $file );
-		unlink( $this->mgr()->blocklist_path() );
-		$this->assertSame( 'Forbidden', $out );
+		$this->seed_blocklist( '198.51.100.60' );
+		$this->register_module( 'seen', 'echo "SEEN";' );
+		$this->assertSame( 'Forbidden', $this->run_guard( array( 'REMOTE_ADDR' => '198.51.100.60' ) ) );
 	}
 
 	/**
-	 * Remove the live queue, a leftover rotation and the lock.
-	 *
-	 * @return void
+	 * A whitelisted IP leaves the guard before any module sees it.
 	 */
-	private function reset_queue(): void {
-		$queue = $this->mgr()->queue_path();
-		foreach ( array( $queue, $queue . '.processing', $queue . '.lock' ) as $file ) {
-			if ( '' !== $queue && file_exists( $file ) ) {
-				unlink( $file );
-			}
-		}
+	public function test_whitelisted_ip_never_reaches_a_module() {
+		$this->register_module( 'seen', 'echo "SEEN";' );
+		$source = preg_replace( '/\$whitelist  = array \(\n\);/', '$whitelist  = array( \'203.0.113.50\' );', $this->guard_source(), 1, $count );
+		$this->assertSame( 1, $count, 'The baked whitelist must be found in the guard.' );
+		$this->assertSame( 'PASS', $this->run_guard( array(), $source ) );
+		$this->assertSame( 'SEENPASS', $this->run_guard( array( 'REMOTE_ADDR' => '203.0.113.51' ), $source ) );
+	}
+
+	/**
+	 * Objects in a module config never reach the guard, and the rules still apply.
+	 */
+	public function test_object_in_config_is_dropped_and_rules_still_apply() {
+		$this->register_module(
+			'cfg',
+			'echo json_encode( $config );',
+			array(
+				'keep'   => 1,
+				'obj'    => new \stdClass(),
+				'nested' => array(
+					'o' => new \ArrayObject(),
+					'n' => null,
+				),
+			)
+		);
+		$snapshot = $this->mgr()->modules_snapshot();
+		$this->assertSame(
+			array(
+				'keep'   => 1,
+				'nested' => array( 'n' => null ),
+			),
+			$snapshot[0]['config']
+		);
+		$this->assertStringNotContainsString( '__set_state', $this->guard_source() );
+		$this->assertSame( '{"keep":1,"nested":{"n":null}}Forbidden', $this->run_guard( array( 'REQUEST_URI' => '/?f=../../etc/passwd' ) ) );
+	}
+
+	/**
+	 * A module list that fails to load skips the modules, never the rules.
+	 */
+	public function test_broken_module_list_still_runs_the_rules() {
+		$this->register_modules(
+			array(
+				array(
+					'id'   => 'x',
+					'file' => '/nope.php',
+				),
+			)
+		);
+		$source = preg_replace( '/\$modules = array \(.*?\n\);/s', '$modules = RipNoSuchClass::__set_state( array() );', $this->guard_source(), 1, $count );
+		$this->assertSame( 1, $count, 'The baked module list must be found in the guard.' );
+		$this->assertSame( 'PASS', $this->run_guard( array(), $source ) );
+		$this->assertSame( 'Forbidden', $this->run_guard( array( 'REQUEST_URI' => '/?f=../../etc/passwd' ), $source ) );
 	}
 
 	/**
 	 * A queue line with a foreign kind goes to the action, not to the WAF.
 	 */
 	public function test_foreign_kind_is_dispatched_to_the_action() {
-		$this->reset_queue();
 		$seen = array();
 		add_action(
 			'reportedip_hive_guard_queue_entry',
@@ -396,7 +544,6 @@ class WafDropinModulesTest extends TestCase {
 		);
 		file_put_contents( $this->mgr()->queue_path(), implode( "\n", $lines ) . "\n" );
 		$this->mgr()->drain_queue();
-		$this->reset_queue();
 		$this->assertCount( 1, $seen, 'Only the foreign line reaches the action; waf and legacy lines stay with the WAF.' );
 		$this->assertSame( 'load_shield', $seen[0]['kind'] );
 		$this->assertSame( 3, $seen[0]['exp'] );
@@ -406,88 +553,9 @@ class WafDropinModulesTest extends TestCase {
 	 * The guard tags its own queue lines as waf.
 	 */
 	public function test_guard_queue_line_carries_the_waf_kind() {
-		$this->reset_queue();
-		$out = $this->run_after_guard( "echo 'PASS';", array( 'REQUEST_URI' => '/?f=../../etc/passwd' ) );
-		$this->assertSame( 'Forbidden', $out );
+		$this->assertSame( 'Forbidden', $this->run_guard( array( 'REQUEST_URI' => '/?f=../../etc/passwd' ) ) );
 		$lines = array_values( array_filter( explode( "\n", (string) file_get_contents( $this->mgr()->queue_path() ) ) ) );
-		$this->reset_queue();
 		$this->assertCount( 1, $lines );
 		$this->assertSame( 'waf', json_decode( $lines[0], true )['kind'] );
-	}
-
-	/**
-	 * Objects in a module config never reach the guard, and the rules still apply.
-	 */
-	public function test_object_in_config_is_dropped_and_rules_still_apply() {
-		$file = $this->module_file( 'function reportedip_hive_guard_module_cfg( $ip, $config, $env ) { echo json_encode( $config ); }' );
-		$this->register_modules(
-			array(
-				array(
-					'id'     => 'cfg',
-					'file'   => $file,
-					'config' => array(
-						'keep'   => 1,
-						'obj'    => new \stdClass(),
-						'nested' => array(
-							'o' => new \ArrayObject(),
-							'n' => null,
-						),
-					),
-				),
-			)
-		);
-		$snapshot = $this->mgr()->modules_snapshot();
-		$this->assertSame(
-			array(
-				'keep'   => 1,
-				'nested' => array( 'n' => null ),
-			),
-			$snapshot[0]['config']
-		);
-		$this->assertStringNotContainsString( '__set_state', $this->guard_source() );
-		$out = $this->run_after_guard( "echo 'PASS';", array( 'REQUEST_URI' => '/?f=../../etc/passwd' ) );
-		unlink( $file );
-		$this->reset_queue();
-		$this->assertSame( '{"keep":1,"nested":{"n":null}}Forbidden', $out );
-	}
-
-	/**
-	 * A module list that fails to load skips the modules, never the rules.
-	 */
-	public function test_broken_module_list_still_runs_the_rules() {
-		$this->register_modules(
-			array(
-				array(
-					'id'   => 'x',
-					'file' => '/nope.php',
-				),
-			)
-		);
-		$source = preg_replace( '/\$modules = array \(.*?\n\);/s', '$modules = RipNoSuchClass::__set_state( array() );', $this->guard_source(), 1, $count );
-		$this->assertSame( 1, $count, 'The baked module list must be found in the guard.' );
-		$this->assertSame( 'PASS', $this->run_after_guard( "echo 'PASS';", array(), $source ) );
-		$this->assertSame( 'Forbidden', $this->run_after_guard( "echo 'PASS';", array( 'REQUEST_URI' => '/?f=../../etc/passwd' ), $source ) );
-		$this->reset_queue();
-	}
-
-	/**
-	 * A module file that defines no entry function fails open, the rules still run.
-	 */
-	public function test_included_file_without_function_fails_open() {
-		$file = $this->module_file( 'return;' );
-		$this->register_modules(
-			array(
-				array(
-					'id'   => 'empty',
-					'file' => $file,
-				),
-			)
-		);
-		$plain  = $this->run_after_guard( "echo 'PASS';" );
-		$attack = $this->run_after_guard( "echo 'PASS';", array( 'REQUEST_URI' => '/?f=../../etc/passwd' ) );
-		unlink( $file );
-		$this->reset_queue();
-		$this->assertSame( 'PASS', $plain );
-		$this->assertSame( 'Forbidden', $attack );
 	}
 }

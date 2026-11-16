@@ -1057,6 +1057,13 @@ if ( ! function_exists( 'reportedip_hive_dropin_refuse' ) ) {
 		exit;
 	}
 }
+if ( ! function_exists( 'reportedip_hive_dropin_is_https' ) ) {
+	/* The same test as is_ssl(): HTTPS '1' or 'on' (any case), or port 443. */
+	function reportedip_hive_dropin_is_https( $server ) {
+		if ( isset( $server['HTTPS'] ) && ( '1' === (string) $server['HTTPS'] || 'on' === strtolower( (string) $server['HTTPS'] ) ) ) { return true; }
+		return isset( $server['SERVER_PORT'] ) && '443' === (string) $server['SERVER_PORT'];
+	}
+}
 if ( ! function_exists( 'reportedip_hive_dropin_header_lines' ) ) {
 	/* The security headers WordPress would add on send_headers, sent here so a
 	   page served from a cache drop-in carries them too. Front-end requests
@@ -1066,8 +1073,7 @@ if ( ! function_exists( 'reportedip_hive_dropin_header_lines' ) ) {
 		if ( ! is_array( $headers ) || array() === $headers ) { return array(); }
 		$script = isset( $server['SCRIPT_FILENAME'] ) ? str_replace( chr( 92 ), '/', (string) $server['SCRIPT_FILENAME'] ) : '';
 		if ( 'index.php' !== basename( $script ) || false !== strpos( $script, '/wp-admin/' ) ) { return array(); }
-		$https = ( isset( $server['HTTPS'] ) && ( '1' === (string) $server['HTTPS'] || 'on' === strtolower( (string) $server['HTTPS'] ) ) )
-			|| ( isset( $server['SERVER_PORT'] ) && '443' === (string) $server['SERVER_PORT'] );
+		$https = reportedip_hive_dropin_is_https( $server );
 		$lines = array();
 		foreach ( $headers as $name => $value ) {
 			if ( 'Strict-Transport-Security' === $name && ! $https ) { continue; }
@@ -1163,7 +1169,7 @@ try {
 				'queue'       => __RIP_QUEUE__,
 				'queue_max'   => __RIP_QUEUE_MAX__,
 				'report_only' => __RIP_REPORT_ONLY__,
-				'https'       => ( ! empty( $_SERVER['HTTPS'] ) && 'off' !== strtolower( (string) $_SERVER['HTTPS'] ) ) || ( isset( $_SERVER['SERVER_PORT'] ) && '443' === (string) $_SERVER['SERVER_PORT'] ),
+				'https'       => reportedip_hive_dropin_is_https( $_SERVER ),
 			);
 			foreach ( $modules as $module ) {
 				try {
@@ -1302,23 +1308,31 @@ PHP;
 	 * plain PHP file without WordPress dependencies) and `config` (array of
 	 * scalars and arrays, baked with var_export; anything else is dropped).
 	 * The guard calls `reportedip_hive_guard_module_<id>( $ip, $config, $env )`.
-	 * A module file with a parse error or a duplicate function declaration
-	 * cannot be caught by PHP; modules must be plain, self-contained files.
+	 * The first row of an id wins, later rows with the same id are dropped.
+	 * A ParseError in an included module is caught by the guard's
+	 * catch( Throwable ); what PHP cannot catch is the compile-time
+	 * "Cannot redeclare" fatal when a module declares a function or class
+	 * that already exists. Rule for module authors: the guard loads a module
+	 * only via include_once of its path, and every function and class in it
+	 * must be wrapped in a function_exists() or class_exists() check.
 	 *
+	 * @internal Read by generate_prepend(); add-ons use the filter.
 	 * @return array<int,array{id:string,file:string,config:array<mixed>}>
 	 * @since  3.1.0
 	 */
 	public function modules_snapshot() {
-		$raw = apply_filters( 'reportedip_hive_guard_modules', array() );
-		$out = array();
+		$raw  = apply_filters( 'reportedip_hive_guard_modules', array() );
+		$out  = array();
+		$seen = array();
 		foreach ( is_array( $raw ) ? $raw : array() as $row ) {
 			if ( ! is_array( $row ) || empty( $row['id'] ) || empty( $row['file'] ) || ! is_string( $row['id'] ) || ! is_string( $row['file'] ) ) {
 				continue;
 			}
-			if ( ! preg_match( '/^[a-z0-9_]{1,32}$/', $row['id'] ) ) {
+			if ( ! preg_match( '/^[a-z0-9_]{1,32}$/', $row['id'] ) || isset( $seen[ $row['id'] ] ) ) {
 				continue;
 			}
-			$out[] = array(
+			$seen[ $row['id'] ] = true;
+			$out[]              = array(
 				'id'     => $row['id'],
 				'file'   => $row['file'],
 				'config' => isset( $row['config'] ) && is_array( $row['config'] ) ? self::bakeable_config( $row['config'] ) : array(),
@@ -1719,11 +1733,25 @@ PHP;
 	/**
 	 * Queue directory path, or '' when uploads are unavailable.
 	 *
+	 * Always the main site's uploads directory: the guard bakes that one path
+	 * network-wide, so a subsite request (a block, an add-on list write) must
+	 * land in the same files and never under uploads/sites/N.
+	 *
 	 * @return string
 	 * @since  2.1.30
 	 */
 	private function queue_dir() {
-		$uploads = wp_upload_dir( null, false );
+		$switch = function_exists( 'is_multisite' ) && is_multisite() && ! is_main_site() && function_exists( 'switch_to_blog' );
+		if ( $switch ) {
+			switch_to_blog( get_main_site_id() );
+		}
+		try {
+			$uploads = wp_upload_dir( null, false );
+		} finally {
+			if ( $switch ) {
+				restore_current_blog();
+			}
+		}
 		if ( ! is_array( $uploads ) || empty( $uploads['basedir'] ) || ! empty( $uploads['error'] ) ) {
 			return '';
 		}
@@ -1732,7 +1760,8 @@ PHP;
 
 	/**
 	 * Directory the guard reads and writes (queue, blocklist, add-on files),
-	 * created on demand. Empty when uploads are unavailable.
+	 * created on demand. Always the main site's directory, also when called
+	 * on a subsite. Empty when uploads are unavailable.
 	 *
 	 * @return string Absolute path without trailing slash, or ''.
 	 * @since  3.1.0
