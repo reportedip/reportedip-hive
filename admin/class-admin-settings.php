@@ -3862,7 +3862,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<input type="password" id="reportedip_hive_api_key" name="reportedip_hive_api_key" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' ) ); ?>" class="rip-input" />
 					<p class="rip-help-text">
 						<?php esc_html_e( 'You find the key in your reportedip.com account.', 'reportedip-hive' ); ?>
-						<a href="https://reportedip.com/dashboard/api-keys/?rc=hive-plugin" target="_blank"><?php esc_html_e( 'Get a key', 'reportedip-hive' ); ?></a>
+						<a href="<?php echo esc_url( 'https://reportedip.com/dashboard/api-keys/?rc=hive-plugin' ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Get a key', 'reportedip-hive' ); ?></a>
 					</p>
 				</div>
 

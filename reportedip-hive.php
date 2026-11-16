@@ -151,6 +151,7 @@ class ReportedIP_Hive {
 		add_action( 'init', array( $this, 'init' ), 1 );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
 		add_filter( 'plugin_row_meta', array( __CLASS__, 'plugin_row_meta' ), 10, 2 );
+		add_filter( 'clean_url', array( 'ReportedIP_Hive_Catalog', 'localize_clean_url' ), 10, 1 );
 
 		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_disable_xmlrpc_multicall', true ) ) {
 			add_filter( 'xmlrpc_methods', array( $this, 'disable_xmlrpc_multicall' ) );
