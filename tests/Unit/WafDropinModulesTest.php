@@ -65,11 +65,12 @@ class WafDropinModulesTest extends TestCase {
 	/**
 	 * Run PHP code after the generated guard in a subprocess.
 	 *
-	 * @param string $tail   PHP statements run after the guard include.
-	 * @param array  $server Request superglobal.
+	 * @param string      $tail   PHP statements run after the guard include.
+	 * @param array       $server Request superglobal.
+	 * @param string|null $source Guard source, null for a fresh one.
 	 * @return string Trimmed output.
 	 */
-	private function run_after_guard( string $tail, array $server = array() ): string {
+	private function run_after_guard( string $tail, array $server = array(), ?string $source = null ): string {
 		$server += array(
 			'REMOTE_ADDR'     => '203.0.113.50',
 			'REQUEST_URI'     => '/',
@@ -77,7 +78,7 @@ class WafDropinModulesTest extends TestCase {
 			'REQUEST_METHOD'  => 'GET',
 		);
 		$guard  = tempnam( sys_get_temp_dir(), 'rip-mod-guard-' );
-		file_put_contents( $guard, $this->guard_source() );
+		file_put_contents( $guard, null === $source ? $this->guard_source() : $source );
 		$boot = tempnam( sys_get_temp_dir(), 'rip-mod-boot-' );
 		file_put_contents(
 			$boot,
@@ -276,9 +277,20 @@ class WafDropinModulesTest extends TestCase {
 				),
 			)
 		);
-		$out = $this->run_after_guard( "echo 'PASS';" );
+		$this->mgr()->guard_dir();
+		file_put_contents( $this->mgr()->blocklist_path(), \ReportedIP_Hive_WAF_Dropin_Manager::build_ip_list( array( '198.51.100.63' => 0 ) ) );
+		$plain   = $this->run_after_guard( "echo 'PASS';" );
+		$blocked = $this->run_after_guard(
+			"echo 'PASS';",
+			array(
+				'REMOTE_ADDR' => '198.51.100.63',
+				'REQUEST_URI' => '/?f=../../etc/passwd',
+			)
+		);
 		unlink( $file );
-		$this->assertSame( 'ROPASS', $out );
+		unlink( $this->mgr()->blocklist_path() );
+		$this->assertSame( 'ROPASS', $plain );
+		$this->assertSame( 'ROPASS', $blocked, 'Report-only lets a blocklisted IP and a rule match through, the module still runs.' );
 	}
 
 	/**
@@ -401,5 +413,81 @@ class WafDropinModulesTest extends TestCase {
 		$this->reset_queue();
 		$this->assertCount( 1, $lines );
 		$this->assertSame( 'waf', json_decode( $lines[0], true )['kind'] );
+	}
+
+	/**
+	 * Objects in a module config never reach the guard, and the rules still apply.
+	 */
+	public function test_object_in_config_is_dropped_and_rules_still_apply() {
+		$file = $this->module_file( 'function reportedip_hive_guard_module_cfg( $ip, $config, $env ) { echo json_encode( $config ); }' );
+		$this->register_modules(
+			array(
+				array(
+					'id'     => 'cfg',
+					'file'   => $file,
+					'config' => array(
+						'keep'   => 1,
+						'obj'    => new \stdClass(),
+						'nested' => array(
+							'o' => new \ArrayObject(),
+							'n' => null,
+						),
+					),
+				),
+			)
+		);
+		$snapshot = $this->mgr()->modules_snapshot();
+		$this->assertSame(
+			array(
+				'keep'   => 1,
+				'nested' => array( 'n' => null ),
+			),
+			$snapshot[0]['config']
+		);
+		$this->assertStringNotContainsString( '__set_state', $this->guard_source() );
+		$out = $this->run_after_guard( "echo 'PASS';", array( 'REQUEST_URI' => '/?f=../../etc/passwd' ) );
+		unlink( $file );
+		$this->reset_queue();
+		$this->assertSame( '{"keep":1,"nested":{"n":null}}Forbidden', $out );
+	}
+
+	/**
+	 * A module list that fails to load skips the modules, never the rules.
+	 */
+	public function test_broken_module_list_still_runs_the_rules() {
+		$this->register_modules(
+			array(
+				array(
+					'id'   => 'x',
+					'file' => '/nope.php',
+				),
+			)
+		);
+		$source = preg_replace( '/\$modules = array \(.*?\n\);/s', '$modules = RipNoSuchClass::__set_state( array() );', $this->guard_source(), 1, $count );
+		$this->assertSame( 1, $count, 'The baked module list must be found in the guard.' );
+		$this->assertSame( 'PASS', $this->run_after_guard( "echo 'PASS';", array(), $source ) );
+		$this->assertSame( 'Forbidden', $this->run_after_guard( "echo 'PASS';", array( 'REQUEST_URI' => '/?f=../../etc/passwd' ), $source ) );
+		$this->reset_queue();
+	}
+
+	/**
+	 * A module file that defines no entry function fails open, the rules still run.
+	 */
+	public function test_included_file_without_function_fails_open() {
+		$file = $this->module_file( 'return;' );
+		$this->register_modules(
+			array(
+				array(
+					'id'   => 'empty',
+					'file' => $file,
+				),
+			)
+		);
+		$plain  = $this->run_after_guard( "echo 'PASS';" );
+		$attack = $this->run_after_guard( "echo 'PASS';", array( 'REQUEST_URI' => '/?f=../../etc/passwd' ) );
+		unlink( $file );
+		$this->reset_queue();
+		$this->assertSame( 'PASS', $plain );
+		$this->assertSame( 'Forbidden', $attack );
 	}
 }

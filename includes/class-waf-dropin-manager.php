@@ -1151,9 +1151,14 @@ try {
 
 		/* Add-on modules run after whitelist and blocklist and before the
 		   rules, also in report-only mode (the module reads report_only from
-		   $env and must not refuse then). Each one is fail-open on its own. */
-		$modules = __RIP_MODULES__;
-		if ( ! empty( $modules ) ) {
+		   $env and must not refuse then). Each one is fail-open on its own,
+		   and a list that fails to load skips the modules, never the rules. */
+		try {
+			$modules = __RIP_MODULES__;
+		} catch ( \Throwable $modules_error ) {
+			$modules = array();
+		}
+		if ( ! empty( $modules ) && is_array( $modules ) ) {
 			$env = array(
 				'queue'       => __RIP_QUEUE__,
 				'queue_max'   => __RIP_QUEUE_MAX__,
@@ -1295,8 +1300,10 @@ PHP;
 	 *
 	 * Each row is `id` (a-z, 0-9, underscore), `file` (absolute path to a
 	 * plain PHP file without WordPress dependencies) and `config` (array of
-	 * scalars and arrays, baked with var_export). The guard calls
-	 * `reportedip_hive_guard_module_<id>( $ip, $config, $env )`.
+	 * scalars and arrays, baked with var_export; anything else is dropped).
+	 * The guard calls `reportedip_hive_guard_module_<id>( $ip, $config, $env )`.
+	 * A module file with a parse error or a duplicate function declaration
+	 * cannot be caught by PHP; modules must be plain, self-contained files.
 	 *
 	 * @return array<int,array{id:string,file:string,config:array<mixed>}>
 	 * @since  3.1.0
@@ -1314,8 +1321,29 @@ PHP;
 			$out[] = array(
 				'id'     => $row['id'],
 				'file'   => $row['file'],
-				'config' => isset( $row['config'] ) && is_array( $row['config'] ) ? $row['config'] : array(),
+				'config' => isset( $row['config'] ) && is_array( $row['config'] ) ? self::bakeable_config( $row['config'] ) : array(),
 			);
+		}
+		return $out;
+	}
+
+	/**
+	 * Keep only values var_export bakes as plain literals: scalars, null and
+	 * arrays of those. An object would be baked as `__set_state()` and fail
+	 * in the guard, so it is dropped together with resources and closures.
+	 *
+	 * @param array<mixed> $config Module configuration.
+	 * @return array<mixed>
+	 * @since  3.1.0
+	 */
+	private static function bakeable_config( array $config ) {
+		$out = array();
+		foreach ( $config as $key => $value ) {
+			if ( is_array( $value ) ) {
+				$out[ $key ] = self::bakeable_config( $value );
+			} elseif ( null === $value || is_scalar( $value ) ) {
+				$out[ $key ] = $value;
+			}
 		}
 		return $out;
 	}
