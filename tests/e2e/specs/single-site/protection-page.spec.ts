@@ -197,7 +197,7 @@ test.describe('protection page', () => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive-protection');
 		const rows = page.locator('.rip-protection__field--catalog');
-		await expect(rows).toHaveCount(14);
+		await expect(rows).toHaveCount(15);
 		const tor = page.locator('#blocking .rip-protection__field--catalog[data-feature="tor_blocking"]');
 		await expect(tor).toContainText('Available in the ReportedIP Hive Pro add-on (Pro plan).');
 		await expect(tor.locator('a')).toHaveAttribute('href', 'https://reportedip.com/products/wordpress-plugin/?rc=hive-plugin#hive-response');

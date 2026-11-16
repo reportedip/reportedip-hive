@@ -111,7 +111,7 @@ test.describe('quickstart', () => {
 		if (WITH_ADD_ON) {
 			await expect(page.locator('#rip-quickstart-features li[data-rank="1"]').first()).toHaveClass(/rip-quickstart__feature--locked/);
 		} else {
-			await expect(page.locator('#rip-quickstart-addon li'), 'the add-on features come from the catalog').toHaveCount(14);
+			await expect(page.locator('#rip-quickstart-addon li'), 'the add-on features come from the catalog').toHaveCount(15);
 			await expect(page.locator('.rip-quickstart__feature--locked')).toHaveCount(0);
 			await expect(page.locator('.rip-quickstart')).not.toContainText(/€|upgrade|unl[o]ck/i);
 		}
@@ -145,7 +145,7 @@ test.describe('quickstart', () => {
 			await expect(page.locator('#rip-quickstart-features li[data-rank="1"]').first()).not.toHaveClass(/rip-quickstart__feature--locked/);
 			await expect(page.locator('#rip-quickstart-features li[data-rank="2"]').first()).toHaveClass(/rip-quickstart__feature--locked/);
 		} else {
-			await expect(page.locator('#rip-quickstart-addon li'), 'the catalog does not change with the plan').toHaveCount(14);
+			await expect(page.locator('#rip-quickstart-addon li'), 'the catalog does not change with the plan').toHaveCount(15);
 			await expect(page.locator('.rip-quickstart__feature--locked')).toHaveCount(0);
 		}
 		await expect(page.locator('#rip-quickstart-teaser')).toHaveCount(0);

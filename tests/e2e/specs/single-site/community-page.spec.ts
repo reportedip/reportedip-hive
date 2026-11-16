@@ -41,7 +41,7 @@ test.describe('community page', () => {
 		await expect(intro).toContainText('Download it from your account dashboard at reportedip.com');
 		await expect(intro.locator('a', { hasText: 'Open your account' })).toHaveAttribute('href', 'https://reportedip.com/dashboard/product-hive/?rc=hive-plugin');
 		await expect(intro.locator('a', { hasText: 'Learn more' })).toHaveAttribute('href', 'https://reportedip.com/products/wordpress-plugin/?rc=hive-plugin');
-		await expect(page.locator('.rip-addon__section tr[data-feature]')).toHaveCount(14);
+		await expect(page.locator('.rip-addon__section tr[data-feature]')).toHaveCount(15);
 		await expect(page.locator('.rip-addon__section tr[data-feature="hardening_mode"]')).toContainText('Hardening mode during attack waves');
 		await expect(page.locator('.rip-content')).not.toContainText(/€|upgrade|unl[o]ck/i);
 		await expect(page.locator('.rip-content a[href*="pricing"]')).toHaveCount(0);
