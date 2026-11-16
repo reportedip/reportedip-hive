@@ -478,7 +478,7 @@ class ReportedIP_Hive_Protection_Page {
 						'<option value="%1$s"%2$s>%3$s</option>',
 						esc_attr( (string) $allowed ),
 						(string) $allowed === (string) $value ? ' selected' : '',
-						esc_html( self::enum_label( (string) $allowed ) )
+						esc_html( self::enum_label( (string) $allowed, (string) $key ) )
 					);
 				}
 				$control = sprintf( '<select class="rip-select" id="%1$s" name="%2$s"%3$s>%4$s</select>', esc_attr( $id ), esc_attr( $key ), $disabled, $options );
@@ -941,9 +941,10 @@ class ReportedIP_Hive_Protection_Page {
 	 * Human label for an enum value.
 	 *
 	 * @param string $value Allowed value.
+	 * @param string $key   Registry key the value belongs to.
 	 * @return string
 	 */
-	private static function enum_label( $value ) {
+	private static function enum_label( $value, $key = '' ) {
 		$labels = array(
 			''            => __( 'None (REMOTE_ADDR)', 'reportedip-hive' ),
 			'off'         => __( 'Off', 'reportedip-hive' ),
@@ -975,7 +976,17 @@ class ReportedIP_Hive_Protection_Page {
 			'digest'      => __( 'Daily summary', 'reportedip-hive' ),
 			'instant'     => __( 'Single mail per event', 'reportedip-hive' ),
 		);
-		return $labels[ $value ] ?? $value;
+		$label  = $labels[ $value ] ?? $value;
+		/**
+		 * Filters the label of one enum value on the Protection page, so an
+		 * add-on can name the values of its own enum settings.
+		 *
+		 * @param string $label Label, the raw value when the free plugin has none.
+		 * @param string $value Enum value.
+		 * @param string $key   Registry key.
+		 * @since 3.1.0
+		 */
+		return (string) apply_filters( 'reportedip_hive_protection_enum_label', $label, $value, $key );
 	}
 
 	/**
@@ -1123,7 +1134,7 @@ class ReportedIP_Hive_Protection_Page {
 			case 'forms':
 				return self::switch_state( ! empty( $current['reportedip_hive_form_proof_enabled'] ) );
 			case 'lockdown':
-				return self::neutral_state( self::enum_label( (string) ( $current['reportedip_hive_rest_access_mode'] ?? 'open' ) ) );
+				return self::neutral_state( self::enum_label( (string) ( $current['reportedip_hive_rest_access_mode'] ?? 'open' ), 'reportedip_hive_rest_access_mode' ) );
 			case 'account_password':
 				return self::switch_state( ! empty( $current['reportedip_hive_password_policy_enabled'] ) );
 		}

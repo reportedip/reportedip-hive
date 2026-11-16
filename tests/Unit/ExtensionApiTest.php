@@ -857,4 +857,30 @@ class ExtensionApiTest extends TestCase {
 		$rows = \ReportedIP_Hive_Two_Factor_WebAuthn::keys_for_display( 4 );
 		$this->assertSame( 'Model of 2fc0579f-8113-47ea-b116-bb5a8db9202a', $rows[0]['model'] );
 	}
+
+	/**
+	 * An add-on names the values of its own enum through the label filter;
+	 * the filter sees value and key, values without a listener keep theirs.
+	 */
+	public function test_enum_labels_are_filterable_per_key() {
+		require_once REPORTEDIP_HIVE_PLUGIN_DIR . 'admin/class-protection-page.php';
+		add_filter(
+			'reportedip_hive_protection_enum_label',
+			static function ( $label, $value, $key ) {
+				return 'rip_test_enum' === $key && 'auto' === $value ? 'Automatic' : $label;
+			},
+			10,
+			3
+		);
+		$entry = array(
+			'kind'    => 'enum',
+			'allowed' => array( 'off', 'auto' ),
+			'label'   => 'Test enum',
+		);
+		$html  = \ReportedIP_Hive_Protection_Page::field_markup( 'rip_test_enum', $entry, 'off', array( 'available' => true ) );
+		$this->assertStringContainsString( '<option value="auto">Automatic</option>', $html );
+		$this->assertStringContainsString( '<option value="off" selected>Off</option>', $html );
+		$other = \ReportedIP_Hive_Protection_Page::field_markup( 'rip_other_enum', $entry, 'off', array( 'available' => true ) );
+		$this->assertStringContainsString( '<option value="auto">auto</option>', $other );
+	}
 }
