@@ -329,4 +329,77 @@ class WafDropinModulesTest extends TestCase {
 		unlink( $this->mgr()->blocklist_path() );
 		$this->assertSame( 'Forbidden', $out );
 	}
+
+	/**
+	 * Remove the live queue, a leftover rotation and the lock.
+	 *
+	 * @return void
+	 */
+	private function reset_queue(): void {
+		$queue = $this->mgr()->queue_path();
+		foreach ( array( $queue, $queue . '.processing', $queue . '.lock' ) as $file ) {
+			if ( '' !== $queue && file_exists( $file ) ) {
+				unlink( $file );
+			}
+		}
+	}
+
+	/**
+	 * A queue line with a foreign kind goes to the action, not to the WAF.
+	 */
+	public function test_foreign_kind_is_dispatched_to_the_action() {
+		$this->reset_queue();
+		$seen = array();
+		add_action(
+			'reportedip_hive_guard_queue_entry',
+			static function ( $entry ) use ( &$seen ) {
+				$seen[] = $entry;
+			}
+		);
+		$this->mgr()->guard_dir();
+		$lines = array(
+			wp_json_encode(
+				array(
+					'kind' => 'load_shield',
+					'time' => time(),
+					'exp'  => 3,
+				)
+			),
+			wp_json_encode(
+				array(
+					'kind'  => 'waf',
+					'time'  => time(),
+					'ip'    => '198.51.100.61',
+					'rule'  => 'waf_traversal',
+					'group' => 'path_traversal',
+				)
+			),
+			wp_json_encode(
+				array(
+					'time' => time(),
+					'ip'   => '198.51.100.62',
+					'rule' => 'waf_traversal',
+				)
+			),
+		);
+		file_put_contents( $this->mgr()->queue_path(), implode( "\n", $lines ) . "\n" );
+		$this->mgr()->drain_queue();
+		$this->reset_queue();
+		$this->assertCount( 1, $seen, 'Only the foreign line reaches the action; waf and legacy lines stay with the WAF.' );
+		$this->assertSame( 'load_shield', $seen[0]['kind'] );
+		$this->assertSame( 3, $seen[0]['exp'] );
+	}
+
+	/**
+	 * The guard tags its own queue lines as waf.
+	 */
+	public function test_guard_queue_line_carries_the_waf_kind() {
+		$this->reset_queue();
+		$out = $this->run_after_guard( "echo 'PASS';", array( 'REQUEST_URI' => '/?f=../../etc/passwd' ) );
+		$this->assertSame( 'Forbidden', $out );
+		$lines = array_values( array_filter( explode( "\n", (string) file_get_contents( $this->mgr()->queue_path() ) ) ) );
+		$this->reset_queue();
+		$this->assertCount( 1, $lines );
+		$this->assertSame( 'waf', json_decode( $lines[0], true )['kind'] );
+	}
 }

@@ -1233,6 +1233,7 @@ try {
 				if ( false === $queued || $queued < __RIP_QUEUE_MAX__ ) {
 					$row = @json_encode(
 						array(
+							'kind'       => 'waf',
 							'time'       => time(),
 							'ip'         => $ip,
 							'rule'       => isset( $hit['id'] ) ? (string) $hit['id'] : '',
@@ -1871,7 +1872,21 @@ PHP;
 			}
 			++$processed;
 			$entry = json_decode( $line, true );
-			if ( ! is_array( $entry ) || null === $waf ) {
+			if ( ! is_array( $entry ) ) {
+				continue;
+			}
+			$kind = isset( $entry['kind'] ) && is_string( $entry['kind'] ) ? $entry['kind'] : 'waf';
+			if ( 'waf' !== $kind ) {
+				/**
+				 * A guard module's queue line, handed to its owner.
+				 *
+				 * @since 3.1.0
+				 * @param array<string,mixed> $entry Decoded line, `kind` names the module.
+				 */
+				do_action( 'reportedip_hive_guard_queue_entry', $entry );
+				continue;
+			}
+			if ( null === $waf ) {
 				continue;
 			}
 			$this->group_entry( $groups, $entry );
