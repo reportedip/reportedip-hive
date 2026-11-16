@@ -225,6 +225,12 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 
 == Changelog ==
 
+= 3.0.9 =
+* Fix: on a multisite network the firewall before WordPress always uses the directory of the main site, so a block set from a subsite reaches it.
+* Extended Protection guard version 11 with hooks for add-on modules (`reportedip_hive_guard_modules`, `reportedip_hive_guard_rebake`, `reportedip_hive_guard_queue_entry`).
+* New hooks for add-ons: `reportedip_hive_fake_bot_detected`, `reportedip_hive_waf_would_block`, `reportedip_hive_protection_enum_label`, `reportedip_hive_mainwp_sync_data`.
+* The middle plan is called Pro in the tier badge and the plan labels.
+
 = 3.0.8 =
 * Fix: the 404 scanner counts each path once per visitor, so a broken URL a page requests on every view no longer blocks ordinary visitors.
 * Fix: primary link buttons keep their white label on hover and focus.

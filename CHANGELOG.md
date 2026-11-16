@@ -7,6 +7,15 @@ All changes to ReportedIP Hive are documented here.
 ### Changed
 - The middle plan is called Pro in the tier badge, the plan labels and the readme; the Business description names the audit trail, account blocking and the higher mail and SMS quotas instead of features that do not ship.
 - The key test on the Community page lists only the features it knows; raw feature flags of the account are no longer printed.
+- Extended Protection guard version 11: the guard loads modules from add-ons and passes their queue lines on. Sites rebuild the guard on their own after the update.
+
+### New
+- Hooks for add-on guard modules: the filter `reportedip_hive_guard_modules`, the actions `reportedip_hive_guard_rebake` and `reportedip_hive_guard_queue_entry`, plus the helpers `WAF_Dropin_Manager::build_ip_list()` and `WAF_Dropin_Manager::guard_dir()`.
+- The actions `reportedip_hive_fake_bot_detected` (a fake bot was flagged) and `reportedip_hive_waf_would_block` (a report-only firewall hit).
+- The filters `reportedip_hive_protection_enum_label` (labels of choice values on the Protection Settings page) and `reportedip_hive_mainwp_sync_data` (extra figures in the MainWP sync).
+
+### Fixes
+- On a multisite network the guard directory is always the one of the main site, so a block set from a subsite lands in the files the guard reads.
 
 ## [3.0.8] - 2026-11-10
 
