@@ -57,7 +57,6 @@ class ReportedIP_Hive_Suspect_Signal_Actions_Test extends WP_UnitTestCase {
 	 */
 	private function handle_fake( $ip ) {
 		$method = new ReflectionMethod( ReportedIP_Hive_Bot_Verifier::class, 'handle_fake' );
-		$method->setAccessible( true );
 		$method->invoke( ReportedIP_Hive_Bot_Verifier::get_instance(), array( 'ua' => 'Googlebot' ), $ip );
 	}
 
@@ -70,7 +69,6 @@ class ReportedIP_Hive_Suspect_Signal_Actions_Test extends WP_UnitTestCase {
 	public function test_report_only_waf_hit_is_announced() {
 		update_site_option( ReportedIP_Hive_WAF::OPT_REPORT_ONLY, true );
 		$method = new ReflectionMethod( ReportedIP_Hive_WAF::class, 'handle_hit' );
-		$method->setAccessible( true );
 		$method->invoke(
 			ReportedIP_Hive_WAF::get_instance(),
 			array(
