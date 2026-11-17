@@ -36,6 +36,7 @@ class ReportedIP_Hive_Settings_CLI {
 	 * Register the class as a WP-CLI command.
 	 *
 	 * @return void
+	 * @since  3.0.9
 	 */
 	public static function register() {
 		WP_CLI::add_command( 'reportedip settings', __CLASS__ );
@@ -46,6 +47,7 @@ class ReportedIP_Hive_Settings_CLI {
 	 *
 	 * @param string $key One key, '' for every setting.
 	 * @return array<int, array{key:string, kind:string, value:string}> Empty when the key is unknown.
+	 * @since  3.0.9
 	 */
 	public static function rows( $key = '' ) {
 		$spec = ReportedIP_Hive_Settings_Registry::remote_spec();
@@ -71,6 +73,7 @@ class ReportedIP_Hive_Settings_CLI {
 	 * @param string $key   Option key.
 	 * @param string $value Raw value.
 	 * @return array{status:string, message:string} Status as reported by the pipeline.
+	 * @since  3.0.9
 	 */
 	public static function write( $key, $value ) {
 		$out    = ReportedIP_Hive_Settings_Apply::apply( array( $key => $value ), 'cli' );
@@ -104,6 +107,7 @@ class ReportedIP_Hive_Settings_CLI {
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
 	 * @return void
+	 * @since  3.0.9
 	 */
 	public function list( $args, $assoc_args ) {
 		unset( $args );
@@ -135,6 +139,7 @@ class ReportedIP_Hive_Settings_CLI {
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
 	 * @return void
+	 * @since  3.0.9
 	 */
 	public function get( $args, $assoc_args ) {
 		$key  = (string) ( $args[0] ?? '' );
@@ -170,6 +175,7 @@ class ReportedIP_Hive_Settings_CLI {
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
 	 * @return void
+	 * @since  3.0.9
 	 */
 	public function set( $args, $assoc_args ) {
 		unset( $assoc_args );
