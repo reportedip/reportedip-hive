@@ -1389,7 +1389,7 @@ class ReportedIP_Hive_API {
 				'remaining'  => null,
 				'limit'      => null,
 				'user_role'  => 'unknown',
-				'message'    => __( 'Quota status unknown - will attempt API calls', 'reportedip-hive' ),
+				'message'    => __( 'Quota status unknown, API calls will still be attempted', 'reportedip-hive' ),
 			);
 		}
 

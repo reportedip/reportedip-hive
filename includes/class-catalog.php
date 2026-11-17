@@ -60,6 +60,69 @@ final class ReportedIP_Hive_Catalog {
 	const CAMPAIGN_EXEMPT = '#^/(?:wp-json/|feed/|(?:[a-z]{2}/)?feed/|datenschutzerklaerung/|impressum/|nutzungsbedingungen/|agb/|privacy|terms|dashboard/dsgvo)#i';
 
 	/**
+	 * Paths on reportedip.com that exist in one language only: the REST API,
+	 * feeds, downloads, the agent installer and the legal pages. Links to them
+	 * keep the unprefixed address, a language prefix would end in a 404.
+	 */
+	const LOCALIZE_EXEMPT = '#^/(?:wp-json/|feed/|download/|agent/|datenschutzerklaerung/|impressum/|nutzungsbedingungen/|agb/|legal/|privacy|terms|(?:de|fr|es)/)|\.[a-z0-9]{2,5}$#i';
+
+	/**
+	 * Languages reportedip.com is published in besides English.
+	 */
+	const SITE_LANGUAGES = array( 'de', 'fr', 'es' );
+
+	/**
+	 * Point a reportedip.com link at the page in the admin's language.
+	 *
+	 * reportedip.com is published in English, German, French and Spanish.
+	 * The plugin links were English only, so a site run in German sent its
+	 * admin to the English pricing and product pages. The language comes from
+	 * the locale WordPress shows the admin in; anything outside the three
+	 * site languages keeps the English page.
+	 *
+	 * @param string $url    Link.
+	 * @param string $locale WordPress locale, '' for the current one.
+	 * @return string
+	 * @since  3.0.9
+	 */
+	public static function localize_url( $url, $locale = '' ) {
+		$url  = (string) $url;
+		$host = strtolower( (string) wp_parse_url( $url, PHP_URL_HOST ) );
+		if ( 'reportedip.com' !== $host && 'www.reportedip.com' !== $host ) {
+			return $url;
+		}
+		if ( '' === $locale ) {
+			$locale = function_exists( 'determine_locale' ) ? determine_locale() : get_locale();
+		}
+		$lang = strtolower( substr( (string) $locale, 0, 2 ) );
+		if ( ! in_array( $lang, self::SITE_LANGUAGES, true ) ) {
+			return $url;
+		}
+		$path = (string) wp_parse_url( $url, PHP_URL_PATH );
+		$path = '' === $path ? '/' : $path;
+		if ( preg_match( self::LOCALIZE_EXEMPT, $path ) ) {
+			return $url;
+		}
+		$origin = substr( $url, 0, (int) strpos( $url, $host ) + strlen( $host ) );
+		return $origin . '/' . $lang . $path . substr( $url, strlen( $origin ) + strlen( (string) wp_parse_url( $url, PHP_URL_PATH ) ) );
+	}
+
+	/**
+	 * `clean_url` callback: every reportedip.com link printed through esc_url()
+	 * in the admin goes to the page in the admin's language.
+	 *
+	 * @param string $good_url Escaped URL.
+	 * @return string
+	 * @since  3.0.9
+	 */
+	public static function localize_clean_url( $good_url ) {
+		if ( ! is_admin() || false === strpos( (string) $good_url, 'reportedip.com' ) ) {
+			return $good_url;
+		}
+		return self::localize_url( (string) $good_url );
+	}
+
+	/**
 	 * Tag a reportedip.com link with its campaign source.
 	 *
 	 * reportedip.com counts clicks, sign-ups and revenue per source from the
@@ -139,7 +202,7 @@ final class ReportedIP_Hive_Catalog {
 			),
 			'sms_relay_via_api'            => array(
 				'label'          => __( 'SMS codes via the managed relay', 'reportedip-hive' ),
-				'description'    => __( 'A second factor by text message, delivered through the EU gateway, no SMS provider account needed.', 'reportedip-hive' ),
+				'description'    => __( 'A second factor by text message, delivered through the EU gateway, no contract with an SMS provider.', 'reportedip-hive' ),
 				'tier'           => 'professional',
 				'section'        => 'account_security',
 				'docs_url'       => self::PRODUCT_URL . '#hive-identity',
@@ -161,7 +224,7 @@ final class ReportedIP_Hive_Catalog {
 			),
 			'hardening_mode'               => array(
 				'label'       => __( 'Hardening mode during attack waves', 'reportedip-hive' ),
-				'description' => __( 'Tightens the sign-in and reputation thresholds for an hour when a coordinated attack is detected.', 'reportedip-hive' ),
+				'description' => __( 'When a coordinated attack is detected, the limits tighten for an hour: 2 failed logins instead of 5 and a block threshold of 60 percent instead of 75.', 'reportedip-hive' ),
 				'tier'        => 'professional',
 				'section'     => 'hardening_mode',
 				'docs_url'    => self::PRODUCT_URL . '#hive-response',

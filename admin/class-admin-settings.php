@@ -1373,7 +1373,7 @@ class ReportedIP_Hive_Admin_Settings {
 
 		$body = sprintf(
 			'<strong>%1$s</strong> %2$s',
-			esc_html__( 'ReportedIP Hive - Domain limit:', 'reportedip-hive' ),
+			esc_html__( 'ReportedIP Hive, domain limit:', 'reportedip-hive' ),
 			sprintf(
 				/* translators: 1: domains in use, 2: domain limit of the account, 3: link to the reportedip.com dashboard */
 				esc_html__( 'Your Community Access Key is used on %1$d domains, but your account includes %2$d. See your account in the %3$s.', 'reportedip-hive' ),
@@ -3862,7 +3862,7 @@ class ReportedIP_Hive_Admin_Settings {
 					<input type="password" id="reportedip_hive_api_key" name="reportedip_hive_api_key" value="<?php echo esc_attr( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_api_key', '' ) ); ?>" class="rip-input" />
 					<p class="rip-help-text">
 						<?php esc_html_e( 'You find the key in your reportedip.com account.', 'reportedip-hive' ); ?>
-						<a href="https://reportedip.com/dashboard/api-keys/?rc=hive-plugin" target="_blank"><?php esc_html_e( 'Get a key', 'reportedip-hive' ); ?></a>
+						<a href="<?php echo esc_url( 'https://reportedip.com/dashboard/api-keys/?rc=hive-plugin' ); ?>" target="_blank" rel="noopener"><?php esc_html_e( 'Get a key', 'reportedip-hive' ); ?></a>
 					</p>
 				</div>
 

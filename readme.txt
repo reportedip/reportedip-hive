@@ -106,15 +106,18 @@ ReportedIP Hive Pro is a separate add-on for paid plans. It is not hosted on wor
 
 Pro plan:
 
-* **Managed 2FA mail relay** (500 mails per month) and **SMS two-factor authentication** through an EU SMS gateway (25 SMS per month).
+* **2FA codes that reach the inbox:** 500 mails per month from the EU mail relay with its own SPF, DKIM and DMARC, instead of your shared host.
+* **SMS two-factor authentication** through an EU SMS gateway (25 SMS per month), no contract with an SMS provider.
 * **WooCommerce two-factor authentication** on My Account, the classic checkout and the WooCommerce Blocks login, inside the shop theme.
 * **Adaptive 2FA policies per role:** ask again on a new device, IP address, network or country, every N days or sign-ins, or above a session limit.
-* **Hardening mode** that tightens thresholds for one hour during a coordinated attack.
+* **Automatic lockdown during a coordinated attack:** for one hour, 2 failed logins instead of 5 and a block threshold of 60 percent instead of 75.
 * **Advanced security headers:** Content Security Policy (CSP) builder, HSTS with preload, Permissions-Policy and Cross-Origin headers.
 * **Computation proof on forms,** a proof of work the browser solves in the background, as a CAPTCHA alternative that a script cannot copy.
 * **Tor exit node blocking.**
 * **Unlimited registration rules** with regular expressions and sign-ups restricted to allowlisted IP addresses.
 * **Group ban lists:** one block list and whitelist shared by all sites of a group.
+* **Daily, deeper firewall rule sets** through Priority Sync.
+* **One Linux server licence** for the ReportedIP Agent and email support with a reply within two working days.
 
 Business plan, in addition:
 
@@ -201,7 +204,7 @@ Yes. The plugin is activated network-wide and keeps one set of tables for the wh
 
 = What is in the Pro add-on? =
 
-The add-on adds SMS 2FA and a managed mail relay, WooCommerce storefront 2FA, adaptive 2FA policies, hardening mode, advanced security headers, a computation proof on forms, Tor blocking, group ban lists, protection for further form plugins, an audit trail, account blocking and fleet management. The list per plan is in the description above.
+On the Pro plan: 2FA codes by mail that reach the inbox and by SMS, WooCommerce storefront 2FA, adaptive 2FA policies, an automatic lockdown during attacks, advanced security headers, a computation proof on forms, Tor blocking and group ban lists. On the Business plan, in addition: protection for further form plugins, an audit trail, account blocking and fleet management. The full list per plan is in the description above.
 
 = I still run version 1.3 of this plugin. What happens on the update? =
 
