@@ -2,20 +2,24 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [3.0.9] - unreleased
+## [3.0.9] - 2026-11-17
 
 ### Changed
 - The middle plan is called Pro in the tier badge, the plan labels and the readme; the Business description names the audit trail, account blocking and the higher mail and SMS quotas instead of features that do not ship.
+- Links to reportedip.com in the admin open the page in the language of the admin (German, French or Spanish), English otherwise. API, download and legal addresses stay as they are.
+- The plan descriptions and the readme say what each plan does in the words of the pricing page: 2FA codes by mail and SMS without a provider contract, the automatic lockdown during a coordinated attack with its figures, daily rule updates.
 - The key test on the Community page lists only the features it knows; raw feature flags of the account are no longer printed.
 - Extended Protection guard version 11: the guard loads modules from add-ons and passes their queue lines on. Sites rebuild the guard on their own after the update.
 
 ### New
 - WP-CLI: `wp reportedip settings list`, `get <key>` and `set <key> <value>` read and write the settings with the same validation as the admin pages.
 - Hooks for add-on guard modules: the filter `reportedip_hive_guard_modules`, the actions `reportedip_hive_guard_rebake` and `reportedip_hive_guard_queue_entry`, plus the helpers `WAF_Dropin_Manager::build_ip_list()` and `WAF_Dropin_Manager::guard_dir()`.
+- The security log gets a line "Report Sent" for every report that reached the community, so the log shows what was shared and when.
 - The actions `reportedip_hive_fake_bot_detected` (a fake bot was flagged) and `reportedip_hive_waf_would_block` (a report-only firewall hit).
 - The filters `reportedip_hive_protection_enum_label` (labels of choice values on the Protection Settings page) and `reportedip_hive_mainwp_sync_data` (extra figures in the MainWP sync).
 
 ### Fixes
+- The log export stopped at 1000 rows and ignored the filters of the table. It now downloads every row the filtered table shows (event type, severity, search, date range), as CSV or JSON.
 - On a multisite network the guard directory is always the one of the main site, so a block set from a subsite lands in the files the guard reads.
 - The Extended Protection guard file is written to a temporary file and then renamed into place, so a request that arrives during a rebuild never loads a half written guard.
 

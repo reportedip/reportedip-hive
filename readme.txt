@@ -4,7 +4,7 @@ Tags: security, firewall, brute-force, 2fa, anti-spam
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 3.0.8
+Stable tag: 3.0.9
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -229,10 +229,13 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 == Changelog ==
 
 = 3.0.9 =
+* Fix: the log export downloads every row the filtered table shows instead of stopping at 1000 rows.
+* New: the security log shows a line for every report that reached the community.
 * Fix: on a multisite network the firewall before WordPress always uses the directory of the main site, so a block set from a subsite reaches it.
 * Extended Protection guard version 11 with hooks for add-on modules (`reportedip_hive_guard_modules`, `reportedip_hive_guard_rebake`, `reportedip_hive_guard_queue_entry`).
 * New hooks for add-ons: `reportedip_hive_fake_bot_detected`, `reportedip_hive_waf_would_block`, `reportedip_hive_protection_enum_label`, `reportedip_hive_mainwp_sync_data`.
 * The middle plan is called Pro in the tier badge and the plan labels.
+* Links to reportedip.com in the admin open the page in the language of the admin (German, French, Spanish).
 * New: `wp reportedip settings list`, `get` and `set` read and write the settings from WP-CLI.
 
 = 3.0.8 =
