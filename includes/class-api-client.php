@@ -716,6 +716,7 @@ class ReportedIP_Hive_API {
 				if ( $success ) {
 					$database->update_api_report_status( $report->id, 'completed' );
 					$database->update_daily_stats( 'api_reports_sent' );
+					$this->logger->log_security_event( 'api_report_sent', $report->ip_address, array( 'report_type' => (string) $report->report_type ), 'low' );
 					++$processed;
 				} else {
 					$error_message = is_array( $result ) ? ( $result['message'] ?? 'Unknown error' ) : 'Unknown error';

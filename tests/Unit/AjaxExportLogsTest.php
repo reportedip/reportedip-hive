@@ -97,5 +97,20 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'ajax_export_logs() must not read the format from $_POST only'
 			);
 		}
+
+		public function test_export_follows_the_table_filters_without_a_row_cap() {
+			$src = $this->handler_file();
+
+			$this->assertMatchesRegularExpression(
+				'/function ajax_export_logs\(.*?ReportedIP_Hive_Logs_Table::filter_where\(\)/s',
+				$src,
+				'the export must use the same WHERE clause as the filtered log table'
+			);
+			$this->assertStringNotContainsString(
+				'logger->get_logs(',
+				$src,
+				'Logger::get_logs() caps at 1000 rows and must not feed the export'
+			);
+		}
 	}
 }

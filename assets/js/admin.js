@@ -1177,44 +1177,11 @@
             const days = prompt(reportedip_hive_ajax.strings.prompt_export_days || 'Export logs from how many days? (default: 30)', '30');
             if (days === null) return;
             
-            const $button = $(this);
-            $button.prop('disabled', true);
-            
-            $.ajax({
-                url: reportedip_hive_ajax.ajax_url,
-                type: 'POST',
-                data: {
-                    action: 'reportedip_hive_export_logs',
-                    format: format,
-                    days: parseInt(days) || 30,
-                    nonce: reportedip_hive_ajax.nonce
-                },
-                success: function(response) {
-                    if (response.success) {
-                        // Create download link
-                        const blob = new Blob([response.data], { 
-                            type: format === 'csv' ? 'text/csv' : 'application/json' 
-                        });
-                        const url = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `reportedip-logs-${new Date().toISOString().split('T')[0]}.${format}`;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        window.URL.revokeObjectURL(url);
-                        
-                        ReportedIPAdmin.showNotification(ripT('notify_logs_exported', 'Logs exported successfully'), 'success');
-                    } else {
-                        ReportedIPAdmin.showNotification(response.data || ripT('notify_logs_export_failed', 'Failed to export logs'), 'error');
-                    }
-                },
-                error: function() {
-                    ReportedIPAdmin.showNotification(ripT('notify_network_error', 'Network error occurred'), 'error');
-                },
-                complete: function() {
-                    $button.prop('disabled', false);
-                }
+            window.location = reportedip_hive_ajax.ajax_url + '?' + $.param({
+                action: 'reportedip_hive_export_logs',
+                format: format,
+                days: parseInt(days) || 30,
+                nonce: reportedip_hive_ajax.nonce
             });
         },
 

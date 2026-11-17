@@ -92,7 +92,7 @@ final class ReportedIP_Hive_Catalog {
 			return $url;
 		}
 		if ( '' === $locale ) {
-			$locale = function_exists( 'determine_locale' ) ? determine_locale() : get_locale();
+			$locale = determine_locale();
 		}
 		$lang = strtolower( substr( (string) $locale, 0, 2 ) );
 		if ( ! in_array( $lang, self::SITE_LANGUAGES, true ) ) {
@@ -103,8 +103,7 @@ final class ReportedIP_Hive_Catalog {
 		if ( preg_match( self::LOCALIZE_EXEMPT, $path ) ) {
 			return $url;
 		}
-		$origin = substr( $url, 0, (int) strpos( $url, $host ) + strlen( $host ) );
-		return $origin . '/' . $lang . $path . substr( $url, strlen( $origin ) + strlen( (string) wp_parse_url( $url, PHP_URL_PATH ) ) );
+		return (string) preg_replace( '~^(.*?' . preg_quote( $host, '~' ) . ')/?~', '$1/' . $lang . '/', $url, 1 );
 	}
 
 	/**

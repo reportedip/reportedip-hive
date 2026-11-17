@@ -478,6 +478,10 @@ class ReportedIP_Hive_Event_Taxonomy {
 				'label' => __( 'Report Queued', 'reportedip-hive' ),
 				'group' => 'ops_api',
 			),
+			'api_report_sent'                   => array(
+				'label' => __( 'Report Sent', 'reportedip-hive' ),
+				'group' => 'ops_api',
+			),
 			'api_report_skipped'                => array(
 				'label' => __( 'Report Skipped', 'reportedip-hive' ),
 				'group' => 'ops_api',

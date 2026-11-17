@@ -24,6 +24,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ReportedIP_Hive_Ajax_Handler {
 
 	/**
+	 * Rows read per query while a log export streams.
+	 */
+	const EXPORT_CHUNK = 5000;
+
+	/**
 	 * Reference to the main plugin instance
 	 *
 	 * @var ReportedIP_Hive
@@ -547,37 +552,50 @@ class ReportedIP_Hive_Ajax_Handler {
 
 		$this->require_admin_capability();
 
-		$format = isset( $_REQUEST['format'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['format'] ) ) : 'csv';
-		$days   = isset( $_REQUEST['days'] ) ? absint( wp_unslash( $_REQUEST['days'] ) ) : 30;
-		if ( $days < 1 ) {
-			$days = 30;
+		global $wpdb;
+
+		$json  = isset( $_REQUEST['format'] ) && 'json' === sanitize_text_field( wp_unslash( $_REQUEST['format'] ) );
+		$days  = isset( $_REQUEST['days'] ) ? absint( wp_unslash( $_REQUEST['days'] ) ) : 0;
+		$table = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
+		$where = ReportedIP_Hive_Logs_Table::filter_where();
+		if ( $days > 0 ) {
+			$where .= ' AND created_at >= DATE_SUB(UTC_TIMESTAMP(), INTERVAL ' . $days . ' DAY)';
 		}
 
-		$logs = $this->logger->get_logs( $days );
-
-		if ( 'json' === $format ) {
-			$this->export_logs_json( $logs );
-		} else {
-			$this->export_logs_csv( $logs );
-		}
-	}
-
-	/**
-	 * Export logs as CSV
-	 *
-	 * @param array $logs Log entries to export.
-	 */
-	private function export_logs_csv( $logs ) {
-		header( 'Content-Type: text/csv' );
-		header( 'Content-Disposition: attachment; filename="reportedip-hive-logs-' . gmdate( 'Y-m-d' ) . '.csv"' );
+		header( 'Content-Type: ' . ( $json ? 'application/json' : 'text/csv' ) );
+		header( 'Content-Disposition: attachment; filename="reportedip-hive-logs-' . gmdate( 'Y-m-d' ) . ( $json ? '.json"' : '.csv"' ) );
 
 		$output = fopen( 'php://output', 'w' );
-		fputcsv( $output, array( 'Date', 'Event Type', 'IP Address', 'Severity', 'Details' ), ',', '"', '' );
-
-		foreach ( $logs as $log ) {
-			fputcsv( $output, self::csv_export_row( $log ), ',', '"', '' );
+		if ( $json ) {
+			fwrite( $output, '[' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- php://output stream
+		} else {
+			fputcsv( $output, array( 'Date', 'Event Type', 'IP Address', 'Severity', 'Details' ), ',', '"', '' );
 		}
 
+		$last = PHP_INT_MAX;
+		$sep  = '';
+		do {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name from Schema::table(); WHERE built from $wpdb->prepare() fragments and integers.
+			$rows = $wpdb->get_results( "SELECT * FROM {$table} WHERE {$where} AND id < {$last} ORDER BY id DESC LIMIT " . self::EXPORT_CHUNK );
+			foreach ( $rows as $log ) {
+				$last = (int) $log->id;
+				if ( ! $json ) {
+					fputcsv( $output, self::csv_export_row( $log ), ',', '"', '' );
+					continue;
+				}
+				$details = json_decode( (string) $log->details, true );
+				if ( null !== $details ) {
+					$log->details = $details;
+				}
+				fwrite( $output, $sep . wp_json_encode( $log ) ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- php://output stream
+				$sep = ',';
+			}
+			$more = self::EXPORT_CHUNK === count( $rows );
+		} while ( $more );
+
+		if ( $json ) {
+			fwrite( $output, ']' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- php://output stream
+		}
 		fclose( $output ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- php://output stream
 		exit;
 	}
@@ -607,19 +625,6 @@ class ReportedIP_Hive_Ajax_Handler {
 			isset( $log->severity ) ? (string) $log->severity : '',
 			(string) $details,
 		);
-	}
-
-	/**
-	 * Export logs as JSON
-	 *
-	 * @param array $logs Log entries to export.
-	 */
-	private function export_logs_json( $logs ) {
-		header( 'Content-Type: application/json' );
-		header( 'Content-Disposition: attachment; filename="reportedip-hive-logs-' . gmdate( 'Y-m-d' ) . '.json"' );
-
-		echo wp_json_encode( $logs, JSON_PRETTY_PRINT );
-		exit;
 	}
 
 	/**

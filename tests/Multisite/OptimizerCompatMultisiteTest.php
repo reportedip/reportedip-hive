@@ -22,7 +22,7 @@
 class ReportedIP_Hive_Optimizer_Compat_Multisite_Test extends WP_UnitTestCase {
 
 	public function test_every_optimiser_filter_is_wired(): void {
-		ReportedIP_Hive_Optimizer_Compat::get_instance();
+		ReportedIP_Hive_Optimizer_Compat::init();
 
 		$wired = array(
 			'add_selectors' => ReportedIP_Hive_Optimizer_Compat::SELECTOR_FILTERS,
@@ -47,7 +47,7 @@ class ReportedIP_Hive_Optimizer_Compat_Multisite_Test extends WP_UnitTestCase {
 	}
 
 	public function test_the_optimisers_get_the_entries_through_their_filters(): void {
-		ReportedIP_Hive_Optimizer_Compat::get_instance();
+		ReportedIP_Hive_Optimizer_Compat::init();
 
 		$this->assertContains( '.rip-hp-field', apply_filters( 'rocket_rucss_safelist', array() ) );
 		$this->assertContains( '/assets/js/form-proof', apply_filters( 'litespeed_optm_js_defer_exc', array() ) );

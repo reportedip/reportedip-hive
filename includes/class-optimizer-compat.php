@@ -131,31 +131,12 @@ final class ReportedIP_Hive_Optimizer_Compat {
 	);
 
 	/**
-	 * Singleton instance.
-	 *
-	 * @var self|null
-	 */
-	private static $instance = null;
-
-	/**
-	 * Get the singleton.
-	 *
-	 * @return self
-	 * @since  3.0.7
-	 */
-	public static function get_instance() {
-		if ( null === self::$instance ) {
-			self::$instance = new self();
-		}
-		return self::$instance;
-	}
-
-	/**
 	 * Hook into every optimiser filter.
 	 *
-	 * @since 3.0.7
+	 * @return void
+	 * @since  3.0.7
 	 */
-	private function __construct() {
+	public static function init() {
 		foreach ( self::SELECTOR_FILTERS as $filter ) {
 			add_filter( $filter, array( __CLASS__, 'add_selectors' ) );
 		}

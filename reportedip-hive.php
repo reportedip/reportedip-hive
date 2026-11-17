@@ -491,7 +491,7 @@ class ReportedIP_Hive {
 		ReportedIP_Hive_Bot_Verifier::get_instance();
 		ReportedIP_Hive_Disposable_Email::get_instance();
 		ReportedIP_Hive_Registration_Guard::get_instance();
-		ReportedIP_Hive_Optimizer_Compat::get_instance();
+		ReportedIP_Hive_Optimizer_Compat::init();
 		ReportedIP_Hive_Form_Proof::get_instance();
 		ReportedIP_Hive_Form_Adapters::get_instance();
 		ReportedIP_Hive_Reputation_Gate::get_instance();

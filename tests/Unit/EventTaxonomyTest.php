@@ -95,6 +95,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 				'block_skipped_whitelist',
 				'ip_blocked',
 				'api_report_queued',
+				'api_report_sent',
 				'local_event_detected',
 				'categories_cached',
 				'2fa_reset_challenge_sent',

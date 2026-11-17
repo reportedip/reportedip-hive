@@ -3586,6 +3586,17 @@ class ReportedIP_Hive_Admin_Settings {
 		$logs_table->process_bulk_action();
 		$logs_table->prepare_items();
 
+		$export_args = array(
+			'action' => 'reportedip_hive_export_logs',
+			'nonce'  => wp_create_nonce( 'reportedip_hive_nonce' ),
+		);
+		foreach ( array( 'event_type', 'severity', 's', 'hardening_only', 'rip_date_from', 'rip_date_to' ) as $filter ) {
+			if ( ! empty( $_REQUEST[ $filter ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only filter values, the export verifies its own nonce.
+				$export_args[ $filter ] = sanitize_text_field( wp_unslash( $_REQUEST[ $filter ] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- See above.
+			}
+		}
+		$export_url = add_query_arg( array_map( 'rawurlencode', $export_args ), admin_url( 'admin-ajax.php' ) );
+
 		$logs_table->render_filters();
 		?>
 		<form method="post">
@@ -3596,10 +3607,10 @@ class ReportedIP_Hive_Admin_Settings {
 		</form>
 
 		<div class="rip-table-actions">
-			<a href="<?php echo esc_url( admin_url( 'admin-ajax.php?action=reportedip_hive_export_logs&format=csv&nonce=' . wp_create_nonce( 'reportedip_hive_nonce' ) ) ); ?>" class="rip-button rip-button--secondary">
+			<a href="<?php echo esc_url( add_query_arg( 'format', 'csv', $export_url ) ); ?>" class="rip-button rip-button--secondary">
 				<?php esc_html_e( 'Export CSV', 'reportedip-hive' ); ?>
 			</a>
-			<a href="<?php echo esc_url( admin_url( 'admin-ajax.php?action=reportedip_hive_export_logs&format=json&nonce=' . wp_create_nonce( 'reportedip_hive_nonce' ) ) ); ?>" class="rip-button rip-button--secondary">
+			<a href="<?php echo esc_url( add_query_arg( 'format', 'json', $export_url ) ); ?>" class="rip-button rip-button--secondary">
 				<?php esc_html_e( 'Export JSON', 'reportedip-hive' ); ?>
 			</a>
 		</div>

@@ -196,20 +196,16 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 	}
 
 	/**
-	 * Get logs data
+	 * WHERE clause for the filters of the current request.
+	 *
+	 * Shared by the table and the log export, so a download carries exactly the
+	 * rows the filtered table shows.
+	 *
+	 * @return string SQL fragment built from prepared parts.
+	 * @since  3.0.9
 	 */
-	private function get_logs_data( $per_page, $current_page ) {
+	public static function filter_where() {
 		global $wpdb;
-
-		$table_name = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
-		$orderby    = isset( $_REQUEST['orderby'] ) ? sanitize_sql_orderby( wp_unslash( $_REQUEST['orderby'] ) ) : 'created_at';
-		$order_raw  = isset( $_REQUEST['order'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order'] ) ) : 'DESC';
-		$order      = in_array( strtoupper( $order_raw ), array( 'ASC', 'DESC' ), true ) ? strtoupper( $order_raw ) : 'DESC';
-
-		$allowed_columns = array( 'created_at', 'event_type', 'ip_address', 'severity' );
-		if ( ! in_array( $orderby, $allowed_columns, true ) ) {
-			$orderby = 'created_at';
-		}
 
 		$where = array( '1=1' );
 
@@ -244,7 +240,26 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 			$where[] = $wpdb->prepare( 'created_at <= %s', get_gmt_from_date( $date_to . ' 23:59:59' ) );
 		}
 
-		$where_clause = implode( ' AND ', $where );
+		return implode( ' AND ', $where );
+	}
+
+	/**
+	 * Get logs data
+	 */
+	private function get_logs_data( $per_page, $current_page ) {
+		global $wpdb;
+
+		$table_name = ReportedIP_Hive_Schema::table( 'reportedip_hive_logs' );
+		$orderby    = isset( $_REQUEST['orderby'] ) ? sanitize_sql_orderby( wp_unslash( $_REQUEST['orderby'] ) ) : 'created_at';
+		$order_raw  = isset( $_REQUEST['order'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['order'] ) ) : 'DESC';
+		$order      = in_array( strtoupper( $order_raw ), array( 'ASC', 'DESC' ), true ) ? strtoupper( $order_raw ) : 'DESC';
+
+		$allowed_columns = array( 'created_at', 'event_type', 'ip_address', 'severity' );
+		if ( ! in_array( $orderby, $allowed_columns, true ) ) {
+			$orderby = 'created_at';
+		}
+
+		$where_clause = self::filter_where();
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- Table name composed from Schema::table() with a hardcoded suffix; WHERE clause built from $wpdb->prepare() fragments.
 		$total = $wpdb->get_var( "SELECT COUNT(*) FROM {$table_name} WHERE {$where_clause}" );
