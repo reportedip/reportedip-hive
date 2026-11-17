@@ -17,7 +17,7 @@ import { test, expect, loginAsAdmin } from '../../fixtures/admin';
 const WP_CONTAINER = process.env.RIP_E2E_WP_CONTAINER ?? 'reportedip-hive-suite-wordpress-1';
 
 function wp(args: string): string {
-	return execSync(`docker exec ${WP_CONTAINER} wp --allow-root ${args}`, { encoding: 'utf8' }).toString().trim();
+	return execSync(`docker exec ${WP_CONTAINER} wp --allow-root ${args}`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).toString().trim();
 }
 
 function wpOption(name: string): string {

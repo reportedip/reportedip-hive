@@ -29,7 +29,7 @@ const PRO_KEY = 'e2eprofessionalkey0123456789abcdef012345';
 const WITH_ADD_ON = process.env.RIP_E2E_WITH_PRO === '1';
 
 function wp(args: string): string {
-	return execSync(`docker exec ${WP_CONTAINER} wp --allow-root ${args}`, { encoding: 'utf8' }).toString().trim();
+	return execSync(`docker exec ${WP_CONTAINER} wp --allow-root ${args}`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).toString().trim();
 }
 
 function wpOption(name: string): string {
