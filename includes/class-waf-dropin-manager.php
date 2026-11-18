@@ -95,6 +95,14 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 */
 	const REMEMBER_SERVER_OPTION = 'reportedip_hive_dropin_server';
 
+	/**
+	 * Stores WP_CONTENT_DIR as real web requests see it. A PHP-FPM pool with
+	 * `chroot` sees `/web/wp-content` while WP-CLI on the host sees the full
+	 * host path, so a headless sync would bake a path the pool cannot open
+	 * and every request would end in a fatal error. See {@see sync()}.
+	 */
+	const REMEMBER_CONTENT_DIR_OPTION = 'reportedip_hive_dropin_web_content_dir';
+
 	const BLOCKLIST_MAGIC = '#rip1 ';
 
 	/**
@@ -344,6 +352,13 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 			return $this->remove();
 		}
 
+		if ( $this->headless_path_mismatch() ) {
+			if ( class_exists( 'WP_CLI' ) ) {
+				WP_CLI::warning( 'The web server sees wp-content at a different path (chroot). Enable Extended Protection in wp-admin instead.' );
+			}
+			return false;
+		}
+
 		$prepend = $this->prepend_path();
 		if ( '' === $prepend ) {
 			return false;
@@ -566,6 +581,9 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 			if ( $detected !== (string) ReportedIP_Hive_Option_Routing::get( self::REMEMBER_SERVER_OPTION, '' ) ) {
 				ReportedIP_Hive_Option_Routing::set( self::REMEMBER_SERVER_OPTION, $detected );
 			}
+			if ( 'cli' !== $sapi && defined( 'WP_CONTENT_DIR' ) && WP_CONTENT_DIR !== (string) ReportedIP_Hive_Option_Routing::get( self::REMEMBER_CONTENT_DIR_OPTION, '' ) ) {
+				ReportedIP_Hive_Option_Routing::set( self::REMEMBER_CONTENT_DIR_OPTION, WP_CONTENT_DIR );
+			}
 			return $detected;
 		}
 
@@ -676,6 +694,24 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 */
 	public function php_ini_snippet() {
 		return 'auto_prepend_file = ' . $this->prepend_path();
+	}
+
+	/**
+	 * Whether a headless run sees wp-content at another path than the web
+	 * server does, as with a chrooted PHP-FPM pool. The guard file and the
+	 * directive would then carry paths the pool cannot open.
+	 *
+	 * @param string|null $sapi Override SAPI (defaults to php_sapi_name()); for tests.
+	 * @return bool
+	 * @since  3.0.10
+	 */
+	public function headless_path_mismatch( $sapi = null ) {
+		$sapi = null === $sapi ? php_sapi_name() : (string) $sapi;
+		if ( 'cli' !== $sapi || ! defined( 'WP_CONTENT_DIR' ) ) {
+			return false;
+		}
+		$web = (string) ReportedIP_Hive_Option_Routing::get( self::REMEMBER_CONTENT_DIR_OPTION, '' );
+		return '' !== $web && rtrim( $web, '/\\' ) !== rtrim( WP_CONTENT_DIR, '/\\' );
 	}
 
 	/**

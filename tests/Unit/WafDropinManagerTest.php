@@ -157,6 +157,34 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertSame( 'apache', $this->mgr()->detect_server( 'cli' ) );
 		}
 
+		/**
+		 * A chrooted PHP-FPM pool sees wp-content as `/web/wp-content`. A sync
+		 * from WP-CLI on the host would bake the host path, which the pool
+		 * cannot open, and every request would end in a fatal error.
+		 */
+		public function test_headless_sync_is_refused_when_the_web_path_differs(): void {
+			\ReportedIP_Hive_Option_Routing::set( \ReportedIP_Hive_WAF_Dropin_Manager::REMEMBER_CONTENT_DIR_OPTION, '/web/wp-content' );
+
+			$this->assertTrue( $this->mgr()->headless_path_mismatch( 'cli' ) );
+			$this->assertFalse( $this->mgr()->headless_path_mismatch( 'fpm-fcgi' ) );
+		}
+
+		public function test_headless_sync_is_allowed_when_the_paths_match_or_nothing_is_known(): void {
+			$this->assertFalse( $this->mgr()->headless_path_mismatch( 'cli' ) );
+
+			\ReportedIP_Hive_Option_Routing::set( \ReportedIP_Hive_WAF_Dropin_Manager::REMEMBER_CONTENT_DIR_OPTION, WP_CONTENT_DIR . '/' );
+			$this->assertFalse( $this->mgr()->headless_path_mismatch( 'cli' ) );
+		}
+
+		public function test_detect_server_remembers_the_web_content_dir(): void {
+			$this->mgr()->detect_server( 'fpm-fcgi' );
+
+			$this->assertSame(
+				WP_CONTENT_DIR,
+				\ReportedIP_Hive_Option_Routing::get( \ReportedIP_Hive_WAF_Dropin_Manager::REMEMBER_CONTENT_DIR_OPTION, '' )
+			);
+		}
+
 		public function test_detect_server_ignores_a_bogus_remembered_verdict(): void {
 			\ReportedIP_Hive_Option_Routing::set( \ReportedIP_Hive_WAF_Dropin_Manager::REMEMBER_SERVER_OPTION, 'not-a-server' );
 			$_SERVER['SERVER_SOFTWARE'] = '';

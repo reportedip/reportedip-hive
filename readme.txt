@@ -228,6 +228,9 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 
 == Changelog ==
 
+= 3.0.10 =
+* Fix: switching on Extended Protection over WP-CLI no longer breaks a site whose PHP-FPM pool runs in a chroot.
+
 = 3.0.9 =
 * Fix: the log export downloads every row the filtered table shows instead of stopping at 1000 rows.
 * New: the security log shows a line for every report that reached the community.
