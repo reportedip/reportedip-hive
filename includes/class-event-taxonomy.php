@@ -31,7 +31,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  *            are offered in the filter but deliberately kept out of the threat
  *            charts so bookkeeping does not inflate attack numbers.
  * - `writes` `direct` (default, the bare slug is logged), `threshold` (only the
- *            generated `_threshold_exceeded` variant is logged) or `both`.
+ *            generated `_threshold_exceeded` variant is logged), `both` or
+ *            `legacy` (no longer written; the row only labels old log entries
+ *            and keeps them out of the threat charts, the filter skips it).
  *
  * An event type that is not registered at all classifies as `other` and shows
  * up in the charts as such, so a new sensor stays visible even when someone
@@ -422,6 +424,11 @@ class ReportedIP_Hive_Event_Taxonomy {
 				'label' => __( 'CSV Import (whitelist)', 'reportedip-hive' ),
 				'group' => 'ops_blocks',
 			),
+			'attempting_auto_block'             => array(
+				'label'  => __( 'Auto Block Attempted', 'reportedip-hive' ),
+				'group'  => 'ops_blocks',
+				'writes' => 'legacy',
+			),
 			'auto_block_failed'                 => array(
 				'label' => __( 'Auto Block Failed', 'reportedip-hive' ),
 				'group' => 'ops_blocks',
@@ -799,6 +806,10 @@ class ReportedIP_Hive_Event_Taxonomy {
 			$group  = $row['group'];
 			$writes = isset( $row['writes'] ) ? $row['writes'] : 'direct';
 
+			if ( 'legacy' === $writes ) {
+				continue;
+			}
+
 			if ( 'threshold' !== $writes ) {
 				$groups[ $group ][ $slug ] = $row['label'];
 			}
@@ -819,10 +830,16 @@ class ReportedIP_Hive_Event_Taxonomy {
 	public const GROUP_PREFIX = 'group:';
 
 	/**
+	 * Filter value that selects every attack the dashboard counts, i.e. every
+	 * event type with a threat family. The dashboard figures link to it.
+	 */
+	public const THREATS_FILTER = 'threats';
+
+	/**
 	 * Turn one filter value into the event types it selects.
 	 *
 	 * A plain slug selects itself, `group:<key>` selects every option of that
-	 * group. The list is never empty: an unknown value comes back as itself, so
+	 * group, `threats` every attack type the dashboard counts. The list is never empty: an unknown value comes back as itself, so
 	 * the query stays well formed and simply finds nothing.
 	 *
 	 * @param string $value Raw filter value from the request.
@@ -831,6 +848,10 @@ class ReportedIP_Hive_Event_Taxonomy {
 	 */
 	public static function expand_filter_value( $value ) {
 		$value = (string) $value;
+
+		if ( self::THREATS_FILTER === $value ) {
+			return self::threat_event_types();
+		}
 
 		if ( 0 !== strpos( $value, self::GROUP_PREFIX ) ) {
 			return array( $value );

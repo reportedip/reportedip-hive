@@ -220,6 +220,24 @@ namespace ReportedIP\Hive\Tests\Unit {
 				array( '' ),
 				\ReportedIP_Hive_Event_Taxonomy::expand_filter_value( '' )
 			);
+
+			$this->assertSame(
+				\ReportedIP_Hive_Event_Taxonomy::threat_event_types(),
+				\ReportedIP_Hive_Event_Taxonomy::expand_filter_value( \ReportedIP_Hive_Event_Taxonomy::THREATS_FILTER ),
+				'The dashboard figure links to exactly the attacks it counts.'
+			);
+		}
+
+		/**
+		 * A slug that is no longer written keeps its label and stays out of
+		 * the attack count; dropping the row made old entries count as attacks.
+		 */
+		public function test_legacy_slug_is_labelled_but_neither_a_threat_nor_filterable() {
+			$this->assertNull( \ReportedIP_Hive_Event_Taxonomy::classify( 'attempting_auto_block' ) );
+			$this->assertSame( 'Auto Block Attempted', \ReportedIP_Hive_Event_Taxonomy::label( 'attempting_auto_block' ) );
+			foreach ( \ReportedIP_Hive_Event_Taxonomy::filter_options() as $options ) {
+				$this->assertArrayNotHasKey( 'attempting_auto_block', $options );
+			}
 		}
 
 		/**

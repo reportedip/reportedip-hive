@@ -3022,36 +3022,45 @@ class ReportedIP_Hive_Admin_Settings {
 				$layers    = $this->get_active_protection_layers();
 				?>
 
+				<?php
+				$log_url   = '?page=reportedip-hive-security&tab=activity&sub=logs&event_type=' . ReportedIP_Hive_Event_Taxonomy::THREATS_FILTER;
+				$today     = current_time( 'Y-m-d' );
+				$month_ago = wp_date( 'Y-m-d', time() - 29 * DAY_IN_SECONDS );
+				$more      = '<span class="rip-stat-card__more">' . esc_html__( 'Show in the log', 'reportedip-hive' ) . '</span>';
+				?>
 				<div class="rip-stat-cards">
-					<div class="rip-stat-card rip-stat-card--accent">
+					<a class="rip-stat-card rip-stat-card--accent rip-stat-card--link" href="<?php echo esc_url( $log_url . '&rip_date_from=' . $month_ago . '&rip_date_to=' . $today ); ?>">
 						<div class="rip-stat-card__icon rip-stat-card__icon--success">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
 						</div>
 						<div class="rip-stat-card__content">
 							<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $analytics['totals']['period'] ) ); ?></div>
 							<div class="rip-stat-card__label"><?php esc_html_e( 'Attacks blocked (30 days)', 'reportedip-hive' ); ?></div>
+							<?php echo wp_kses_post( $more ); ?>
 						</div>
-					</div>
+					</a>
 
-					<div class="rip-stat-card">
+					<a class="rip-stat-card rip-stat-card--link" href="<?php echo esc_url( $log_url . '&rip_date_from=' . $today . '&rip_date_to=' . $today ); ?>">
 						<div class="rip-stat-card__icon rip-stat-card__icon--danger">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
 						</div>
 						<div class="rip-stat-card__content">
 							<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $analytics['totals']['today'] ) ); ?></div>
 							<div class="rip-stat-card__label"><?php esc_html_e( 'Blocked today', 'reportedip-hive' ); ?></div>
+							<?php echo wp_kses_post( $more ); ?>
 						</div>
-					</div>
+					</a>
 
-					<div class="rip-stat-card">
+					<a class="rip-stat-card rip-stat-card--link" href="<?php echo esc_url( '?page=reportedip-hive-security&tab=ip_lists&sub=blocked' ); ?>">
 						<div class="rip-stat-card__icon rip-stat-card__icon--warning">
 							<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
 						</div>
 						<div class="rip-stat-card__content">
 							<div class="rip-stat-card__value"><?php echo esc_html( number_format_i18n( $ip_stats['active_blocked'] ?? 0 ) ); ?></div>
 							<div class="rip-stat-card__label"><?php esc_html_e( 'IPs currently blocked', 'reportedip-hive' ); ?></div>
+							<span class="rip-stat-card__more"><?php esc_html_e( 'Show the list', 'reportedip-hive' ); ?></span>
 						</div>
-					</div>
+					</a>
 
 					<div class="rip-stat-card">
 						<div class="rip-stat-card__icon rip-stat-card__icon--primary">

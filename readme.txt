@@ -229,6 +229,7 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 == Changelog ==
 
 = 3.0.10 =
+* The dashboard figures link to the matching attacks in the event log and to the block list. Thanks to Marcus Krämer (HostPress).
 * Fix: the XML-RPC multicall switch really refuses multicall requests now, and each one is logged and counted like a failed login.
 * Failed logins record the endpoint, failed mails the reason; the CSV export has ID, Site ID and Shared columns; less log noise.
 * Fix: link previews in iMessage are no longer refused as a spoofed Meta crawler.

@@ -598,6 +598,24 @@ button.rip-tier-lock--mode:hover {
     margin-top: var(--rip-space-1);
 }
 
+.rip-stat-card--link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.rip-stat-card--link:focus-visible {
+    outline: 2px solid var(--rip-primary);
+    outline-offset: 2px;
+}
+
+.rip-stat-card__more {
+    display: block;
+    margin-top: var(--rip-space-2);
+    font-size: var(--rip-text-sm);
+    color: var(--rip-primary);
+    text-decoration: underline;
+}
+
 /* ==========================================================================
    Stat Card, Quota variant
    ========================================================================== */

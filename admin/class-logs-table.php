@@ -428,6 +428,7 @@ class ReportedIP_Hive_Logs_Table extends WP_List_Table {
 				aria-controls="rip-log-event-type" hidden />
 			<select name="event_type" id="rip-log-event-type" class="rip-select">
 				<option value=""><?php esc_html_e( 'All Event Types', 'reportedip-hive' ); ?></option>
+				<option value="<?php echo esc_attr( ReportedIP_Hive_Event_Taxonomy::THREATS_FILTER ); ?>" <?php selected( $event_type, ReportedIP_Hive_Event_Taxonomy::THREATS_FILTER ); ?>><?php esc_html_e( 'All attacks', 'reportedip-hive' ); ?></option>
 				<?php
 				$group_labels = ReportedIP_Hive_Event_Taxonomy::group_labels();
 				foreach ( ReportedIP_Hive_Event_Taxonomy::filter_options() as $group => $options ) :
