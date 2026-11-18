@@ -63,6 +63,12 @@ namespace ReportedIP\Hive\Tests\Unit {
 			);
 		}
 
+		public function test_csv_row_appends_id_site_and_shared_flag() {
+			$row = \ReportedIP_Hive_Ajax_Handler::csv_export_row( (object) array( 'id' => 42, 'blog_id' => 3, 'reported_to_api' => 1 ) );
+
+			$this->assertSame( array( '42', '3', '1' ), array_slice( $row, 5 ) );
+		}
+
 		public function test_csv_row_passes_string_details_through() {
 			$log = (object) array(
 				'created_at' => '2026-06-12 00:00:01',
@@ -80,7 +86,7 @@ namespace ReportedIP\Hive\Tests\Unit {
 		public function test_csv_row_tolerates_missing_fields() {
 			$row = \ReportedIP_Hive_Ajax_Handler::csv_export_row( (object) array() );
 
-			$this->assertSame( array( '', '', '', '', '' ), $row );
+			$this->assertSame( array( '', '', '', '', '', '', '', '' ), $row );
 		}
 
 		public function test_export_params_are_read_from_request_not_post() {

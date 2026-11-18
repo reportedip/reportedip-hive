@@ -5,8 +5,15 @@ All changes to ReportedIP Hive are documented here.
 ## [3.0.10] - unreleased
 
 ### Fixed
+- "Disable XML-RPC multicall" now does what it says. WordPress adds `system.multicall` back after the `xmlrpc_methods` filter, so removing it there never took effect. Hive now answers a multicall itself with the fault for an unknown method, logs it as "XML-RPC Multicall Refused" and counts it like a failed login, so the address is blocked and shared like any other brute force. Whitelisted addresses pass.
 - Links shared over iMessage get their preview again. Apple fetches the preview from the sender's device and names facebookexternalhit in its user agent; the spoofed-crawler check refused it as a fake Meta crawler. The Apple preview now counts as an ordinary visitor.
 - Extended Protection no longer takes a site down when it is switched on over WP-CLI on a host whose PHP-FPM pool runs in a chroot. The guard remembers the wp-content path the web server sees; a headless run that sees another path writes nothing and asks to switch it on in wp-admin.
+
+### Changed
+- Failed logins record which door they came through (`login`, `xmlrpc`, `rest`, `woocommerce`), without user name or address details.
+- A failed mail delivery logs the reason WordPress gave, with addresses masked.
+- The log export in CSV carries three more columns at the end: ID, Site ID and whether the entry was shared.
+- Less noise in the log: "Auto Block Attempted" is gone, its threshold details are part of "IP Blocked"; a successful application password login is logged once per hour and app; a site without a Community Access Key notes the skipped report queue once a day instead of every 15 minutes.
 
 ## [3.0.9] - 2026-11-17
 

@@ -246,6 +246,11 @@ class ReportedIP_Hive_Event_Taxonomy {
 				'group'  => 'recon',
 				'family' => 'recon',
 			),
+			'xmlrpc_multicall_denied'           => array(
+				'label'  => __( 'XML-RPC Multicall Refused', 'reportedip-hive' ),
+				'group'  => 'login',
+				'family' => 'login',
+			),
 			'xmlrpc_denied'                     => array(
 				'label'  => __( 'XML-RPC Denied', 'reportedip-hive' ),
 				'group'  => 'recon',
@@ -415,10 +420,6 @@ class ReportedIP_Hive_Event_Taxonomy {
 			),
 			'csv_import_whitelist'              => array(
 				'label' => __( 'CSV Import (whitelist)', 'reportedip-hive' ),
-				'group' => 'ops_blocks',
-			),
-			'attempting_auto_block'             => array(
-				'label' => __( 'Auto Block Attempted', 'reportedip-hive' ),
 				'group' => 'ops_blocks',
 			),
 			'auto_block_failed'                 => array(

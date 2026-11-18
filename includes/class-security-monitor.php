@@ -949,20 +949,6 @@ class ReportedIP_Hive_Security_Monitor {
 			$duration_minutes = $duration_hours * 60;
 		}
 
-		$this->logger->log_security_event(
-			'attempting_auto_block',
-			$ip_address,
-			array(
-				'event_type'         => $event_type,
-				'reason'             => $reason,
-				'duration_minutes'   => $duration_minutes,
-				'duration_hours'     => $duration_hours,
-				'escalation_enabled' => $use_ladder,
-				'threshold_details'  => $details,
-			),
-			'high'
-		);
-
 		$result = $use_ladder
 			? $this->database->block_ip_for_minutes( $ip_address, $reason, 'automatic', $duration_minutes )
 			: $this->database->block_ip( $ip_address, $reason, 'automatic', $duration_hours );
@@ -975,11 +961,13 @@ class ReportedIP_Hive_Security_Monitor {
 				'ip_blocked',
 				$ip_address,
 				array(
-					'reason'           => $reason,
-					'duration_minutes' => $duration_minutes,
-					'duration_hours'   => $duration_hours,
-					'trigger_event'    => $event_type,
-					'block_type'       => 'automatic',
+					'reason'             => $reason,
+					'duration_minutes'   => $duration_minutes,
+					'duration_hours'     => $duration_hours,
+					'trigger_event'      => $event_type,
+					'block_type'         => 'automatic',
+					'escalation_enabled' => $use_ladder,
+					'threshold_details'  => $details,
 				),
 				'high'
 			);
@@ -992,9 +980,10 @@ class ReportedIP_Hive_Security_Monitor {
 				'auto_block_failed',
 				$ip_address,
 				array(
-					'event_type' => $event_type,
-					'reason'     => $reason,
-					'error'      => 'Database block operation failed',
+					'event_type'        => $event_type,
+					'reason'            => $reason,
+					'error'             => 'Database block operation failed',
+					'threshold_details' => $details,
 				),
 				'critical'
 			);

@@ -569,7 +569,7 @@ class ReportedIP_Hive_Ajax_Handler {
 		if ( $json ) {
 			fwrite( $output, '[' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- php://output stream
 		} else {
-			fputcsv( $output, array( 'Date', 'Event Type', 'IP Address', 'Severity', 'Details' ), ',', '"', '' );
+			fputcsv( $output, array( 'Date', 'Event Type', 'IP Address', 'Severity', 'Details', 'ID', 'Site ID', 'Shared' ), ',', '"', '' );
 		}
 
 		$last = PHP_INT_MAX;
@@ -609,7 +609,7 @@ class ReportedIP_Hive_Ajax_Handler {
 	 * "Array" and silently loses the entire payload.
 	 *
 	 * @param object $log Log row as returned by ReportedIP_Hive_Logger::get_logs().
-	 * @return array<int,string> Ordered cells: date, event type, IP, severity, details.
+	 * @return array<int,string> Ordered cells: date, event type, IP, severity, details, then id, site id and the shared flag (appended in 3.0.10 so existing column positions stay).
 	 * @since  2.1.7
 	 */
 	public static function csv_export_row( $log ) {
@@ -624,6 +624,9 @@ class ReportedIP_Hive_Ajax_Handler {
 			isset( $log->ip_address ) ? (string) $log->ip_address : '',
 			isset( $log->severity ) ? (string) $log->severity : '',
 			(string) $details,
+			isset( $log->id ) ? (string) $log->id : '',
+			isset( $log->blog_id ) ? (string) $log->blog_id : '',
+			isset( $log->reported_to_api ) ? (string) $log->reported_to_api : '',
 		);
 	}
 

@@ -229,6 +229,8 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 == Changelog ==
 
 = 3.0.10 =
+* Fix: the XML-RPC multicall switch really refuses multicall requests now, and each one is logged and counted like a failed login.
+* Failed logins record the endpoint, failed mails the reason; the CSV export has ID, Site ID and Shared columns; less log noise.
 * Fix: link previews in iMessage are no longer refused as a spoofed Meta crawler.
 * Fix: switching on Extended Protection over WP-CLI no longer breaks a site whose PHP-FPM pool runs in a chroot.
 

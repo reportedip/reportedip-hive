@@ -156,6 +156,13 @@ class ReportedIP_Hive_Mailer {
 		 */
 		do_action( 'reportedip_hive_mail_before_send', $args, $provider );
 
+		$failure = '';
+		$catch   = static function ( $error ) use ( &$failure ) {
+			if ( is_wp_error( $error ) ) {
+				$failure = (string) $error->get_error_message();
+			}
+		};
+		add_action( 'wp_mail_failed', $catch );
 		$result = (bool) $provider->send(
 			(string) $args['to'],
 			(string) $args['subject'],
@@ -163,6 +170,7 @@ class ReportedIP_Hive_Mailer {
 			$plain_body,
 			$args['headers']
 		);
+		remove_action( 'wp_mail_failed', $catch );
 
 		/**
 		 * Fires after the provider attempted delivery.
@@ -173,7 +181,7 @@ class ReportedIP_Hive_Mailer {
 		 */
 		do_action( 'reportedip_hive_mail_after_send', $args, $result, $provider );
 
-		$this->log_result( $args, $result, $provider );
+		$this->log_result( $args, $result, $provider, $failure );
 
 		return $result;
 	}
@@ -401,8 +409,9 @@ class ReportedIP_Hive_Mailer {
 	 * @param array                                  $args     Normalized args.
 	 * @param bool                                   $result   Send result.
 	 * @param ReportedIP_Hive_Mail_Provider_Interface $provider Active provider.
+	 * @param string                                 $failure  Message from `wp_mail_failed`, addresses masked before logging.
 	 */
-	private function log_result( array $args, $result, $provider ) {
+	private function log_result( array $args, $result, $provider, $failure = '' ) {
 		if ( ! class_exists( 'ReportedIP_Hive_Logger' ) ) {
 			return;
 		}
@@ -423,6 +432,9 @@ class ReportedIP_Hive_Mailer {
 				$logger->info( 'mail_sent', $ip, $payload );
 			}
 		} elseif ( method_exists( $logger, 'warning' ) ) {
+			if ( '' !== $failure ) {
+				$payload['error'] = substr( (string) preg_replace_callback( '/[^\s<>()":,;]+@[^\s<>()":,;]+/', fn( $m ) => $this->mask_email( $m[0] ), $failure ), 0, 300 );
+			}
 			$logger->warning( 'mail_failed', $ip, $payload );
 		}
 	}

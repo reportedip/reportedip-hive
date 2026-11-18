@@ -368,11 +368,14 @@ class ReportedIP_Hive_Cron_Handler {
 			$queue_result = $this->api_client->process_report_queue( REPORTEDIP_QUEUE_BATCH_SIZE );
 
 			if ( false === $queue_result ) {
-				$this->logger->info(
-					'Queue processing skipped: api not usable (mode or configuration)',
-					'system',
-					array()
-				);
+				if ( false === get_site_transient( 'reportedip_hive_queue_unusable_logged' ) ) {
+					set_site_transient( 'reportedip_hive_queue_unusable_logged', 1, DAY_IN_SECONDS );
+					$this->logger->info(
+						'Queue processing skipped: api not usable (mode or configuration)',
+						'system',
+						array()
+					);
+				}
 			} elseif ( $queue_result && ! isset( $queue_result['skipped'] ) && self::queue_run_did_work( $queue_result ) ) {
 				$this->logger->info(
 					'Queue processed (15min cron)',

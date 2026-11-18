@@ -124,6 +124,14 @@ class ReportedIP_Hive {
 	private $blocked_ip_cache = array();
 
 	/**
+	 * Whether this request already logged a refused multicall; the
+	 * `xmlrpc_methods` filter can run more than once per request.
+	 *
+	 * @var bool
+	 */
+	private $multicall_logged = false;
+
+	/**
 	 * Get single instance
 	 */
 	public static function get_instance() {
@@ -860,15 +868,63 @@ class ReportedIP_Hive {
 
 	/**
 	 * Disable XMLRPC system.multicall to prevent bundled brute-force attacks.
-	 * A single multicall request can contain hundreds of login attempts that
-	 * bypass per-request IP blocking.
+	 *
+	 * Unsetting the method from `xmlrpc_methods` alone never worked:
+	 * `IXR_Server::setCallbacks()` adds `system.multicall` back after the
+	 * filter. A multicall request is therefore answered here with the
+	 * fault WordPress gives for an unknown method, after it was logged and
+	 * counted like a failed login. Whitelisted addresses pass untouched.
 	 *
 	 * @param array $methods Available XMLRPC methods.
 	 * @return array Filtered methods without system.multicall.
 	 */
 	public function disable_xmlrpc_multicall( $methods ) {
 		unset( $methods['system.multicall'] );
+		$body = isset( $GLOBALS['HTTP_RAW_POST_DATA'] ) && is_string( $GLOBALS['HTTP_RAW_POST_DATA'] ) ? $GLOBALS['HTTP_RAW_POST_DATA'] : '';
+		if ( ! $this->multicall_logged && ReportedIP_Hive_Attack_Surface::is_multicall_request( $body ) ) {
+			$this->multicall_logged = true;
+			$ip_address             = $this->get_client_ip();
+			if ( ! $this->ip_manager->is_whitelisted( $ip_address ) ) {
+				$this->log_refused_multicall( $ip_address );
+				$this->refuse_multicall();
+			}
+		}
 		return $methods;
+	}
+
+	/**
+	 * Log a refused multicall and count it as one failed login, so the
+	 * threshold blocks and shares the address like any other brute force.
+	 *
+	 * @param string $ip_address Client address.
+	 * @return void
+	 * @since  3.0.10
+	 */
+	private function log_refused_multicall( $ip_address ) {
+		if ( ! ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_monitor_failed_logins', true ) || $this->is_ip_blocked_cached( $ip_address ) ) {
+			return;
+		}
+		$this->logger->log_security_event( 'xmlrpc_multicall_denied', $ip_address, array( 'endpoint' => 'xmlrpc' ), 'medium' );
+		$this->security_monitor->check_failed_login_threshold( $ip_address, '', true );
+	}
+
+	/**
+	 * Answer the request with the XML-RPC fault for an unknown method and
+	 * stop, before WordPress runs any of the bundled calls.
+	 *
+	 * @return void
+	 * @since  3.0.10
+	 */
+	private function refuse_multicall() {
+		if ( ! class_exists( 'IXR_Error' ) ) {
+			return;
+		}
+		$error = new IXR_Error( -32601, 'server error. requested method system.multicall does not exist.' );
+		if ( ! headers_sent() ) {
+			header( 'Content-Type: text/xml; charset=UTF-8' );
+		}
+		echo '<?xml version="1.0"?>' . PHP_EOL . $error->getXml(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- IXR builds the XML fault from a fixed message.
+		exit;
 	}
 
 	/**
@@ -1268,7 +1324,7 @@ class ReportedIP_Hive {
 			return;
 		}
 
-		$log_data = array();
+		$log_data = array( 'endpoint' => ReportedIP_Hive_Attack_Surface::login_endpoint() );
 
 		if ( ReportedIP_Hive_Option_Routing::get( 'reportedip_hive_detailed_logging', false ) ) {
 			$log_data['username_hash'] = hash( 'sha256', $username . wp_salt() );

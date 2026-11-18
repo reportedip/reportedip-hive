@@ -147,6 +147,38 @@ final class ReportedIP_Hive_Attack_Surface {
 	private static $instance = null;
 
 	/**
+	 * Which door a failed login came through, without any personal data:
+	 * `xmlrpc`, `rest`, `woocommerce` or `login` (wp-login.php and a hidden
+	 * login slug). Lets the log tell an XML-RPC wave from a form attack.
+	 *
+	 * @return string
+	 * @since  3.0.10
+	 */
+	public static function login_endpoint() {
+		if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
+			return 'xmlrpc';
+		}
+		if ( ( defined( 'REST_REQUEST' ) && REST_REQUEST ) || ( function_exists( 'wp_is_serving_rest_request' ) && wp_is_serving_rest_request() ) ) {
+			return 'rest';
+		}
+		if ( isset( $_POST['woocommerce-login-nonce'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Presence check only, WooCommerce verifies its own nonce.
+			return 'woocommerce';
+		}
+		return 'login';
+	}
+
+	/**
+	 * Whether an XML-RPC request body calls system.multicall.
+	 *
+	 * @param string $body Raw request body.
+	 * @return bool
+	 * @since  3.0.10
+	 */
+	public static function is_multicall_request( $body ) {
+		return '' !== $body && 1 === preg_match( '#<methodName>\s*system\.multicall\s*</methodName>#i', $body );
+	}
+
+	/**
 	 * @return self
 	 */
 	public static function get_instance() {

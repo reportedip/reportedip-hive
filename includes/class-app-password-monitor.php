@@ -172,13 +172,20 @@ class ReportedIP_Hive_App_Password_Monitor {
 			return;
 		}
 
+		$app  = isset( $item['name'] ) ? sanitize_text_field( (string) $item['name'] ) : '';
+		$gate = 'reportedip_hive_app_pw_ok_' . md5( $user->ID . '|' . $app );
+		if ( false !== get_transient( $gate ) ) {
+			return;
+		}
+		set_transient( $gate, 1, HOUR_IN_SECONDS );
+
 		$logger = ReportedIP_Hive_Logger::get_instance();
 		$logger->log_security_event(
 			'app_password_success',
 			ReportedIP_Hive::get_client_ip(),
 			array(
 				'user_id'  => $user->ID,
-				'app_name' => isset( $item['name'] ) ? sanitize_text_field( (string) $item['name'] ) : '',
+				'app_name' => $app,
 			),
 			'low'
 		);
