@@ -155,8 +155,8 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 				'field' => 'slug',
 			),
 			'dropin_not_running' => array(
-				'label' => __( 'Open server setup', 'reportedip-hive' ),
-				'write' => false,
+				'label' => __( 'Switch on', 'reportedip-hive' ),
+				'write' => true,
 			),
 			'community_pending'  => array(
 				'label' => __( 'Enter a key', 'reportedip-hive' ),
@@ -532,6 +532,12 @@ class ReportedIP_Hive_Dashboard_Next_Steps {
 					ReportedIP_Hive_Readiness::dismiss( $step, time() );
 				}
 				$ok = true;
+			} elseif ( 'dropin_not_running' === $step ) {
+				$ok      = ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->switch_on_checked();
+				$message = $ok
+					? __( 'Extended Protection is on. The server picks it up within five minutes.', 'reportedip-hive' )
+					: __( 'Extended Protection could not be switched on here. Server & Maintenance shows the manual options.', 'reportedip-hive' );
+				ReportedIP_Hive_Readiness::flush_cache();
 			} elseif ( $actions[ $step ]['write'] ) {
 				$input  = array( 'slug' => isset( $_POST['slug'] ) ? sanitize_text_field( wp_unslash( $_POST['slug'] ) ) : '' );
 				$result = ReportedIP_Hive_Settings_Apply::apply( self::step_values( $step, $input ), 'admin' );

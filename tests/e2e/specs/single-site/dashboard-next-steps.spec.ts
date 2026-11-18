@@ -40,6 +40,23 @@ test.describe('dashboard next steps', () => {
 		tolerant('transient delete reportedip_hive_readiness_cache');
 	});
 
+	test('the Extended Protection card switches the guard on in one click', async ({ page }) => {
+		php(`ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_waf_dropin_enabled', false ); delete_transient( 'reportedip_hive_readiness_cache' ); echo 1;`);
+		try {
+			await loginAsAdmin(page);
+			await page.goto('/wp-admin/admin.php?page=reportedip-hive');
+			const card = page.locator('.rip-next-steps__card[data-step="dropin_not_running"]');
+			await expect(card).toBeVisible();
+			await card.locator('button[type="submit"]').click();
+			await page.waitForURL(/page=reportedip-hive/);
+			expect(php(`echo (int) get_option( 'reportedip_hive_waf_dropin_enabled' ) . '/' . (int) ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->is_active();`).trim()).toBe('1/1');
+			expect((await page.request.get('/')).status()).toBe(200);
+			await expect(page.locator('.rip-next-steps__card[data-step="dropin_not_running"]')).toHaveCount(0);
+		} finally {
+			php(`ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_waf_dropin_enabled', false ); wp_clear_scheduled_hook( 'reportedip_hive_dropin_check' ); @chown( ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->prepend_path(), 'www-data' ); delete_transient( 'reportedip_hive_readiness_cache' ); echo 1;`);
+		}
+	});
+
 	test('the banner names the plan and a badge that is off raises no step', async ({ page }) => {
 		await loginAsAdmin(page);
 		await page.goto('/wp-admin/admin.php?page=reportedip-hive');

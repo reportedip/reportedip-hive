@@ -10,6 +10,7 @@ All changes to ReportedIP Hive are documented here.
 - Extended Protection no longer takes a site down when it is switched on over WP-CLI on a host whose PHP-FPM pool runs in a chroot. The guard remembers the wp-content path the web server sees; a headless run that sees another path writes nothing and asks to switch it on in wp-admin.
 
 ### Changed
+- The next step "Switch on Extended Protection" switches it on in one click instead of opening the server page. Hive checks the home page right after and again six minutes later and switches Extended Protection off again on a server error or when the server setting could not be written; both are logged.
 - The dashboard figures are links: "Attacks blocked (30 days)" and "Blocked today" open the event log filtered to exactly these attacks and that period, "IPs currently blocked" opens the block list. The event type filter has a new choice "All attacks". Thanks to Marcus Krämer (HostPress) for the suggestion.
 - An old log entry "Auto Block Attempted" no longer counts as an attack in the dashboard figures and charts.
 - Failed logins record which door they came through (`login`, `xmlrpc`, `rest`, `woocommerce`), without user name or address details.

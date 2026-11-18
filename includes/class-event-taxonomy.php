@@ -539,6 +539,14 @@ class ReportedIP_Hive_Event_Taxonomy {
 				'label' => __( 'Settings Imported', 'reportedip-hive' ),
 				'group' => 'ops_system',
 			),
+			'waf_dropin_switched_on'            => array(
+				'label' => __( 'Extended Protection Switched On', 'reportedip-hive' ),
+				'group' => 'ops_system',
+			),
+			'waf_dropin_rolled_back'            => array(
+				'label' => __( 'Extended Protection Switched Off After Error', 'reportedip-hive' ),
+				'group' => 'ops_system',
+			),
 			'quickstart_value_rejected'         => array(
 				'label' => __( 'Quickstart Value Rejected', 'reportedip-hive' ),
 				'group' => 'ops_system',

@@ -61,6 +61,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 class ReportedIP_Hive_WAF_Dropin_Manager {
 
 	/**
+	 * Single cron event of the delayed home page check.
+	 */
+	const CHECK_HOOK = 'reportedip_hive_dropin_check';
+
+	/**
+	 * Seconds until the delayed check; `.user.ini` is cached up to 300 s.
+	 */
+	const CHECK_DELAY = 360;
+
+	/**
 	 * Marker label wrapped by insert_with_markers() as `# BEGIN/END`.
 	 */
 	const MARKER = 'ReportedIP Hive WAF';
@@ -217,6 +227,7 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 		add_action( 'activated_plugin', array( $this, 'queue_resync' ) );
 		add_action( 'deactivated_plugin', array( $this, 'on_plugin_deactivated' ) );
 		add_action( 'admin_init', array( $this, 'maybe_self_heal' ) );
+		add_action( self::CHECK_HOOK, array( $this, 'on_check' ) );
 		add_action( 'admin_init', array( $this, 'maybe_drain_queue' ) );
 		add_action( 'reportedip_hive_process_queue', array( $this, 'run_scheduled_drain' ) );
 	}
@@ -299,6 +310,87 @@ class ReportedIP_Hive_WAF_Dropin_Manager {
 	 */
 	public function run_queued_resync() {
 		$this->sync();
+	}
+
+	/**
+	 * Switch the guard on with a check of the home page, for the one-click
+	 * paths (quickstart, next steps). Only where Hive wires the directive
+	 * itself and the target is writable, and never on a home page that
+	 * already answers with a server error. The page is checked right after
+	 * (`.htaccess` acts at once) and again after {@see self::CHECK_DELAY}
+	 * seconds (`.user.ini` is cached up to 300 s); a server error switches
+	 * the guard off again, and so does a directive that could not be
+	 * written. A page that does not answer at all (loopback blocked by the
+	 * host) keeps the guard, that says nothing about it.
+	 *
+	 * @return bool Whether the guard is on afterwards.
+	 * @since  3.0.10
+	 */
+	public function switch_on_checked() {
+		if ( (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false ) ) {
+			return true;
+		}
+		if ( ! $this->supports_auto_install() || ! $this->is_writable_target() || self::home_status() >= 500 ) {
+			return false;
+		}
+		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, true );
+		if ( ! $this->is_active() ) {
+			ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false );
+			return false;
+		}
+		ReportedIP_Hive_Logger::get_instance()->log_security_event( 'waf_dropin_switched_on', 'system', array( 'server' => $this->detect_server() ), 'low' );
+		if ( ! $this->check_or_revert() ) {
+			return false;
+		}
+		wp_clear_scheduled_hook( self::CHECK_HOOK );
+		wp_schedule_single_event( time() + self::CHECK_DELAY, self::CHECK_HOOK );
+		return true;
+	}
+
+	/**
+	 * Cron callback of the delayed check.
+	 *
+	 * @return void
+	 * @since  3.0.10
+	 */
+	public function on_check() {
+		$this->check_or_revert();
+	}
+
+	/**
+	 * Check the home page and switch the guard off on a server error.
+	 *
+	 * @return bool False when the guard was switched off.
+	 * @since  3.0.10
+	 */
+	public function check_or_revert() {
+		if ( ! (bool) ReportedIP_Hive_Option_Routing::get( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false ) ) {
+			return true;
+		}
+		$status = self::home_status();
+		if ( $status < 500 ) {
+			return true;
+		}
+		ReportedIP_Hive_Option_Routing::set( ReportedIP_Hive_WAF::OPT_DROPIN_ENABLED, false );
+		ReportedIP_Hive_Logger::get_instance()->log_security_event( 'waf_dropin_rolled_back', 'system', array( 'status' => $status ), 'high' );
+		return false;
+	}
+
+	/**
+	 * HTTP status of the home page, 0 when it does not answer.
+	 *
+	 * @return int
+	 */
+	private static function home_status() {
+		$response = wp_remote_get(
+			home_url( '/' ),
+			array(
+				'timeout'     => 10,
+				'redirection' => 0,
+				'sslverify'   => false,
+			)
+		);
+		return is_wp_error( $response ) ? 0 : (int) wp_remote_retrieve_response_code( $response );
 	}
 
 	/**

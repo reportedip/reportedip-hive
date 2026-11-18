@@ -8,7 +8,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "POT-Creation-Date: 2026-10-16T10:11:03+00:00\n"
-"PO-Revision-Date: 2026-11-18T14:24:13+00:00\n"
+"PO-Revision-Date: 2026-11-18T18:06:31+00:00\n"
 "Language: de_CH\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Domain: reportedip-hive\n"
@@ -3069,7 +3069,7 @@ msgstr "Manuell gesperrt"
 
 #: admin/class-blocked-ips-table.php:116
 #: admin/class-blocked-ips-table.php:318
-#: includes/class-event-taxonomy.php:694
+#: includes/class-event-taxonomy.php:702
 msgid "Community Reputation"
 msgstr "Community-Reputation"
 
@@ -3108,14 +3108,11 @@ msgid "No blocked IPs found."
 msgstr "Keine gesperrten IPs gefunden."
 
 #: admin/class-dashboard-next-steps.php:153
+#: admin/class-dashboard-next-steps.php:158
 #: admin/class-dashboard-next-steps.php:185
 #: admin/class-protection-page.php:1514
 msgid "Switch on"
 msgstr "Einschalten"
-
-#: admin/class-dashboard-next-steps.php:158
-msgid "Open server setup"
-msgstr "Server-Einrichtung öffnen"
 
 #: admin/class-dashboard-next-steps.php:162
 msgid "Enter a key"
@@ -3203,12 +3200,20 @@ msgstr "Schutzbereiche"
 msgid "Every area of the Protection Settings with its current state. The points show what the scores gain once an area is switched on."
 msgstr "Jeder Bereich der Schutz-Einstellungen mit seinem aktuellen Zustand. Die Punkte zeigen, was die Scores gewinnen, sobald ein Bereich eingeschaltet wird."
 
-#: admin/class-dashboard-next-steps.php:540
+#: admin/class-dashboard-next-steps.php:538
+msgid "Extended Protection is on. The server picks it up within five minutes."
+msgstr "Der erweiterte Schutz ist eingeschaltet. Der Server übernimmt ihn innerhalb von fünf Minuten."
+
+#: admin/class-dashboard-next-steps.php:539
+msgid "Extended Protection could not be switched on here. Server & Maintenance shows the manual options."
+msgstr "Der erweiterte Schutz liess sich hier nicht einschalten. Unter Server & Wartung stehen die Wege von Hand."
+
+#: admin/class-dashboard-next-steps.php:546
 #: admin/class-protection-page.php:1937
 msgid "Rejected."
 msgstr "Abgelehnt."
 
-#: admin/class-dashboard-next-steps.php:545
+#: admin/class-dashboard-next-steps.php:551
 msgid "Done."
 msgstr "Erledigt."
 
@@ -6086,170 +6091,178 @@ msgid "Settings Imported"
 msgstr "Einstellungen importiert"
 
 #: includes/class-event-taxonomy.php:543
+msgid "Extended Protection Switched On"
+msgstr "Erweiterter Schutz eingeschaltet"
+
+#: includes/class-event-taxonomy.php:547
+msgid "Extended Protection Switched Off After Error"
+msgstr "Erweiterter Schutz nach einem Fehler ausgeschaltet"
+
+#: includes/class-event-taxonomy.php:551
 msgid "Quickstart Value Rejected"
 msgstr "Schnellstart-Wert abgelehnt"
 
-#: includes/class-event-taxonomy.php:547
+#: includes/class-event-taxonomy.php:555
 msgid "Notification Rate Limited"
 msgstr "Benachrichtigung gedrosselt"
 
-#: includes/class-event-taxonomy.php:551
+#: includes/class-event-taxonomy.php:559
 msgid "Notification Suppressed (cap)"
 msgstr "Benachrichtigung unterdrückt (Obergrenze)"
 
-#: includes/class-event-taxonomy.php:555
+#: includes/class-event-taxonomy.php:563
 msgid "Cache Hit"
 msgstr "Cache-Treffer"
 
-#: includes/class-event-taxonomy.php:559
+#: includes/class-event-taxonomy.php:567
 msgid "Cache Set"
 msgstr "Cache gefüllt"
 
-#: includes/class-event-taxonomy.php:563
+#: includes/class-event-taxonomy.php:571
 msgid "Cache Cleared"
 msgstr "Cache geleert"
 
-#: includes/class-event-taxonomy.php:567
+#: includes/class-event-taxonomy.php:575
 msgid "Cache Cleanup"
 msgstr "Cache-Aufräumlauf"
 
-#: includes/class-event-taxonomy.php:571
+#: includes/class-event-taxonomy.php:579
 msgid "Cache Flushed"
 msgstr "Cache vollständig geleert"
 
-#: includes/class-event-taxonomy.php:575
+#: includes/class-event-taxonomy.php:583
 msgid "Info Message"
 msgstr "Info-Meldung"
 
-#: includes/class-event-taxonomy.php:579
+#: includes/class-event-taxonomy.php:587
 msgid "Warning Message"
 msgstr "Warnmeldung"
 
-#: includes/class-event-taxonomy.php:583
+#: includes/class-event-taxonomy.php:591
 msgid "Error Message"
 msgstr "Fehlermeldung"
 
-#: includes/class-event-taxonomy.php:587
+#: includes/class-event-taxonomy.php:595
 msgid "Critical Message"
 msgstr "Kritische Meldung"
 
-#: includes/class-event-taxonomy.php:591
+#: includes/class-event-taxonomy.php:599
 msgid "Debug Message"
 msgstr "Debug-Meldung"
 
-#: includes/class-event-taxonomy.php:595
+#: includes/class-event-taxonomy.php:603
 msgid "Auto Block Test"
 msgstr "Test der automatischen Sperre"
 
-#: includes/class-event-taxonomy.php:599
+#: includes/class-event-taxonomy.php:607
 msgid "Login Simulation Started"
 msgstr "Anmeldesimulation gestartet"
 
-#: includes/class-event-taxonomy.php:603
+#: includes/class-event-taxonomy.php:611
 msgid "Simulated Failed Login"
 msgstr "Simulierte fehlgeschlagene Anmeldung"
 
-#: includes/class-event-taxonomy.php:607
+#: includes/class-event-taxonomy.php:615
 msgid "Logging Test (low)"
 msgstr "Protokolltest (niedrig)"
 
-#: includes/class-event-taxonomy.php:611
+#: includes/class-event-taxonomy.php:619
 msgid "Logging Test (medium)"
 msgstr "Protokolltest (mittel)"
 
-#: includes/class-event-taxonomy.php:615
+#: includes/class-event-taxonomy.php:623
 msgid "Logging Test (high)"
 msgstr "Protokolltest (hoch)"
 
-#: includes/class-event-taxonomy.php:619
+#: includes/class-event-taxonomy.php:627
 msgid "Logging Test (critical)"
 msgstr "Protokolltest (kritisch)"
 
-#: includes/class-event-taxonomy.php:663
+#: includes/class-event-taxonomy.php:671
 msgid "Login & Credential"
 msgstr "Login & Zugangsdaten"
 
-#: includes/class-event-taxonomy.php:664
+#: includes/class-event-taxonomy.php:672
 msgid "Firewall (WAF)"
 msgstr "Firewall (WAF)"
 
-#: includes/class-event-taxonomy.php:665
+#: includes/class-event-taxonomy.php:673
 msgid "Scanners & Probes"
 msgstr "Scanner & Sondierungen"
 
-#: includes/class-event-taxonomy.php:666
+#: includes/class-event-taxonomy.php:674
 msgid "Fake Bots"
 msgstr "Gefälschte Bots"
 
-#: includes/class-event-taxonomy.php:667
-#: includes/class-event-taxonomy.php:693
+#: includes/class-event-taxonomy.php:675
+#: includes/class-event-taxonomy.php:701
 msgid "Recon & Enumeration"
 msgstr "Aufklärung & Enumeration"
 
-#: includes/class-event-taxonomy.php:668
+#: includes/class-event-taxonomy.php:676
 msgid "Spam & Flooding"
 msgstr "Spam & Fluten"
 
-#: includes/class-event-taxonomy.php:669
+#: includes/class-event-taxonomy.php:677
 msgid "Anomalies"
 msgstr "Anomalien"
 
-#: includes/class-event-taxonomy.php:670
+#: includes/class-event-taxonomy.php:678
 msgid "Other"
 msgstr "Sonstige"
 
-#: includes/class-event-taxonomy.php:688
+#: includes/class-event-taxonomy.php:696
 msgid "Login & Accounts"
 msgstr "Anmeldung und Konten"
 
-#: includes/class-event-taxonomy.php:689
+#: includes/class-event-taxonomy.php:697
 msgid "Registration"
 msgstr "Registrierung"
 
-#: includes/class-event-taxonomy.php:690
+#: includes/class-event-taxonomy.php:698
 msgid "Forms & Comments"
 msgstr "Formulare und Kommentare"
 
-#: includes/class-event-taxonomy.php:691
+#: includes/class-event-taxonomy.php:699
 msgid "Firewall"
 msgstr "Firewall"
 
-#: includes/class-event-taxonomy.php:692
+#: includes/class-event-taxonomy.php:700
 msgid "Bots"
 msgstr "Bots"
 
-#: includes/class-event-taxonomy.php:695
+#: includes/class-event-taxonomy.php:703
 msgid "Two-Factor"
 msgstr "Zwei-Faktor"
 
-#: includes/class-event-taxonomy.php:696
+#: includes/class-event-taxonomy.php:704
 msgid "Anomalies & Hardening"
 msgstr "Anomalien und Hardening"
 
-#: includes/class-event-taxonomy.php:697
+#: includes/class-event-taxonomy.php:705
 msgid "Report-only Mode"
 msgstr "Nur-Melden-Modus"
 
-#: includes/class-event-taxonomy.php:698
+#: includes/class-event-taxonomy.php:706
 msgid "Operations: Blocks & Whitelist"
 msgstr "Betrieb: Sperren und Freigabeliste"
 
-#: includes/class-event-taxonomy.php:699
+#: includes/class-event-taxonomy.php:707
 msgid "Operations: API & Queue"
 msgstr "Betrieb: API und Warteschlange"
 
-#: includes/class-event-taxonomy.php:700
+#: includes/class-event-taxonomy.php:708
 msgid "Operations: System"
 msgstr "Betrieb: System"
 
 #. translators: %s: filter group label, for example "Firewall".
-#: includes/class-event-taxonomy.php:879
+#: includes/class-event-taxonomy.php:887
 #, php-format
 msgid "All %s events"
 msgstr "Alle Ereignisse aus %s"
 
 #. translators: %s: event type label.
-#: includes/class-event-taxonomy.php:909
+#: includes/class-event-taxonomy.php:917
 #, php-format
 msgid "%s (threshold reached)"
 msgstr "%s (Schwelle erreicht)"
