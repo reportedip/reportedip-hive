@@ -229,6 +229,7 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 == Changelog ==
 
 = 3.0.10 =
+* Fix: link previews in iMessage are no longer refused as a spoofed Meta crawler.
 * Fix: switching on Extended Protection over WP-CLI no longer breaks a site whose PHP-FPM pool runs in a chroot.
 
 = 3.0.9 =

@@ -5,6 +5,7 @@ All changes to ReportedIP Hive are documented here.
 ## [3.0.10] - unreleased
 
 ### Fixed
+- Links shared over iMessage get their preview again. Apple fetches the preview from the sender's device and names facebookexternalhit in its user agent; the spoofed-crawler check refused it as a fake Meta crawler. The Apple preview now counts as an ordinary visitor.
 - Extended Protection no longer takes a site down when it is switched on over WP-CLI on a host whose PHP-FPM pool runs in a chroot. The guard remembers the wp-content path the web server sees; a headless run that sees another path writes nothing and asks to switch it on in wp-admin.
 
 ## [3.0.9] - 2026-11-17

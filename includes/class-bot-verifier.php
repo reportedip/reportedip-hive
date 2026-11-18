@@ -332,6 +332,26 @@ class ReportedIP_Hive_Bot_Verifier {
 	}
 
 	/**
+	 * Whether the user-agent is Apple's link preview (iMessage, Mail, Notes).
+	 * The preview is fetched from the sender's own iPhone or Mac and names
+	 * `facebookexternalhit/1.1 Facebot Twitterbot/1.0` to get Open Graph
+	 * markup, so it comes from home and mobile networks, never from a Meta
+	 * range. Treated as a claimed Meta crawler it was refused as a spoofer on
+	 * every shared link. It is a visitor like any other: no bot claim, no
+	 * crawler exemption.
+	 *
+	 * @param string $ua Request user-agent.
+	 * @return bool
+	 * @since  3.0.10
+	 */
+	public static function is_apple_link_preview( $ua ) {
+		return false !== stripos( $ua, 'facebookexternalhit' )
+			&& false !== stripos( $ua, 'Facebot' )
+			&& false !== stripos( $ua, 'Twitterbot' )
+			&& false !== stripos( $ua, 'Macintosh' );
+	}
+
+	/**
 	 * Find the first bot rule whose token appears in the user-agent. Pure: takes
 	 * the rules and the user-agent, touches no superglobal, so it is
 	 * deterministically unit-testable.
@@ -342,7 +362,7 @@ class ReportedIP_Hive_Bot_Verifier {
 	 * @since  2.1.2
 	 */
 	public function match_bot( array $rules, $ua ) {
-		if ( '' === $ua ) {
+		if ( '' === $ua || self::is_apple_link_preview( (string) $ua ) ) {
 			return null;
 		}
 		foreach ( $rules as $rule ) {

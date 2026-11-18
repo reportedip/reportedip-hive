@@ -53,6 +53,18 @@ namespace ReportedIP\Hive\Tests\Unit {
 			$this->assertNull( $this->verifier()->match_bot( $rules, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120' ) );
 		}
 
+		/**
+		 * Apple's link preview names facebookexternalhit from the sender's own
+		 * device. It was refused as a spoofed Meta crawler on every link shared
+		 * over iMessage; the real Meta crawler is still matched.
+		 */
+		public function test_match_bot_skips_apple_link_preview(): void {
+			$rules = array( array( 'ua' => 'facebookexternalhit', 'domains' => array(), 'ranges' => array( '31.13.24.0/21' ) ) );
+			$apple = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0';
+			$this->assertNull( $this->verifier()->match_bot( $rules, $apple ) );
+			$this->assertIsArray( $this->verifier()->match_bot( $rules, 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)' ) );
+		}
+
 		public function test_classify_verified_by_ip_range(): void {
 			$bot = array( 'ua' => 'googlebot', 'domains' => array( '.googlebot.com' ), 'ranges' => array( '66.249.66.0/24' ) );
 			$this->assertSame( 'verified', $this->verifier()->classify( $bot, '66.249.66.1' ) );
