@@ -2,7 +2,7 @@
 
 All changes to ReportedIP Hive are documented here.
 
-## [3.0.10] - unreleased
+## [3.0.10] - 2026-11-18
 
 ### Fixed
 - "Disable XML-RPC multicall" now does what it says. WordPress adds `system.multicall` back after the `xmlrpc_methods` filter, so removing it there never took effect. Hive now answers a multicall itself with the fault for an unknown method, logs it as "XML-RPC Multicall Refused" and counts it like a failed login, so the address is blocked and shared like any other brute force. Whitelisted addresses pass.
