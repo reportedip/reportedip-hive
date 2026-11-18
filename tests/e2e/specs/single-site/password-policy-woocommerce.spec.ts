@@ -78,7 +78,7 @@ test.describe('password policy on WooCommerce My Account', () => {
 			"ReportedIP_Hive_Option_Routing::set('reportedip_hive_2fa_enabled_global', 0);",
 			"ReportedIP_Hive_Option_Routing::flush_resolve_cache();",
 			`$u = get_user_by('login', '${SHOPPER}');`,
-			`if (! $u instanceof WP_User) { wp_insert_user(array('user_login' => '${SHOPPER}', 'user_email' => '${SHOPPER}@example.test', 'user_pass' => '${SHOPPER_PASS}', 'role' => 'customer')); } else { wp_set_password('${SHOPPER_PASS}', $u->ID); $u->set_role('customer'); }`,
+			`if (! $u instanceof WP_User) { wp_insert_user(array('user_login' => '${SHOPPER}', 'user_email' => '${SHOPPER}@example.test', 'user_pass' => '${SHOPPER_PASS}', 'role' => 'customer', 'first_name' => 'Shop', 'last_name' => 'Per')); } else { wp_set_password('${SHOPPER_PASS}', $u->ID); $u->set_role('customer'); wp_update_user(array('ID' => $u->ID, 'first_name' => 'Shop', 'last_name' => 'Per')); }`,
 			"echo 'SEED|' . wc_get_page_permalink('myaccount');",
 		]);
 		accountUrl = out.split('SEED|')[1]?.trim() ?? '';
