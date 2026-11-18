@@ -41,7 +41,7 @@ test.describe('dashboard next steps', () => {
 	});
 
 	test('the Extended Protection card switches the guard on in one click', async ({ page }) => {
-		php(`ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_waf_dropin_enabled', false ); delete_transient( 'reportedip_hive_readiness_cache' ); echo 1;`);
+		php(`ReportedIP_Hive_Option_Routing::set( 'reportedip_hive_waf_dropin_enabled', false ); @chown( ReportedIP_Hive_WAF_Dropin_Manager::get_instance()->prepend_path(), 'www-data' ); delete_transient( 'reportedip_hive_readiness_cache' ); echo 1;`);
 		try {
 			await loginAsAdmin(page);
 			await page.goto('/wp-admin/admin.php?page=reportedip-hive');
