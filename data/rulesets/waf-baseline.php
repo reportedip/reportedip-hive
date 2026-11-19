@@ -26,6 +26,17 @@
  * rules cover the Same-Origin-Method-Execution escalation, where the REST JSONP
  * callback carries property traversal instead of a plain function name.
  *
+ * The three WordPress 7.1.5 rules (18 November 2026) cover the unauthenticated
+ * fixes of that release. `waf_xss_shortcode_escape`: `shortcode_parse_atts()`
+ * ran attribute values through `stripcslashes()`, so `\x3c` and `\074` became
+ * `<` after every sanitiser had looked at the comment; the rule matches the
+ * escape followed by a tag shape (name plus attribute, `/`, `>` or the matching
+ * `\x3e`). `waf_rest_search_empty_subtype`: an empty `subtype` on
+ * `/wp/v2/search` handed `WP_Term_Query` no taxonomy at all, which means every
+ * taxonomy including private ones; an omitted `subtype` means `any`, so an
+ * empty one is never legitimate. `waf_admin_rest_route`: WordPress evaluated
+ * `rest_route` on admin screens, no admin screen takes that parameter.
+ *
  * `waf_lfi_proc` covers the `/proc/self/environ` family that LFI scanners try
  * in the path and in every parameter. `waf_phpcgi_argv` covers the PHP-CGI
  * argument injection (CVE-2024-4577), where a soft hyphen or a plain `-d`
@@ -206,6 +217,30 @@ return array(
 			'paranoia' => 1,
 			'severity' => 'high',
 			'target'   => 'body',
+		),
+		array(
+			'id'       => 'waf_xss_shortcode_escape',
+			'group'    => 'xss',
+			'pattern'  => '(?i)\\\\(?:x0?3c|0?74)(?:[a-z]{1,12}(?:[ \t]+[a-z-][^\n=]{0,60}=|/|>|\\\\(?:x0?3e|0?76))|[!/?])',
+			'paranoia' => 1,
+			'severity' => 'high',
+			'target'   => 'body',
+		),
+		array(
+			'id'       => 'waf_rest_search_empty_subtype',
+			'group'    => 'rest_abuse',
+			'pattern'  => '(?i)wp/v2/search[^#\s]*?[?&]subtype(?:\[\]|%5b%5d)?=(?:,|%2c)*(?:&|$)',
+			'paranoia' => 1,
+			'severity' => 'medium',
+			'target'   => 'uri',
+		),
+		array(
+			'id'       => 'waf_admin_rest_route',
+			'group'    => 'rest_abuse',
+			'pattern'  => '(?i)/wp-admin/[^?#\s]*\?(?:[^#\s]*&)?rest_route=',
+			'paranoia' => 1,
+			'severity' => 'high',
+			'target'   => 'uri',
 		),
 		array(
 			'id'       => 'waf_sqli_trackback_2nd',
