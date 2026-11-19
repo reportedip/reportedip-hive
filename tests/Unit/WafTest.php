@@ -346,6 +346,57 @@ namespace ReportedIP\Hive\Tests\Unit {
 		 * @param string $id Rule id.
 		 * @return array<string,mixed> The rule.
 		 */
+		/**
+		 * WordPress 7.1.5 closed four unauthenticated holes; the baseline carries
+		 * a signature for each one that a request can reveal. The shortcode rule
+		 * must see the escaped bracket in a posted comment without tripping on
+		 * prose that merely mentions escapes or Windows paths; the two REST
+		 * rules must leave ordinary searches and admin screens alone.
+		 *
+		 * @dataProvider provide_wp_715_requests
+		 */
+		public function test_baseline_covers_wordpress_715_unauthenticated_fixes( string $rule_id, array $server, array $post, bool $expect_hit ): void {
+			$rules = array( $this->baseline_rule( $rule_id ) );
+			$hit   = $this->waf()->evaluate( $rules, $server, $post, null );
+
+			if ( $expect_hit ) {
+				$this->assertIsArray( $hit );
+				$this->assertSame( $rule_id, $hit['id'] );
+			} else {
+				$this->assertNull( $hit );
+			}
+		}
+
+		public static function provide_wp_715_requests(): array {
+			$comment = static fn( string $text ): array => array( 'comment' => $text, 'comment_post_ID' => '1' );
+			$post    = array( 'REQUEST_URI' => '/wp-comments-post.php', 'REQUEST_METHOD' => 'POST' );
+			$get     = static fn( string $uri ): array => array( 'REQUEST_URI' => $uri, 'REQUEST_METHOD' => 'GET' );
+
+			return array(
+				'hex script'              => array( 'waf_xss_shortcode_escape', $post, $comment( '[caption caption="\x3cscript\x3ealert(1)\x3c/script\x3e"]' ), true ),
+				'octal script'            => array( 'waf_xss_shortcode_escape', $post, $comment( '[caption caption="\074script\076alert(1)\074/script\076"]' ), true ),
+				'hex img handler'         => array( 'waf_xss_shortcode_escape', $post, $comment( '[gallery ids="\x3cimg src=x onerror=alert(1)\x3e"]' ), true ),
+				'hex iframe srcdoc'       => array( 'waf_xss_shortcode_escape', $post, $comment( '[embed width="\x3ciframe srcdoc=x\x3e"]' ), true ),
+				'upper hex boolean attr'  => array( 'waf_xss_shortcode_escape', $post, $comment( '[x y="\X3Cdetails open ontoggle=x\X3E"]' ), true ),
+				'short hex closing tag'   => array( 'waf_xss_shortcode_escape', $post, $comment( '[x y="\x3C/textarea\x3E"]' ), true ),
+				'prose about escapes'     => array( 'waf_xss_shortcode_escape', $post, $comment( 'use \x3c for the bracket and \x41 for A, or \s+ in a regex' ), false ),
+				'windows path'            => array( 'waf_xss_shortcode_escape', $post, $comment( 'see C:\Users\x3cfoo\bar and line1\nline2' ), false ),
+				'plain shortcode'         => array( 'waf_xss_shortcode_escape', $post, $comment( '[caption id="attachment_12" align="alignnone"]text[/caption]' ), false ),
+				'empty subtype'           => array( 'waf_rest_search_empty_subtype', $get( '/wp-json/wp/v2/search?type=term&subtype=&search=a' ), array(), true ),
+				'empty subtype plain'     => array( 'waf_rest_search_empty_subtype', $get( '/index.php?rest_route=%2Fwp%2Fv2%2Fsearch&type=term&subtype=' ), array(), true ),
+				'empty subtype array'     => array( 'waf_rest_search_empty_subtype', $get( '/wp-json/wp/v2/search?subtype[]=&type=term' ), array(), true ),
+				'comma subtype'           => array( 'waf_rest_search_empty_subtype', $get( '/wp-json/wp/v2/search?type=term&subtype=,' ), array(), true ),
+				'category subtype'        => array( 'waf_rest_search_empty_subtype', $get( '/wp-json/wp/v2/search?search=hello&type=term&subtype=category' ), array(), false ),
+				'any subtype'             => array( 'waf_rest_search_empty_subtype', $get( '/wp-json/wp/v2/search?search=hello&subtype=any' ), array(), false ),
+				'no subtype'              => array( 'waf_rest_search_empty_subtype', $get( '/wp-json/wp/v2/search?search=hello&type=term' ), array(), false ),
+				'post subtypes'           => array( 'waf_rest_search_empty_subtype', $get( '/wp-json/wp/v2/search?subtype[]=post&subtype[]=page' ), array(), false ),
+				'admin rest_route'        => array( 'waf_admin_rest_route', $get( '/wp-admin/edit.php?post_type=page&rest_route=/wp/v2/users' ), array(), true ),
+				'admin root rest_route'   => array( 'waf_admin_rest_route', $get( '/wp-admin/?rest_route=%2Fwp%2Fv2%2Fsettings' ), array(), true ),
+				'admin list screen'       => array( 'waf_admin_rest_route', $get( '/wp-admin/edit.php?post_type=page&orderby=title' ), array(), false ),
+				'front rest_route'        => array( 'waf_admin_rest_route', $get( '/index.php?rest_route=/wp/v2/posts' ), array(), false ),
+			);
+		}
+
 		private function baseline_rule( string $id ): array {
 			$baseline = include dirname( __DIR__, 2 ) . '/data/rulesets/waf-baseline.php';
 			foreach ( $baseline['rules'] as $rule ) {
