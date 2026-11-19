@@ -4,7 +4,7 @@ Tags: security, firewall, brute-force, 2fa, anti-spam
 Requires at least: 5.9
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 3.0.10
+Stable tag: 3.0.11
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -228,6 +228,9 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 
 == Changelog ==
 
+= 3.0.11 =
+* Fix: two-factor sign-in and the two-factor step of a password reset no longer end in a 403 on hosts whose firewall refuses a POST to wp-login.php with an unknown query string (seen with ModSecurity at Infomaniak).
+
 = 3.0.10 =
 * The next step "Switch on Extended Protection" works in one click, with a check of the home page that switches it off again on a server error.
 * The dashboard figures link to the matching attacks in the event log and to the block list. Thanks to Marcus Krämer (HostPress).
@@ -306,6 +309,9 @@ Use a recovery code, or run `wp reportedip 2fa reset <user_id>` and `wp reported
 * Database schema 25.
 
 == Upgrade Notice ==
+
+= 3.0.11 =
+Fixes a 403 after entering the two-factor code on hosts with a strict ModSecurity rule set, which locked users out.
 
 = 3.0.8 =
 Fixes false blocks by the 404 scanner when a page requests the same broken URL on every view.
