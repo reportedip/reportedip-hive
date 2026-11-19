@@ -449,7 +449,9 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 		$notice = '';
 		$method = isset( $_GET['method'] ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			? sanitize_key( wp_unslash( $_GET['method'] ) ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			: $eligible[0];
+			: ( isset( $_POST['reportedip_2fa_reset_method'] ) // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Only preselects the re-rendered tab; the submission itself is nonce-checked below.
+				? sanitize_key( wp_unslash( $_POST['reportedip_2fa_reset_method'] ) ) // phpcs:ignore WordPress.Security.NonceVerification.Missing -- See above.
+				: $eligible[0] );
 		if ( ! in_array( $method, $eligible, true ) ) {
 			$method = $eligible[0];
 		}
@@ -600,7 +602,6 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 		login_header( __( 'Two-Factor Verification', 'reportedip-hive' ), '', null );
 
 		$nonce       = wp_create_nonce( 'reportedip_2fa_reset_' . $user->ID );
-		$action_url  = $this->build_challenge_url( $login, $reset_key, $method );
 		$resendable  = self::can_send( $method );
 		$resend_wait = $this->get_resend_wait_seconds( $user->ID, $method );
 		$resend_url  = $this->build_resend_url( $login, $reset_key, $method );
@@ -657,7 +658,8 @@ final class ReportedIP_Hive_Two_Factor_Reset_Gate {
 				</nav>
 			<?php endif; ?>
 
-			<form method="post" action="<?php echo esc_url( $action_url ); ?>" class="rip-2fa-challenge__form" id="rip-2fa-form">
+			<form method="post" action="<?php echo esc_url( wp_login_url() ); ?>" class="rip-2fa-challenge__form" id="rip-2fa-form">
+				<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION_CHALLENGE ); ?>" />
 				<input type="hidden" name="_reportedip_2fa_reset_nonce" value="<?php echo esc_attr( $nonce ); ?>" />
 				<input type="hidden" name="reportedip_2fa_reset_method" id="rip-2fa-method-input" value="<?php echo esc_attr( $method ); ?>" />
 

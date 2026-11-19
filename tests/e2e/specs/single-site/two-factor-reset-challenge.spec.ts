@@ -89,7 +89,7 @@ test.describe.serial('password-reset 2FA challenge', () => {
         await expect(alert).toBeVisible();
         await expect(alert).toContainText(/Verification failed/i);
 
-        await expect(page).toHaveURL(/action=reportedip_2fa_reset/);
+        await expect(page).toHaveURL(/\/wp-login\.php/);
         await expect(page.locator('input[name="reportedip_2fa_reset_code"]')).toBeVisible();
     });
 

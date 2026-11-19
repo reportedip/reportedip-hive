@@ -298,7 +298,7 @@ class ReportedIP_Hive_User_Enumeration {
 		}
 
 		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only flag inspection; no state change.
-		$action       = isset( $_GET['action'] ) ? sanitize_key( wp_unslash( $_GET['action'] ) ) : '';
+		$action       = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
 		$flag_locked  = isset( $_GET['reportedip_2fa_locked'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['reportedip_2fa_locked'] ) );
 		$flag_expired = isset( $_GET['reportedip_2fa_expired'] ) && '1' === sanitize_text_field( wp_unslash( $_GET['reportedip_2fa_expired'] ) );
 		// phpcs:enable WordPress.Security.NonceVerification.Recommended

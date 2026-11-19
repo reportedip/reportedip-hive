@@ -172,7 +172,8 @@ $masked_mail = ReportedIP_Hive_Two_Factor::mask_email( $user->user_email );
 		</div>
 	<?php endif; ?>
 
-	<form method="post" action="<?php echo esc_url( wp_login_url() . '?action=reportedip_2fa' ); ?>" class="rip-2fa-challenge__form" id="rip-2fa-form" novalidate>
+	<form method="post" action="<?php echo esc_url( wp_login_url() ); ?>" class="rip-2fa-challenge__form" id="rip-2fa-form" novalidate>
+		<input type="hidden" name="action" value="reportedip_2fa" />
 		<input type="hidden" name="_reportedip_2fa_nonce" value="<?php echo esc_attr( $form_nonce ); ?>" />
 		<input type="hidden" name="reportedip_2fa_method" id="rip-2fa-method-input" value="<?php echo esc_attr( $method ); ?>" />
 

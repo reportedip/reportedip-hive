@@ -2,6 +2,11 @@
 
 All changes to ReportedIP Hive are documented here.
 
+## [3.0.11] - unreleased
+
+### Fixed
+- Two-factor sign-in and the two-factor step of a password reset no longer end in a 403 on hosts whose firewall refuses a POST to wp-login.php with an unknown query string (seen with the ModSecurity rules at Infomaniak). The forms post to the bare login URL and send the step as a hidden field.
+
 ## [3.0.10] - 2026-11-18
 
 ### Fixed
